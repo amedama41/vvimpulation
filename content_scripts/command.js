@@ -1,0 +1,119 @@
+const COMMAND_DESCRIPTIONS = {
+
+    /** Commands for page scrolling **/
+    scrollTop: {},
+    scrollBottom: {},
+    scrollUp: {},
+    scrollDown: {},
+    scrollLineUp: {},
+    scrollLineDown: {},
+    moveHalfPageUp: {},
+    moveHalfPageDown: {},
+    movePageUp: {},
+    movePageDown: {},
+    scrollLeft: {},
+    scrollRight: {},
+    scrollHome: {},
+    scrollEnd: {},
+    scrollPercent: {},
+    scrollMiddle: {},
+
+    /** Commands for search **/
+    findNext: { background: true },
+    findPrevious: { background: true },
+    findNextPage: {},
+    findPreviousPage: {},
+
+    /** Commands for focus manipulation **/
+    focusTopFrame: { topFrame: true },
+    focusin: {},
+    focusout: {},
+    focusNextFrame: { background: true },
+
+    /** Commands for tab manipulation **/
+    nextTab: { background: true },
+    previousTab: { background: true },
+    firstTab: { background: true },
+    lastTab: { background: true },
+    moveTabToLeft: { background: true },
+    moveTabToRight: { background: true },
+    removeCurrentTab: { background: true },
+    undoCloseTab: { background: true },
+    duplicateTab: { background: true },
+    openTab: { background: true },
+
+    /** Commands for window manipulation **/
+    removeCurrentWindow: { background: true },
+
+    /** Commands for page load manipulation **/
+    stopLoad: { topFrame: true },
+    reload: { background: true },
+    reloadSkipCache: { background: true },
+
+    /** Commands for page history **/
+    back: { topFrame: true },
+    forward: { topFrame: true },
+
+    /** Commands for URL edit **/
+    incrementURL: { topFrame: true },
+    decrementURL: { topFrame: true },
+    goToParent: { topFrame: true },
+    goToRoot: { topFrame: true },
+
+    /** Commands for video manipulation **/
+    playOrPause: {},
+    volumeUp: {},
+    volumeDown: {},
+    seekForward: {},
+    seekBack: {},
+    switchLoop: {},
+    reloadVideo: {},
+    showVideInfo: {},
+
+    /** Commands for current frame **/
+    stopLoadFrame: {},
+    reloadFrame: {},
+    incrementFrameURL: {},
+    decrementFrameURL: {},
+    yankFrameURL: {},
+    showFrameURL: {},
+
+    /** Commands for page zoom manipulation **/
+    zoomIn: { background: true },
+    zoomOut: { background: true },
+    zoomReset: { background: true },
+
+    /** Commands for link manipulation **/
+    openLink: {},
+    openLinkInTab: {},
+    yankLink: {},
+    downloadLink: {},
+    pressEnter: {},
+
+    /** Commands for mouse emulation **/
+    mouseclick: {},
+    mousedown: {},
+    mousein: {},
+    mouseout: {},
+
+    yankCurrentURL: { topFrame: true },
+    reloadHintPattern: { background: true },
+    repeatLastCommand: {},
+
+    /** Commands for mode changing **/
+    toNormalMode: { background: true },
+    toInsertMode: {},
+    toInsertModeOnFirstElement: {},
+    toInsertModeOnLastElement: {},
+    toHintMode: {},
+    toHintFocusMode: {},
+    toHintMediaMode: {},
+    toVisualMode: {},
+    toExMode: {},
+    toExModeOpen: {},
+    toExModeOpenCurrentURL: {},
+    toExModeTabOpen: {},
+    toExModeTabOpenCurrentURL: {},
+    toSearchMode: {},
+    toBackwardSearchMode: {},
+};

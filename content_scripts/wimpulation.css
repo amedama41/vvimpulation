@@ -1,0 +1,63 @@
+#wimpulation-hint-container, #wimpulation-console-container {
+    z-index: 2147483647 !important;
+    border: none !important;
+    background: none !important;
+    width: 0px !important;
+    height: 0px !important;
+}
+#wimpulation-hint-container > span {
+    opacity: 0.8;
+    background-color: MistyRose;
+    color: black;
+    display: inline;
+    z-index: 2147483646;
+    position: absolute;
+    visibility: visible;
+    border: 1px solid;
+    font: 10px Monospace;
+    line-height: 10px;
+    margin: 0px;
+    padding: 0px 4px;
+}
+
+#wimpulation-hint-container > .A,
+#wimpulation-hint-container > .AREA {
+    background-color: white !important;
+}
+#wimpulation-hint-container > .AREA {
+    font-style: italic !important;
+}
+#wimpulation-hint-container > .INPUT,
+#wimpulation-hint-container > .TEXTAREA,
+#wimpulation-hint-container > .BUTTON,
+#wimpulation-hint-container > .SELECT,
+#wimpulation-hint-container > .PRE,
+#wimpulation-hint-container > .CANVAS {
+    background-color: Lavender !important;
+}
+#wimpulation-hint-container > #wimpulation-hint-active {
+    color: red !important;
+    z-index: 2147483647 !important;
+}
+
+#wimpulation-console {
+    background-color: transparent !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    overflow: hidden !important;
+    display: block !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    border: none !important;
+    z-index: 2147483647 !important;
+    /* pointer-events: none; */
+}
+
+.wimpulation-input {
+    box-shadow: #0cf 0 0 3px !important;
+    border-color: #09C !important;
+}
+

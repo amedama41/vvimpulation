@@ -1,0 +1,55 @@
+{
+    "manifest_version": 2,
+    "name": "VVimpulation",
+    "version": "0.1",
+
+    "permissions": [
+        "clipboardRead",
+        "clipboardWrite",
+        "downloads",
+        "history",
+        "notifications",
+        "sessions",
+        "storage",
+        "tabs",
+        "webNavigation",
+        "https://suggestqueries.google.com/complete/search"
+    ],
+
+    "background": {
+        "scripts": [
+            "common/utils.js",
+            "common/port.js",
+            "background/command.js",
+            "background/wimpulation.js"
+        ]
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": [
+                "common/utils.js",
+                "common/dom_utils.js",
+                "common/scroll.js",
+                "common/port.js",
+                "content_scripts/command.js",
+                "content_scripts/frontend_command.js",
+                "content_scripts/hint_mode.js",
+                "content_scripts/visual_mode.js",
+                "content_scripts/wimpulation.js"
+            ],
+            "css": ["content_scripts/wimpulation.css"],
+            "match_about_blank": true,
+            "all_frames": true,
+            "run_at": "document_start"
+        }
+    ],
+
+    "web_accessible_resources": [
+        "resources/ex_mode/ex_mode.html",
+        "resources/search_mode/search_mode.html",
+        "resources/hint_pattern.json",
+        "resources/rm_pattern.json"
+    ]
+}
