@@ -34,7 +34,7 @@ class HintMode extends Mode {
             container.parentNode.removeChild(container);
         }
     }
-    getElement() {
+    getTarget() {
         const [span, elem] = this.hints[this.focusIndex];
         return elem;
     }

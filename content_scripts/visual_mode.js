@@ -55,7 +55,7 @@ class VisualModeBase extends Mode {
             }
         }
     }
-    getElement() {
+    getTarget() {
         return selection.anchorNode;
     }
     handle(key) {

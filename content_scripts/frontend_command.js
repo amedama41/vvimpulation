@@ -9,7 +9,7 @@ class FrontendCommand {
         window.scrollTo(window.scrollX, window.scrollMaxY);
     }
     static scrollUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 20);
             return;
@@ -17,7 +17,7 @@ class FrontendCommand {
         window.scrollByLines(Math.max(count, 4) * -1);
     }
     static scrollDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 20);
             return;
@@ -31,7 +31,7 @@ class FrontendCommand {
         window.scrollByLines(Math.max(count, 1) * 1);
     }
     static moveHalfPageUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight / 2;
             return;
@@ -39,7 +39,7 @@ class FrontendCommand {
         window.scrollBy(0, Math.max(count, 1) * -window.innerHeight / 2);
     }
     static moveHalfPageDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight / 2;
             return;
@@ -47,7 +47,7 @@ class FrontendCommand {
         window.scrollBy(0, Math.max(count, 1) * window.innerHeight / 2);
     }
     static movePageUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight;
             return;
@@ -55,7 +55,7 @@ class FrontendCommand {
         window.scrollByPages(Math.max(count, 1) * -1);
     }
     static movePageDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getElement());
+        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight;
             return;
@@ -63,7 +63,7 @@ class FrontendCommand {
         window.scrollByPages(Math.max(count, 1) * 1);
     }
     static scrollLeft(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getElement());
+        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
         if (elem && elem.scrollLeft !== 0) {
             elem.scrollLeft -= Math.max(count, 20);
             return;
@@ -71,7 +71,7 @@ class FrontendCommand {
         window.scrollBy(-20, 0);
     }
     static scrollRight(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getElement());
+        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
         if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
             elem.scrollLeft += Math.max(count, 20);
             return;
@@ -79,7 +79,7 @@ class FrontendCommand {
         window.scrollBy(20, 0);
     }
     static scrollHome(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getElement());
+        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
         if (elem && elem.scrollLeft !== 0) {
             elem.scrollLeft = 0;
             return;
@@ -87,7 +87,7 @@ class FrontendCommand {
         window.scrollTo(0, window.scrollY);
     }
     static scrollEnd(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getElement());
+        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
         if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
             elem.scrollLeft = elem.scrollWidth;
             return;
@@ -120,7 +120,7 @@ class FrontendCommand {
         target.removeChild(a);
     }
     static focusin(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         try {
             elem.focus();
         }
@@ -129,7 +129,7 @@ class FrontendCommand {
         }
     }
     static focusout(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         try {
             elem.blur();
         }
@@ -315,7 +315,7 @@ Loop: ${video.loop}`
      * Commands for link manipulation
      **/
     static openLink(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const url = getLink(elem);
         if (!url) {
             return false;
@@ -324,7 +324,7 @@ Loop: ${video.loop}`
         return true;
     }
     static openLinkInTab(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const url = getLink(elem);
         if (!url) {
             return false;
@@ -335,7 +335,7 @@ Loop: ${video.loop}`
         return true;
     }
     static yankLink(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const url = getLink(elem);
         if (!url) {
             return false;
@@ -344,7 +344,7 @@ Loop: ${video.loop}`
         return true;
     }
     static downloadLink(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const url = getLink(elem);
         if (!url) {
             return false;
@@ -353,7 +353,7 @@ Loop: ${video.loop}`
         return true;
     }
     static pressEnter(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const ctrl = (count === 1);
         const shift = (count === 2);
         const alt = (count === 3);
@@ -365,7 +365,7 @@ Loop: ${video.loop}`
      * Commands for mouse emulation
      **/
     static mouseclick(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const ctrl = (count === 1);
         const shift = (count === 2);
         const alt = (count === 3);
@@ -373,7 +373,7 @@ Loop: ${video.loop}`
         emulateClick(elem, ctrl, alt, shift, meta);
     }
     static mousedown(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const ctrl = (count === 1);
         const shift = (count === 2);
         const alt = (count === 3);
@@ -382,7 +382,7 @@ Loop: ${video.loop}`
             elem, "mousedown", 0, ctrl, alt, shift, meta);
     }
     static mousein(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
         emulateMouseEvent(
@@ -391,7 +391,7 @@ Loop: ${video.loop}`
             elem, "mousemove", 0, false, false, false, false);
     }
     static mouseout(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
         emulateMouseEvent(
@@ -415,7 +415,7 @@ Loop: ${video.loop}`
      * Commands for mode changing
      */
     static toInsertMode(count, mode) {
-        const target = mode.getElement();
+        const target = mode.getTarget();
         if (!DomUtils.isEditable(target)) {
             return FrontendCommand.toInsertModeOnFirstElement(count, mode);
         }

@@ -251,7 +251,7 @@ class NormalMode extends Mode {
             }, 0);
         }
     }
-    getElement() {
+    getTarget() {
         return document.activeElement;
     }
     handle(key) {
@@ -315,60 +315,60 @@ class NormalMode extends Mode {
 
 class InsertCommand {
     static deleteCharBackward(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const prevValue = elem.value;
         if (DomUtils.deleteCharBackward(elem)) {
             mode.undoStack.push(prevValue);
         }
     }
     static deleteWordBackward(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const prevValue = elem.value;
         if (DomUtils.deleteWordBackward(elem)) {
             mode.undoStack.push(prevValue);
         }
     }
     static deleteToBeggingOfLine(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const prevValue = elem.value;
         if (DomUtils.deleteToBeggingOfLine(elem)) {
             mode.undoStack.push(prevValue);
         }
     }
     static deleteToEndOfLine(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         const prevValue = elem.value;
         if (DomUtils.deleteToEndOfLine(elem)) {
             mode.undoStack.push(prevValue);
         }
     }
     static charNext(count, mode) {
-        DomUtils.charNext(mode.getElement());
+        DomUtils.charNext(mode.getTarget());
     }
     static charPrevious(count, mode) {
-        DomUtils.charPrevious(mode.getElement());
+        DomUtils.charPrevious(mode.getTarget());
     }
     static beginLine(count, mode) {
-        DomUtils.beginLine(mode.getElement());
+        DomUtils.beginLine(mode.getTarget());
     }
     static endLine(count, mode) {
-        DomUtils.endLine(mode.getElement());
+        DomUtils.endLine(mode.getTarget());
     }
     static nextLine(count, mode) {
-        DomUtils.nextLine(mode.getElement());
+        DomUtils.nextLine(mode.getTarget());
     }
     static previousLine(count, mode) {
-        DomUtils.previousLine(mode.getElement());
+        DomUtils.previousLine(mode.getTarget());
     }
     static undo(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         if (mode.undoStack.length !== 0) {
             elem.setRangeText(
                 mode.undoStack.pop(), 0, elem.value.length, "end");
         }
     }
     static yankValue(count, mode) {
-        const elem = mode.getElement();
+        const elem = mode.getTarget();
         mode.freeze = true;
         DomUtils.setToClipboard(elem.value);
         mode.freeze = false;
@@ -378,7 +378,7 @@ class InsertCommand {
     }
     static goToPreviousInput(count, mode) {
         const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getElement());
+        const index = inputs.indexOf(mode.getTarget());
         if (index === -1) return;
         mode.changeMode("INSERT", {
             editableElement: inputs[(index - 1 + inputs.length) % inputs.length]
@@ -386,7 +386,7 @@ class InsertCommand {
     }
     static goToNextInput(count, mode) {
         const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getElement());
+        const index = inputs.indexOf(mode.getTarget());
         if (index === -1) return;
         mode.changeMode("INSERT", {
             editableElement: inputs[(index + 1) % inputs.length]
@@ -418,7 +418,7 @@ class InsertMode extends Mode {
         };
         this.editableElement.addEventListener("blur", this.blurHandler, true);
     }
-    getElement() {
+    getTarget() {
         return this.editableElement;
     }
     handle(key) {
