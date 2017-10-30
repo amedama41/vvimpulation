@@ -16,7 +16,7 @@ const NORMAL_KEY_MAP = Utils.toPreparedCmdMap({
     "T": "toExModeTabOpenCurrentURL",
     "/": "toSearchMode",
     "?": "toBackwardSearchMode",
-    "e": "openLink",
+    "e": "pressEnter",
     "gg": "scrollTop",
     "M": "scrollMiddle",
     "G": "scrollBottom",
