@@ -82,6 +82,9 @@ class HintMode extends Mode {
     }
 }
 
+function getFirstRectInArea(rectList, area) {
+    return rectList.find((rect) => !isOutOfArea(rect, area));
+}
 function isOutOfArea(rect, winArea) {
     if (rect.width === 0 && rect.height === 0) return true;
     return (rect.top > winArea.bottom
@@ -114,8 +117,14 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
 
-        const rect = elem.getBoundingClientRect();
-        if (isOutOfArea(rect, winArea)) {
+        // use getClientRects instead of getBoundingClientRect in order to
+        // acquire the collect position for text wrapped elements.
+        const rectList = elem.getClientRects();
+        if (rectList.length === 0) {
+            continue;
+        }
+        const rect = getFirstRectInArea(rectList, winArea);
+        if (!rect) {
             continue;
         }
         const style = win.getComputedStyle(elem, null);
