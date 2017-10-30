@@ -75,7 +75,7 @@ class VisualModeBase extends Mode {
             return true;
         }
         else {
-            return !VisualCommand[cmd](this.selection);
+            return !VisualCommand[cmd](this.selection, this);
         }
     }
 }
