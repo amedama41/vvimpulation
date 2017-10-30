@@ -1,8 +1,5 @@
 'use strict';
 
-var gFrameMgr = undefined;
-var gModeMgr = undefined;
-
 const NORMAL_KEY_MAP = Utils.toPreparedCmdMap({
     ".": "repeatLastCommand",
     "f": "toHintMode",
@@ -132,55 +129,9 @@ const VISUAL_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-[>": "toNormalMode",
 });
 
-class ModeManager {
-    constructor(mode) {
-        this.mode = ModeManager.createMode(mode);
-        this.suspend = false;
-    }
-    getMode() {
-        return this.mode;
-    }
-    changeMode(mode, data) {
-        this.mode.reset();
-        this.mode = ModeManager.createMode(mode, data);
-    }
-    resetMode() {
-        this.mode.reset();
-    }
-    isHintMode() {
-        return this.mode instanceof HintMode;
-    }
-    isSuspend() {
-        return this.suspend;
-    }
-    toggleSuspend() {
-        this.suspend = !this.suspend;
-    }
-    static createMode(mode, data = undefined) {
-        switch (mode) {
-            case "NORMAL":
-                return new NormalMode(NORMAL_KEY_MAP, data);
-            case "INSERT":
-                return new InsertMode(INSERT_KEY_MAP, data);
-            case "HINT":
-                return new HintMode(data);
-            case "VISUAL":
-                return new VisualMode(VISUAL_KEY_MAP, data);
-            case "CARET":
-                return new CaretMode(VISUAL_KEY_MAP, data);
-            case "EX":
-                return new ExMode(data);
-            case "SEARCH":
-                return new SearchMode(data);
-            default:
-                console.assert(false, "never reach here");
-                return new NormalMode(NORMAL_KEY_MAP, );
-        }
-    }
-}
-
 class FrameInfo {
     constructor(selfFrameId, port) {
+        this.suspend = false;
         this.selfFrameId = selfFrameId;
         this.port = port;
         this.childFrameIdMap = new Map();
@@ -192,6 +143,12 @@ class FrameInfo {
             this._unregisterToParent();
         }, { capture: true, once: true });
         this._startRegisterToParent();
+    }
+    isSuspend() {
+        return this.suspend;
+    }
+    toggleSuspend() {
+        this.suspend = !this.suspend;
     }
     getSelfFrameId() {
         return this.selfFrameId;
@@ -210,10 +167,6 @@ class FrameInfo {
     }
     sendMessage(msg) {
         return this.port.sendMessage(msg);
-    }
-    forwardMessage(frameId, msg) {
-        return this.sendMessage(
-            { command: 'forwardCommand', frameId: frameId, data: msg });
     }
 
     _startRegisterToParent() {
@@ -286,8 +239,9 @@ class FrameInfo {
     }
 }
 
-class NormalMode {
-    constructor(keyMap, keyList=undefined) {
+class NormalMode extends Mode {
+    constructor(frameInfo, keyMap, keyList=undefined) {
+        super(frameInfo);
         this.count = "0";
         this.lastCmd = [undefined, undefined];
         this.mapper = Utils.makeCommandMapper(keyMap);
@@ -334,10 +288,13 @@ class NormalMode {
         this._resetState();
         const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
         if (cmdDesc.background) {
-            gFrameMgr.postMessage({ command: cmdName, count: count });
+            super.postMessage({ command: cmdName, count: count });
         }
-        else if (cmdDesc.topFrame && !gFrameMgr.isTopFrame()) {
-            gFrameMgr.forwardMessage(0, { command: cmdName, count: count });
+        else if (cmdDesc.topFrame && !super.frameInfo.isTopFrame()) {
+            super.postMessage({
+                command: 'forwardCommand', frameId: 0,
+                data: { command: cmdName, count: count }
+            });
         }
         else {
             FrontendCommand[cmdName](count, this);
@@ -423,7 +380,7 @@ class InsertCommand {
         const inputs = DomUtils.getInputList(document);
         const index = inputs.indexOf(mode.getElement());
         if (index === -1) return;
-        gModeMgr.changeMode("INSERT", {
+        mode.changeMode("INSERT", {
             editableElement: inputs[(index - 1 + inputs.length) % inputs.length]
         });
     }
@@ -431,16 +388,17 @@ class InsertCommand {
         const inputs = DomUtils.getInputList(document);
         const index = inputs.indexOf(mode.getElement());
         if (index === -1) return;
-        gModeMgr.changeMode("INSERT", {
+        mode.changeMode("INSERT", {
             editableElement: inputs[(index + 1) % inputs.length]
         });
     }
-    static toNormalMode() {
-        gModeMgr.changeMode("NORMAL");
+    static toNormalMode(count, mode) {
+        mode.changeMode("NORMAL");
     }
 }
-class InsertMode {
-    constructor(keyMap, data) {
+class InsertMode extends Mode {
+    constructor(frameInfo, keyMap, data) {
+        super(frameInfo);
         this.mapper = Utils.makeCommandMapper(keyMap);
         this.lastFocusedElem = data.lastFocusedElem;
         this.editableElement = data.editableElement;
@@ -449,14 +407,14 @@ class InsertMode {
         this.editableElement.classList.add("wimpulation-input");
         this.freeze = false;
         if (document.activeElement !== this.editableElement) {
-            setTimeout(() => InsertCommand.toNormalMode(), 0);
+            setTimeout(() => InsertCommand.toNormalMode(0, this), 0);
             return;
         }
         this.blurHandler = (e) => {
             if (this.freeze) {
                 return;
             }
-            InsertCommand.toNormalMode();
+            InsertCommand.toNormalMode(0, this);
         };
         this.editableElement.addEventListener("blur", this.blurHandler, true);
     }
@@ -500,8 +458,9 @@ class InsertMode {
     }
 }
 
-class ConsoleMode {
-    constructor(option) {
+class ConsoleMode extends Mode {
+    constructor(frameInfo, option) {
+        super(frameInfo);
         this.lastFocusedElem = document.activeElement;
         this.lastFocusedElem.blur();
         const div = document.createElement("div");
@@ -553,30 +512,31 @@ class MessageCommand {
             top: 0, left: 0,
             bottom: window.innerHeight, rigth: window.innerWidth
         };
-        return makeHints(msg.pattern, msg.isFocusType, winArea, gFrameMgr);
+        return makeHints(
+            msg.pattern, msg.isFocusType, winArea, gMode.frameInfo);
     }
     static forwardHintCommand(msg) {
-        if (!gModeMgr.isHintMode()) {
+        if (!(gMode instanceof HintMode)) {
             return Promise.reject('no hint mode');
         }
         const data = msg.data;
-        return gModeMgr.getMode().dispatch(data);
+        return gMode.dispatch(data);
     }
     static forwardCommand(msg, sneder) {
         const data = msg.data;
-        FrontendCommand[data.command](data.count, gModeMgr.getMode());
+        FrontendCommand[data.command](data.count, gMode);
     }
     static collectFrameId(msg) {
         const frameIdList = Array.from(window.frames)
-            .map((frame) => gFrameMgr.getChildFrameId(frame))
+            .map((frame) => gMode.frameInfo.getChildFrameId(frame))
             .filter((frameId) => frameId !== undefined);
         return Promise.all(
-            frameIdList.map((frameId) => gFrameMgr.sendMessage({
+            frameIdList.map((frameId) => gMode.sendMessage({
                 command: "collectFrameId", frameId: frameId
             }))
         ).then((idListList) => idListList.reduce(
             (list, idList) => list.concat(idList),
-            [ gFrameMgr.getSelfFrameId() ]));
+            [ gMode.frameInfo.getSelfFrameId() ]));
     }
     static focusFrame(msg) {
         if (document.body instanceof HTMLFrameSetElement &&
@@ -610,27 +570,25 @@ function keyHandler(keyEvent) {
     }
 
     if (key === '<C-Z>') {
-        gModeMgr.toggleSuspend();
+        gMode.frameInfo.toggleSuspend();
         return;
     }
-    if (gModeMgr.isSuspend()) {
+    if (gMode.frameInfo.isSuspend()) {
         return;
     }
 
     if (key.endsWith("Esc>")) {
-        gFrameMgr.postMessage({ command: "toNormalMode" });
+        gMode.postMessage({ command: "toNormalMode" });
         return;
     }
 
-    if (gModeMgr.getMode().handle(key)) {
+    if (gMode.handle(key)) {
         keyEvent.preventDefault();
         keyEvent.stopPropagation();
     }
 }
 
 function init() {
-    gModeMgr = new ModeManager("NORMAL");
-    window.addEventListener("keydown", keyHandler, true);
     const reconnectTimeout = 500;
     connectToBackGround(reconnectTimeout);
 }
@@ -639,16 +597,17 @@ function connectToBackGround(reconnectTimeout) {
     const port = new Port(browser.runtime.connect({ name: "wimpulation" }));
     const handleNotification = (msg) => {
         if (msg.command === "registerFrameId") {
-            gFrameMgr = new FrameInfo(msg.frameId, port);
-            gModeMgr.changeMode(msg.mode);
+            gMode = Mode.createMode(msg.mode, new FrameInfo(msg.frameId, port));
+            window.addEventListener("keydown", keyHandler, true);
             window.addEventListener("unload", (evt) => {
+                console.debug(
+                    `${gMode.frameInfo.getSelfFrameId()}: port disconnect`);
                 port.disconnect();
-                gModeMgr.resetMode();
-                console.debug(`${gFrameMgr.getSelfFrameId()}: port disconnect`);
+                gMode.reset();
             }, { capture: true, once : true });
         }
         else if (msg.command === "changeMode") {
-            gModeMgr.changeMode(msg.mode, msg.data);
+            gMode.changeMode(msg.mode, msg.data);
         }
     };
     const handleRequest = (msg, sender) => {
@@ -664,7 +623,7 @@ function connectToBackGround(reconnectTimeout) {
     port.onRequest.addListener(handleRequest);
     port.onDisconnect.addListener((port, error) => {
         console.debug("Port disconnected:", error.toString());
-        if (gFrameMgr === undefined) {
+        if (gMode === undefined) {
             // reconnect because background may not listen yet
             window.setTimeout(
                 connectToBackGround.bind(
@@ -672,7 +631,7 @@ function connectToBackGround(reconnectTimeout) {
                 reconnectTimeout);
         }
         else {
-            gModeMgr.resetMode();
+            gMode.reset();
         }
         // avoid circular reference
         port.onRequest.removeListener(handleRequest);

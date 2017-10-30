@@ -14,14 +14,14 @@ class VisualCommand {
         selection.setBaseAndExtent(
             focusNode, focusOffset, anchorNode, anchorOffset);
     }
-    static toCaretMode(selection) {
-        gModeMgr.changeMode("CARET");
+    static toCaretMode(selection, mode) {
+        mode.changeMode("CARET");
     }
-    static toVisualMode(selection) {
-        gModeMgr.changeMode("VISUAL");
+    static toVisualMode(selection, mode) {
+        mode.changeMode("VISUAL");
     }
-    static toNormalMode(selection) {
-        gModeMgr.changeMode("NORMAL");
+    static toNormalMode(selection, mode) {
+        mode.changeMode("NORMAL");
     }
 }
 
@@ -29,11 +29,12 @@ class VisualCommand {
  * Classes derived from this class must implements init and selectionModify
  * methods.
  */
-class VisualModeBase {
-    constructor(keyMap, data) {
+class VisualModeBase extends Mode {
+    constructor(frameInfo, keyMap, data) {
+        super(frameInfo);
         const selection  = window.getSelection();
         if (selection.rangeCount === 0) {
-            setTimeout(() => gModeMgr.changeMode("NORMAL"), 0);
+            setTimeout(() => super.changeMode("NORMAL"), 0);
             return;
         }
         this.selection = selection;

@@ -101,13 +101,13 @@ class FrontendCommand {
         window.scrollTo(window.scrollX, window.scrollMaxY * count / 100);
     }
     static scrollMiddle(count, mode) {
-        FrontendCommand.scrollPercent(50);
+        FrontendCommand.scrollPercent(50, mode);
     }
 
     /**
      * Commands for focus manipulation
      */
-    static focusTopFrame() {
+    static focusTopFrame(count, mode) {
         const a = document.createElement("a");
         a.style.position = "absolute";
         a.style.top = window.scrollY + "px";
@@ -141,7 +141,7 @@ class FrontendCommand {
     /**
      * Commands for search
      **/
-    static findNextPage(count) {
+    static findNextPage(count, mode) {
         const NEXT_KEYWORDS = [
             "次のページ", "次へ", "次ページ", "NEXT", ">>", "»"
         ];
@@ -150,7 +150,7 @@ class FrontendCommand {
             if (window.find(key, false, true, true, true)) break;
         }
     }
-    static findPreviousPage(count) {
+    static findPreviousPage(count, mode) {
         const PREVIOUS_KEYWORDS = [
             "前のページ", "前へ", "前ページ", "PREV", "<<", "«"
         ];
@@ -163,18 +163,18 @@ class FrontendCommand {
     /**
      * Commands for page load manipulation
      */
-    static stopLoad(count) {
+    static stopLoad(count, mode) {
         window.stop();
     }
 
     /**
      * Commands for page history
      */
-    static back(count) {
+    static back(count, mode) {
         // TODO
         history.go(-Math.min(Math.max(count, 1), history.length - 1));
     }
-    static forward(count) {
+    static forward(count, mode) {
         // TODO
         history.go(Math.min(Math.max(count, 1), history.length - 1));
     }
@@ -182,13 +182,13 @@ class FrontendCommand {
     /**
      * Commands for URL edit
      */
-    static incrementURL(count) {
+    static incrementURL(count, mode) {
         incrementURL(location, Math.max(count, 1));
     }
-    static decrementURL(count) {
+    static decrementURL(count, mode) {
         incrementURL(location, -Math.max(count, 1));
     }
-    static goToParent(count) {
+    static goToParent(count, mode) {
         const path = location.pathname;
         if (path === "/") {
             return;
@@ -197,14 +197,14 @@ class FrontendCommand {
         pathList.length -= Math.max(1, Math.min(count, pathList.length));
         location.href = location.origin + pathList.join("/");
     }
-    static goToRoot(count) {
+    static goToRoot(count, mode) {
         location.href = location.origin;
     }
 
     /**
      * Commands for video manipulation
      */
-    static playOrPause() {
+    static playOrPause(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -216,21 +216,21 @@ class FrontendCommand {
             video.pause();
         }
     }
-    static volumeUp(count) {
+    static volumeUp(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.volume = Math.min(video.volume + Math.max(1, count) / 100, 1.0);
     }
-    static volumeDown(count) {
+    static volumeDown(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.volume = Math.max(video.volume - Math.max(1, count) / 100, 0.0);
     }
-    static seekForward(count) {
+    static seekForward(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -240,7 +240,7 @@ class FrontendCommand {
         }
         video.currentTime = Math.min(video.currentTime + count, video.duration);
     }
-    static seekBack(count) {
+    static seekBack(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -250,21 +250,21 @@ class FrontendCommand {
         }
         video.currentTime = Math.max(video.currentTime - count, 0);
     }
-    static switchLoop() {
+    static switchLoop(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.loop = !video.loop;
     }
-    static reloadVideo() {
+    static reloadVideo(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.load();
     }
-    static showVideInfo() {
+    static showVideInfo(count, mode) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -292,22 +292,22 @@ Loop: ${video.loop}`
     /**
      * Commands for current frame
      **/
-    static stopLoadFrame() {
+    static stopLoadFrame(count, mode) {
         window.stop();
     }
-    static reloadFrame() {
+    static reloadFrame(count, mode) {
         location.reload();
     }
-    static incrementFrameURL(count) {
+    static incrementFrameURL(count, mode) {
         incrementURL(location, Math.max(count, 1));
     }
-    static decrementFrameURL(count) {
+    static decrementFrameURL(count, mode) {
         incrementURL(location, -Math.max(count, 1));
     }
-    static yankFrameURL() {
+    static yankFrameURL(count, mode) {
         DomUtils.setToClipboard(location.href);
     }
-    static showFrameURL() {
+    static showFrameURL(count, mode) {
         alert("Title: " + document.title + "\n" + "URL: " + location.href);
     }
 
@@ -320,7 +320,7 @@ Loop: ${video.loop}`
         if (!url) {
             return false;
         }
-        gFrameMgr.postMessage({ command: 'openLink', url: url });
+        mode.postMessage({ command: 'openLink', url: url });
         return true;
     }
     static openLinkInTab(count, mode) {
@@ -330,7 +330,7 @@ Loop: ${video.loop}`
             return false;
         }
         const active = (count === 0);
-        gFrameMgr.postMessage(
+        mode.postMessage(
             { command: 'openLinkInTab', url: url, active: active });
         return true;
     }
@@ -343,13 +343,13 @@ Loop: ${video.loop}`
         DomUtils.setToClipboard(url);
         return true;
     }
-    static downloadLink(tabId, mode) {
+    static downloadLink(count, mode) {
         const elem = mode.getElement();
         const url = getLink(elem);
         if (!url) {
             return false;
         }
-        gFrameMgr.postMessage({ command: 'downloadLink', url: url });
+        mode.postMessage({ command: 'downloadLink', url: url });
         return true;
     }
     static pressEnter(count, mode) {
@@ -400,7 +400,7 @@ Loop: ${video.loop}`
             elem, "mousemove", 1, false, false, false, false);
     }
 
-    static yankCurrentURL() {
+    static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);
     }
     static repeatLastCommand(count, mode) {
@@ -408,7 +408,7 @@ Loop: ${video.loop}`
         if (func === undefined) {
             return;
         }
-        func(count !== 0 ? count : cnt);
+        func(count !== 0 ? count : cnt, mode);
     }
 
     /**
@@ -417,65 +417,64 @@ Loop: ${video.loop}`
     static toInsertMode(count, mode) {
         const target = mode.getElement();
         if (!DomUtils.isEditable(target)) {
-            return FrontendCommand.toInsertModeOnFirstElement(count);
+            return FrontendCommand.toInsertModeOnFirstElement(count, mode);
         }
-        gModeMgr.changeMode("INSERT", {
+        mode.changeMode("INSERT", {
             lastFocusedElem: undefined,
             editableElement: target
         });
     }
-    static toInsertModeOnFirstElement(count) {
+    static toInsertModeOnFirstElement(count, mode) {
         const inputs = DomUtils.getInputList(document);
         if (inputs.length === 0) {
             return;
         }
         const target = inputs[Math.min(count, inputs.length - 1)];
-        gModeMgr.changeMode("INSERT", {
+        mode.changeMode("INSERT", {
             lastFocusedElem: document.activeElement,
             editableElement: target
         });
     }
-    static toInsertModeOnLastElement(count) {
-        FrontendCommand.toInsertModeOnFirstElement(100000);
+    static toInsertModeOnLastElement(count, mode) {
+        FrontendCommand.toInsertModeOnFirstElement(100000, mode);
     }
-    static toHintMode() {
-        gFrameMgr.postMessage({ command: "toHintMode", type: "link" });
+    static toHintMode(count, mode) {
+        mode.postMessage({ command: "toHintMode", type: "link" });
     }
-    static toHintFocusMode() {
-        gFrameMgr.postMessage({ command: "toHintMode", type: "focus" });
+    static toHintFocusMode(count, mode) {
+        mode.postMessage({ command: "toHintMode", type: "focus" });
     }
-    static toHintMediaMode() {
-        gFrameMgr.postMessage({ command: "toHintMode", type: "media" });
+    static toHintMediaMode(count, mode) {
+        mode.postMessage({ command: "toHintMode", type: "media" });
     }
-    static toVisualMode() {
-        gModeMgr.changeMode("VISUAL");
+    static toVisualMode(count, mode) {
+        mode.changeMode("VISUAL");
     }
-    static toExMode(defaultValue = "") {
-        gFrameMgr.postMessage({
+    static toExMode(count, mode, defaultValue = "") {
+        mode.postMessage({
             command: "toConsoleMode", mode: "EX", data: defaultValue
         });
     }
-    static toExModeOpen() {
-        FrontendCommand.toExMode("open ");
+    static toExModeOpen(count, mode) {
+        FrontendCommand.toExMode(count, mode, "open ");
     }
-    static toExModeOpenCurrentURL() {
-        FrontendCommand.toExMode("open " + location.href);
+    static toExModeOpenCurrentURL(count, mode) {
+        FrontendCommand.toExMode(count, mode, "open " + location.href);
     }
-    static toExModeTabOpen() {
-        FrontendCommand.toExMode("tabopen ");
+    static toExModeTabOpen(count, mode) {
+        FrontendCommand.toExMode(count, mode, "tabopen ");
     }
-    static toExModeTabOpenCurrentURL() {
-        FrontendCommand.toExMode("tabopen " + location.href);
+    static toExModeTabOpenCurrentURL(count, mode) {
+        FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
     }
-    static toSearchMode(isBackward = false) {
-        gFrameMgr.postMessage({
+    static toSearchMode(count, mode, isBackward = false) {
+        mode.postMessage({
             command: "toConsoleMode", mode: "SEARCH", data: isBackward
         });
     }
-    static toBackwardSearchMode() {
-        FrontendCommand.toSearchMode(true);
+    static toBackwardSearchMode(count, mode) {
+        FrontendCommand.toSearchMode(count, mode, true);
     }
-
 }
 
 function incrementURL(location, count) {

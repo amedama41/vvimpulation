@@ -1,7 +1,8 @@
 var gHintElementList = [];
 
-class HintMode {
-    constructor(labelList) {
+class HintMode extends Mode {
+    constructor(frameInfo, labelList) {
+        super(frameInfo);
         this.hints = gHintElementList;
         gHintElementList = [];
         this.focusIndex = undefined;
@@ -19,22 +20,18 @@ class HintMode {
         this.indexMap = indexMap;
         if (document.querySelectorAll(
             "#wimpulation-hint-container").length > 1) {
-            console.warn(
-                "multiple wimpulation-hint-container",
-                gFrameMgr.getSelfFrameId());
+            const frameId = frameInfo.getSelfFrameId();
+            console.warn("multiple wimpulation-hint-container", frameId);
         }
     }
     handle(key) {
-        gFrameMgr.postMessage({ command: "forwardHintKeyEvent", key: key });
+        super.postMessage({ command: "forwardHintKeyEvent", key: key });
         return true;
     }
     reset() {
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
             container.parentNode.removeChild(container);
-        }
-        else {
-            console.log("missing container", gFrameMgr.getSelfFrameId());
         }
     }
     getElement() {
@@ -103,14 +100,14 @@ function isAncestorVisible(elem, rect) {
     }
     return true;
 }
-function makeHints(pattern, isFocusType, winArea, frameMgr) {
+function makeHints(pattern, isFocusType, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
 
     const idOrPromiseList = [];
     const hints = [];
 
-    const selfFrameId = frameMgr.getSelfFrameId();
+    const selfFrameId = frameInfo.getSelfFrameId();
 
     const scrX = win.scrollX, scrY = win.scrollY;
     const elems = win.document.querySelectorAll("frame, iframe, " + pattern);
@@ -142,15 +139,15 @@ function makeHints(pattern, isFocusType, winArea, frameMgr) {
             hints.push([span, elem]);
             idOrPromiseList.push(selfFrameId);
         }
-        if (isFrame && frameMgr.isRegistered(elem.contentWindow)) {
-            const frameId = frameMgr.getChildFrameId(elem.contentWindow);
+        if (isFrame && frameInfo.isRegistered(elem.contentWindow)) {
+            const frameId = frameInfo.getChildFrameId(elem.contentWindow);
             const frameArea = {
                 top: Math.max(winArea.top - rect.top, 0),
                 left: Math.max(winArea.left - rect.left, 0),
                 bottom: Math.min(winArea.bottom - rect.top, rect.height),
                 right: Math.min(winArea.right - rect.left, rect.width)
             };
-            idOrPromiseList.push(frameMgr.sendMessage({
+            idOrPromiseList.push(frameInfo.sendMessage({
                 command: "collectHint",
                 pattern: pattern, isFocusType: isFocusType, area: frameArea,
                 frameId: frameId

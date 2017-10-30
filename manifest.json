@@ -35,6 +35,7 @@
                 "common/port.js",
                 "content_scripts/command.js",
                 "content_scripts/frontend_command.js",
+                "content_scripts/mode.js",
                 "content_scripts/hint_mode.js",
                 "content_scripts/visual_mode.js",
                 "content_scripts/wimpulation.js"
