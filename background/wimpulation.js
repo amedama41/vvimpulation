@@ -372,14 +372,14 @@ class Command {
                 .then((frameIdList) => {
                     gFindCache.set(tabId, [msg.keyword, 0, frameIdList]);
                     return findAllFrame(
-                        tabId, msg.keyword, 0, frameIdList, false);
+                        tabId, msg.keyword, 0, frameIdList, msg.backward);
                 });
         }
         else {
             const [keyword, index, frameIdList] = cache;
             const startIndex = (keyword === msg.keyword ? index : 0);
             return findAllFrame(
-                tabId, msg.keyword, startIndex, frameIdList, false)
+                tabId, msg.keyword, startIndex, frameIdList, msg.backward)
         }
     }
     static findNext(msg, sender) {
