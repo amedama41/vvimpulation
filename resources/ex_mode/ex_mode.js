@@ -120,14 +120,13 @@ class Completer {
 }
 
 class History {
-    constructor() {
+    constructor(key) {
         this.history = undefined;
         this.index = 0;
         this.candidateHistory = undefined;
-        browser.storage.local.get({ "command_history" : [] }).then(
-            (command_history) => {
-                this.history = command_history["command_history"];
-            });
+        History.load(key).then((result) => {
+            this.history = result[key];
+        });
     }
     reset() {
         this.candidateHistory = undefined;
@@ -154,15 +153,35 @@ class History {
     setPrevious(input) {
         this.select(input, 1);
     }
+    static load(key) {
+        const param = {};
+        param[key] = [];
+        return browser.storage.local.get(param);
+    }
+    static save(key, cmd) {
+        History.load(key).then((result) => {
+            const history = result[key];
+            history.length = Math.min(history.length + 1, 100);
+            history.copyWithin(1, 0, history.length);
+            history[0] = cmd;
+            browser.storage.local.set(result);
+        }).catch ((error) => {
+            console.error("failed to save history:", key, cmd);
+        });
+    }
 };
 
 function search(keyword, backward) {
     browser.runtime.sendMessage({
         command: "find", keyword: keyword, backward: backward
     }).then((result) => {
+        if (result) {
+            History.save("search_history", keyword);
+        }
         ConsoleCommand.closeConsoleMode();
     }).catch((error) => {
         console.error(error);
+        ConsoleCommand.closeConsoleMode();
     });
 }
 
@@ -186,25 +205,29 @@ class ConsoleCommand {
             ConsoleCommand.closeConsoleMode();
             return;
         }
-        if (value.startsWith("/") || value.startsWith("?")) {
-            search(value.substr(1), value.charAt(0) === "?");
+        const prefix = value.charAt(0);
+        if (prefix === "/" || prefix === "?") {
+            search(value.substr(1), prefix === '?');
             return;
         }
 
-        browser.runtime.sendMessage(
-            { command: "execCommand", cmd: value })
-            .then((result) => {
-                if (result) {
-                    if (Array.isArray(result)) {
-                        result = result.join("\n");
-                    }
-                    if (result === true) {
-                        ConsoleCommand.closeConsoleMode();
-                        return;
-                    }
-                    const output = document.querySelector("#ex_output");
-                    output.value = result;
+        browser.runtime.sendMessage({ command: "execCommand", cmd: value })
+            .then(([result, incognito]) => {
+                if (!result) {
+                    return;
                 }
+                if (!incognito) { // TODO
+                    History.save("command_history", value);
+                }
+                if (Array.isArray(result)) {
+                    result = result.join("\n");
+                }
+                if (result === true) {
+                    ConsoleCommand.closeConsoleMode();
+                    return;
+                }
+                const output = document.querySelector("#ex_output");
+                output.value = result;
             });
     }
 
@@ -276,8 +299,8 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-W>": "deleteWordBackward",
     "<C-U>": "deleteToBeggingOfLine",
     "<C-K>": "deleteToEndOfLine",
-    // "<C-N>": "selectNextHistory",
-    // "<C-P>": "selectPreviousHistory",
+    "<C-N>": "selectNextHistory",
+    "<C-P>": "selectPreviousHistory",
     "<C-X><C-D>": "clearAllHistory",
     "<C-C>": "closeConsoleMode",
 });
@@ -293,10 +316,12 @@ class ConsoleMode {
         const container = document.getElementById("ex_candidates");
         container.style.maxHeight = (window.innerHeight - 100) + "px";
         this.completer = new Completer(container);
-        this.history = new History();
 
-        this.mapper = Utils.makeCommandMapper(
-            this.isSearch() ? SEARCH_CMD_MAP : EX_CMD_MAP);
+        const isSearch = this.isSearch();
+        this.history =
+            new History(isSearch ? "search_history" : "command_history");
+        this.mapper =
+            Utils.makeCommandMapper(isSearch ? SEARCH_CMD_MAP : EX_CMD_MAP);
     }
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);

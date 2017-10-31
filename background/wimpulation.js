@@ -533,18 +533,11 @@ class Command {
     static execCommand(msg, sender, sendResponse) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             gExCommandMap.execCommand(msg.cmd, tab).then((result) => {
-                if (!tab.incognito) { // TODO
-                    browser.storage.local.get({ "command_history": [] }).then(
-                        (command_history) => {
-                            const history = command_history["command_history"];
-                            history.length = Math.min(history.length + 1, 100);
-                            history.copyWithin(1, 0, history.length);
-                            history[0] = msg.cmd;
-                            browser.storage.local.set(command_history);
-                        });
-                }
-                sendResponse(result)
-            }, sendResponse);
+                sendResponse([result, tab.incognito])
+            }).catch((error) => {
+                console.log(error);
+                return [false, tab.incognito];
+            });
         });
         return true;
     }
