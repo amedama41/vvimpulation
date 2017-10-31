@@ -541,9 +541,15 @@ class MessageCommand {
         // reset selection in order to search from head or end of page.
         if (msg.reset) {
             const selection = window.getSelection();
+            const body = document.body || document.documentElement;
             if (msg.backward) {
-                selection.selectAllChildren(document.body);
-                selection.collapseToEnd();
+                const walker =
+                    document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+                const text = walker.lastChild();
+                if (text) {
+                    const length = text.length;
+                    selection.setBaseAndExtent(text, length, text, length);
+                }
             }
             else {
                 const body = document.body || document.documentElement;
