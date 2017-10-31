@@ -556,7 +556,7 @@ class MessageCommand {
                 selection.setBaseAndExtent(body, 0, body, 0);
             }
         }
-        return window.find(msg.keyword, true, msg.backward);
+        return window.find(msg.keyword, false, msg.backward);
     }
 };
 
