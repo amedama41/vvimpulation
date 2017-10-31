@@ -541,22 +541,30 @@ class MessageCommand {
         // reset selection in order to search from head or end of page.
         if (msg.reset) {
             const selection = window.getSelection();
-            const body = document.body || document.documentElement;
-            if (msg.backward) {
-                const walker =
-                    document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
-                const text = walker.lastChild();
-                if (text) {
-                    const length = text.length;
-                    selection.setBaseAndExtent(text, length, text, length);
+            // getSelection for a window with display none style can return null
+            if (selection) {
+                const body = document.body || document.documentElement;
+                if (msg.backward) {
+                    const walker =
+                        document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+                    const text = walker.lastChild();
+                    if (text) {
+                        const length = text.length;
+                        selection.setBaseAndExtent(text, length, text, length);
+                    }
+                }
+                else {
+                    selection.setBaseAndExtent(body, 0, body, 0);
                 }
             }
-            else {
-                const body = document.body || document.documentElement;
-                selection.setBaseAndExtent(body, 0, body, 0);
-            }
         }
-        return window.find(msg.keyword, false, msg.backward);
+        try {
+            return window.find(msg.keyword, false, msg.backward);
+        }
+        catch (e) {
+            // some window (e.g. about:blank) can throw an exception
+            return false;
+        }
     }
 };
 
