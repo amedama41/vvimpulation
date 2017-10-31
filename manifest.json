@@ -49,7 +49,6 @@
 
     "web_accessible_resources": [
         "resources/ex_mode/ex_mode.html",
-        "resources/search_mode/search_mode.html",
         "resources/hint_pattern.json",
         "resources/rm_pattern.json"
     ]

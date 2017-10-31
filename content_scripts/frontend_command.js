@@ -450,9 +450,10 @@ Loop: ${video.loop}`
     static toVisualMode(count, mode) {
         mode.changeMode("VISUAL");
     }
-    static toExMode(count, mode, defaultValue = "") {
+    static toExMode(count, mode, defaultCommand="") {
         mode.postMessage({
-            command: "toConsoleMode", mode: "EX", data: defaultValue
+            command: "toConsoleMode",
+            data: { defaultCommand: defaultCommand, prompt: ':' }
         });
     }
     static toExModeOpen(count, mode) {
@@ -467,9 +468,10 @@ Loop: ${video.loop}`
     static toExModeTabOpenCurrentURL(count, mode) {
         FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
     }
-    static toSearchMode(count, mode, isBackward = false) {
+    static toSearchMode(count, mode, isBackward=false) {
         mode.postMessage({
-            command: "toConsoleMode", mode: "SEARCH", data: isBackward
+            command: "toConsoleMode",
+            data: { defaultCommand: '', prompt: (isBackward ? '?' : '/') }
         });
     }
     static toBackwardSearchMode(count, mode) {

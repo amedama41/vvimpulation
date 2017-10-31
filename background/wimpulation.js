@@ -564,10 +564,13 @@ class Command {
         if (!tabInfo) {
             return;
         }
-        const mode = msg.mode;
+        const mode = "CONSOLE";
         tabInfo.setMode(mode);
         tabInfo.postMessage(
             0, { command: "changeMode", mode: mode, data: msg.data });
+    }
+    static showConsole(msg, sender) {
+        return sendTabMessage(sender.tab.id, 0, msg);
     }
 }
 

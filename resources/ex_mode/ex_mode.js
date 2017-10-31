@@ -119,7 +119,7 @@ class Completer {
     }
 }
 
-const gHistory = new (class {
+class History {
     constructor() {
         this.history = undefined;
         this.index = 0;
@@ -154,37 +154,52 @@ const gHistory = new (class {
     setPrevious(input) {
         this.select(input, 1);
     }
-})();
+};
 
-class ExCommand {
-    static closeExMode() {
+function search(keyword, backward) {
+    browser.runtime.sendMessage({
+        command: "find", keyword: keyword, backward: backward
+    }).then((result) => {
+        ConsoleCommand.closeConsoleMode();
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+class ConsoleCommand {
+    static closeConsoleMode() {
         browser.runtime.sendMessage({ command: "toNormalMode" });
     }
 
-    static execCommand(input, output) {
-        const value = input.value;
+    static execSearch(mode) {
+        const value = mode.getTarget().value;
         if (value === "") {
-            ExCommand.closeExMode();
+            ConsoleCommand.closeConsoleMode();
             return;
         }
-        if (value.startsWith("/") && value.length > 1) {
-            browser.runtime.sendMessage({
-                command: "find", keyword: value.substr(1), backward: false
-            }).then((result) => {
-                ExCommand.closeExMode();
-            });
+        search(value, mode.isBackward());
+    }
+
+    static execCommand(mode) {
+        const value = mode.getTarget().value;
+        if (value === "") {
+            ConsoleCommand.closeConsoleMode();
+            return;
+        }
+        if (value.startsWith("/") || value.startsWith("?")) {
+            search(value.substr(1), value.charAt(0) === "?");
             return;
         }
 
         browser.runtime.sendMessage(
-            { command: "execCommand", cmd: input.value })
+            { command: "execCommand", cmd: value })
             .then((result) => {
                 if (result) {
                     if (Array.isArray(result)) {
                         result = result.join("\n");
                     }
                     if (result === true) {
-                        ExCommand.closeExMode();
+                        ConsoleCommand.closeConsoleMode();
                         return;
                     }
                     const output = document.querySelector("#ex_output");
@@ -193,58 +208,50 @@ class ExCommand {
             });
     }
 
-    static selectNextHistory(input, completer) {
-        gHistory.setNext(input);
+    static selectNextHistory(mode) {
+        mode.selectNextHistory();
     }
 
-    static selectPreviousHistory(input, completer) {
-        gHistory.setPrevious(input);
+    static selectPreviousHistory(mode) {
+        mode.selectPreviousHistory();
     }
 
-    static getCandidate(input, completer) {
-        browser.runtime.sendMessage({
-            command: "getCandidate",
-            value: input.value.substring(0, input.selectionStart)
-        }).then((result) => {
-            if (!result) {
-                return;
-            }
-            completer.setCandidates(result);
-        });
+    static getCandidate(mode) {
+        mode.getCandidate();
     }
-    static selectNextHistoryOrCandidate(input, completer) {
-        if (completer.hasCandidates()) {
-            completer.selectNext(input);
+    static selectNextHistoryOrCandidate(mode) {
+        if (mode.hasCandidates()) {
+            mode.selectNextCandidate();
         }
         else {
-            ExCommand.selectNextHistory(input, completer);
+            ConsoleCommand.selectNextHistory(mode);
         }
     }
-    static selectPreviousHistoryOrCandidate(input, completer) {
-        if (completer.hasCandidates()) {
-            completer.selectPrev(input);
+    static selectPreviousHistoryOrCandidate(mode) {
+        if (mode.hasCandidates()) {
+            mode.selectPreviousCandidate();
         }
         else {
-            ExCommand.selectPreviousHistory(input, completer);
+            ConsoleCommand.selectPreviousHistory(mode);
         }
     }
     static clearAllHistory() {
         browser.storage.local.remove("command_history");
     }
 
-    static deleteCharBackward(input) {
-        if (!DomUtils.deleteCharBackward(input)) {
-            ExCommand.closeExMode();
+    static deleteCharBackward(mode) {
+        if (!DomUtils.deleteCharBackward(mode.getTarget())) {
+            ConsoleCommand.closeConsoleMode();
         }
     }
-    static deleteWordBackward(input) {
-        DomUtils.deleteWordBackward(input);
+    static deleteWordBackward(mode) {
+        DomUtils.deleteWordBackward(mode.getTarget());
     }
-    static deleteToBeggingOfLine(input) {
-        DomUtils.deleteToBeggingOfLine(input);
+    static deleteToBeggingOfLine(mode) {
+        DomUtils.deleteToBeggingOfLine(mode.getTarget());
     }
-    static deleteToEndOfLine(input) {
-        DomUtils.deleteToEndOfLine(input);
+    static deleteToEndOfLine(mode) {
+        DomUtils.deleteToEndOfLine(mode.getTarget());
     }
 }
 
@@ -260,54 +267,117 @@ const EX_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-N>": "selectNextHistoryOrCandidate",
     "<C-P>": "selectPreviousHistoryOrCandidate",
     "<C-X><C-D>": "clearAllHistory",
-    "<C-C>": "closeExMode",
+    "<C-C>": "closeConsoleMode",
 });
+const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
+    "<Enter>": "execSearch",
+    "<C-M>": "execSearch",
+    "<C-H>": "deleteCharBackward",
+    "<C-W>": "deleteWordBackward",
+    "<C-U>": "deleteToBeggingOfLine",
+    "<C-K>": "deleteToEndOfLine",
+    // "<C-N>": "selectNextHistory",
+    // "<C-P>": "selectPreviousHistory",
+    "<C-X><C-D>": "clearAllHistory",
+    "<C-C>": "closeConsoleMode",
+});
+class ConsoleMode {
+    constructor(options) {
+        const prompt = document.getElementById("ex_prompt");
+        prompt.textContent = options.prompt;
+        this.prompt = options.prompt;
+
+        this.input = document.getElementById("ex_input");
+        this.input.value = options.defaultCommand;
+
+        const container = document.getElementById("ex_candidates");
+        container.style.maxHeight = (window.innerHeight - 100) + "px";
+        this.completer = new Completer(container);
+        this.history = new History();
+
+        this.mapper = Utils.makeCommandMapper(
+            this.isSearch() ? SEARCH_CMD_MAP : EX_CMD_MAP);
+    }
+    handle(key) {
+        const [consumed, optCmd, cmd] = this.mapper.get(key);
+        const previousValue = this.input.value;
+        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
+        if (!result) {
+            this.history.reset();
+        }
+        if (!this.isSearch()) {
+            if (previousValue !== this.input.value
+                && !cmd.includes("Candidate")) {
+                this.completer.changeCandidates(this.input.value);
+            }
+            else if (!result && key.length === 1) {
+                this.completer.changeCandidates(this.input.value + key);
+            }
+        }
+        return result;
+    }
+    getTarget() {
+        return this.input;
+    }
+    isSearch() {
+        return this.prompt !== ':';
+    }
+    isBackward() {
+        return this.prompt === '?';
+    }
+    hasCandidates() {
+        return this.completer.hasCandidates();
+    }
+    getCandidate() {
+        const target = this.getTarget();
+        browser.runtime.sendMessage({
+            command: "getCandidate",
+            value: target.value.substring(0, target.selectionStart)
+        }).then((result) => {
+            if (!result) {
+                return;
+            }
+            this.completer.setCandidates(result);
+        });
+    }
+    selectNextCandidate() {
+        this.completer.selectNext(this.getTarget());
+    }
+    selectPreviousCandidate() {
+        this.completer.selectPrev(this.getTarget());
+    }
+    selectNextHistory() {
+        this.history.setNext(this.getTarget());
+    }
+    selectPreviousHistory() {
+        this.history.setPrevious(this.getTarget());
+    }
+}
 window.addEventListener("DOMContentLoaded", () => {
-    const input = document.querySelector("#ex_input");
-    const container = document.querySelector("#ex_candidates");
-    container.style.maxHeight = (window.innerHeight - 100) + "px";
-    const completer = new Completer(container);
+    browser.runtime.sendMessage({ command: 'showConsole' }).then((options) => {
+        const mode = new ConsoleMode(options);
+        const input = mode.getTarget();
+        input.addEventListener("keydown", (e) => {
+            const key = Utils.getRegulatedKey(e);
+            if (!key) {
+                return;
+            }
 
-    const invokeCommand = (cmd) => !ExCommand[cmd](input);
-    const mapper = Utils.makeCommandMapper(EX_CMD_MAP);
-    input.addEventListener("keydown", (e) => {
-        const key = Utils.getRegulatedKey(e);
-        if (!key) {
-            return;
-        }
+            // console.debug(e.type, key, e.defaultPrevented);
+            if (key.endsWith("Esc>") || key === "<C-[>") {
+                ConsoleCommand.closeConsoleMode();
+            };
+            if (mode.handle(key)) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        });
 
-        // console.debug(e.type, key, e.defaultPrevented);
-        if (key.endsWith("Esc>") || key === "<C-[>") {
-            ExCommand.closeExMode();
-        };
-        const [consumed, optCmd, cmd] = mapper.get(key);
-        const previousValue = input.value;
-        const result = cmd ? !ExCommand[cmd](input, completer) : consumed;
-        if (result) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        else {
-            gHistory.reset();
-        }
-        if (previousValue !== input.value && !cmd.includes("Candidate")) {
-            completer.changeCandidates(input.value);
-        }
-        else if (!result && key.length === 1) {
-            completer.changeCandidates(input.value + key);
-        }
+        input.focus();
+    }).catch((error) => {
+        console.error(error);
+        ConsoleCommand.closeConsoleMode();
     });
-    // input.addEventListener("blur", (e) => closeExMode());
-
-    browser.storage.local.get("ex_mode_options").then((cmd) => {
-        const defaultValue = cmd["ex_mode_options"];
-        if (defaultValue) {
-            input.value = defaultValue;
-        }
-        browser.storage.local.remove("ex_mode_options");
-    });
-
-    window.focus();
-    input.focus();
+    // input.addEventListener("blur", (e) => closeConsoleMode());
 }, { capture: true, once: true });
 

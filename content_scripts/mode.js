@@ -29,10 +29,8 @@ class Mode {
                 return new VisualMode(frameInfo, VISUAL_KEY_MAP, data);
             case "CARET":
                 return new CaretMode(frameInfo, VISUAL_KEY_MAP, data);
-            case "EX":
-                return new ExMode(frameInfo, data);
-            case "SEARCH":
-                return new SearchMode(frameInfo, data);
+            case "CONSOLE":
+                return new ConsoleMode(frameInfo, data);
             default:
                 console.assert(false, "never reach here");
                 return new NormalMode(frameInfo, NORMAL_KEY_MAP);

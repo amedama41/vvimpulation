@@ -459,18 +459,18 @@ class InsertMode extends Mode {
 }
 
 class ConsoleMode extends Mode {
-    constructor(frameInfo, option) {
+    constructor(frameInfo, options) {
         super(frameInfo);
+        this.options = options;
         this.lastFocusedElem = document.activeElement;
         this.lastFocusedElem.blur();
         const div = document.createElement("div");
         div.id = "wimpulation-console-container";
+        div.style.display = 'none';
         const iframe = document.createElement("iframe");
         iframe.id = "wimpulation-console";
-        this.prepare(option);
-        iframe.src = this.getSrc(option);
+        iframe.src = browser.runtime.getURL("resources/ex_mode/ex_mode.html");
         div.appendChild(iframe);
-
         this.container = div;
         document.documentElement.appendChild(this.container);
     }
@@ -485,24 +485,9 @@ class ConsoleMode extends Mode {
     }
     handle() {
     }
-}
-class ExMode extends ConsoleMode {
-    prepare(defaultValue) {
-        if (defaultValue) {
-            browser.storage.local.set({ "ex_mode_options": defaultValue });
-        }
-    }
-    getSrc() {
-        return browser.runtime.getURL("resources/ex_mode/ex_mode.html");
-    }
-}
-class SearchMode extends ConsoleMode {
-    prepare(option) {
-    }
-    getSrc(isBackward) {
-        const url = browser.runtime.getURL(
-            "resources/search_mode/search_mode.html");
-        return `${url}?isBackward=${isBackward}`;
+    showConsole() {
+        this.container.style.display = 'inline';
+        return this.options;
     }
 }
 
@@ -525,6 +510,12 @@ class MessageCommand {
     static forwardCommand(msg, sneder) {
         const data = msg.data;
         FrontendCommand[data.command](data.count, gMode);
+    }
+    static showConsole(msg, sender) {
+        if (!(gMode instanceof ConsoleMode)) {
+            throw new Error('no console mode');
+        }
+        return gMode.showConsole();
     }
     static collectFrameId(msg) {
         const frameIdList = Array.from(window.frames)
