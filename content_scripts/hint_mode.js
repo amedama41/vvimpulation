@@ -105,6 +105,51 @@ function getRectsInAncestorVisibleArea(elem, rectList) {
     }
     return rectList;
 }
+function getRectsOfAreaElement(area) {
+    const rect = area.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) { // if area's display is none
+        return [];
+    }
+    switch (area.shape) {
+        case "rect": {
+            const coords = area.coords.split(",").map((c) => parseInt(c, 10));
+            return [{
+                left: rect.left + coords[0],
+                top: rect.top + coords[1],
+                right: rect.left + coords[2],
+                bottom: rect.top + coords[3]
+            }];
+        }
+        case "circle": {
+            const [x, y, r] =
+                area.coords.split(",").map((c) => parseInt(c, 10));
+            return [{
+                left: rect.left + x - r,
+                top: rect.top + y - r,
+                right: rect.left + x + r,
+                bottom: rect.top + y + r
+            }];
+        }
+        case "poly": {
+            let [minX, minY, maxX, maxY, ...coords] =
+                area.coords.split(",").map((c) => parseInt(c, 10));
+            for (let i = 0; i < coords.length; i += 4) {
+                minX = Math.min(minX, coords[i + 0]);
+                minY = Math.min(minY, coords[i + 1]);
+                maxX = Math.max(maxX, coords[i + 2]);
+                maxY = Math.max(maxY, coords[i + 3]);
+            }
+            return [{
+                left: rect.left + minX,
+                top: rect.top + minY,
+                right: rect.left + maxX,
+                bottom: rect.top + maxY
+            }];
+        }
+        default:
+            return [rect];
+    }
+}
 function makeHints(pattern, isFocusType, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
@@ -119,14 +164,17 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
 
+        const isAreaElem = (elem instanceof HTMLAreaElement);
         // use getClientRects instead of getBoundingClientRect in order to
         // acquire the collect position for text wrapped elements.
-        let rectList = getRectsInArea(elem.getClientRects(), winArea);
+        let rectList =
+            (isAreaElem ? getRectsOfAreaElement(elem) : elem.getClientRects());
+        rectList = getRectsInArea(rectList, winArea);
         if (rectList.length === 0) {
             continue;
         }
         const style = win.getComputedStyle(elem, null);
-        if (style.visibility !== "visible" || style.display === "none") {
+        if (style.visibility !== "visible") {
             continue;
         }
         const tagName = elem.tagName.toUpperCase();
@@ -134,10 +182,12 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
-        // if some of ancestors are scrollable, elem may not be displayed.
-        rectList = getRectsInAncestorVisibleArea(elem, rectList)
-        if (rectList.length === 0) {
-            continue;
+        if (!isAreaElem) {
+            // if some of ancestors are scrollable, elem may not be displayed.
+            rectList = getRectsInAncestorVisibleArea(elem, rectList)
+            if (rectList.length === 0) {
+                continue;
+            }
         }
 
         const rect = rectList[0];
