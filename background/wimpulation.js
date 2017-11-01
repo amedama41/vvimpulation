@@ -323,24 +323,24 @@ function findAllFrame(tabId, keyword, startIndex, frameIdList, backward) {
     const msg = { command: "find", keyword: keyword, backward: backward };
     const diff = (backward ? -1 : 1);
     const length = frameIdList.length;
-    const findFrame = (index, reset) => {
-        msg.reset = reset;
+    const findFrame = (i) => {
+        const index = (startIndex + i * diff + length) % length;
+        msg.reset = (i !== 0);
         return sendTabMessage(tabId, frameIdList[index], msg).then((result) => {
             if (result) {
                 gFindCache.set(tabId, [keyword, index, frameIdList]);
                 return true;
             }
+            if (i === length) {
+                gFindCache.set(tabId, [keyword, 0, frameIdList]);
+                return false;
+            }
             else {
-                index = (index + length + diff) % length;
-                if (index === startIndex) {
-                    gFindCache.set(tabId, [keyword, 0, frameIdList]);
-                    return false;
-                }
-                return findFrame(index, true);
+                return findFrame(i + 1);
             }
         })
     };
-    return findFrame(startIndex, false);
+    return findFrame(0);
 }
 class Command {
     static focusNextFrame(msg, sender) {
