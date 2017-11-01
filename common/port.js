@@ -89,37 +89,28 @@ class Port {
         }
     }
     _handleRequest(msg) {
-        try {
-            const promiseList = this.onRequest.handlers.map((handler) => {
-                try {
-                    return Promise.resolve(handler(msg.msg, this.port.sender));
-                }
-                catch (e) {
-                    return Promise.reject(e);
-                }
-            });
-            Promise.race(promiseList).then(
-                (response) => {
-                    this.port.postMessage({
-                        type: 'response', id: msg.id, result: 0, msg: response
-                    });
-                },
-                (error) => {
-                    this.port.postMessage({
-                        type: 'response', id: msg.id, result: 1, msg: error
-                    });
-                });
-        }
-        catch (e) {
+        const promiseList = this.onRequest.handlers.map((handler) => {
             try {
-                this.port.postMessage({
-                    type: 'response', id: msg.id, result: 1, msg: e
-                });
+                return Promise.resolve(handler(msg.msg, this.port.sender));
             }
-            catch (e2) {
-                console.error('failed to send message', e2, e);
+            catch (e if e instanceof Error) {
+                // can not send an Error object by postMessage.
+                return Promise.reject(
+                    e.message + ' ' + e.fileName + ':' + e.lineNumber);
             }
-        }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        });
+        Promise.race(promiseList).then((response) => {
+            this._safePostMessage({
+                type: 'response', id: msg.id, result: 0, msg: response
+            });
+        }).catch((error) => {
+            this._safePostMessage({
+                type: 'response', id: msg.id, result: 1, msg: error
+            });
+        });
     }
     _handleResponse(msg) {
         const pendingInfo = this.pendingTxnMap.get(msg.id);
@@ -155,6 +146,15 @@ class Port {
                 txn[2] = true;
             }
         });
+    }
+    _safePostMessage(msg) {
+        try {
+            this.port.postMessage(msg);
+        }
+        catch (e) {
+            console.error(
+                'failed to send message', e.message, e.fileName, e.lineNumber);
+        }
     }
 }
 
