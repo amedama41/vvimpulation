@@ -82,8 +82,8 @@ class HintMode extends Mode {
     }
 }
 
-function getFirstRectInArea(rectList, area) {
-    return rectList.find((rect) => !isOutOfArea(rect, area));
+function getRectsInArea(rectList, area) {
+    return rectList.filter((rect) => !isOutOfArea(rect, area));
 }
 function isOutOfArea(rect, winArea) {
     if (rect.width === 0 && rect.height === 0) return true;
@@ -92,16 +92,18 @@ function isOutOfArea(rect, winArea) {
         || rect.left > winArea.right
         || rect.right < winArea.left);
 }
-function isAncestorVisible(elem, rect) {
+function getRectsInAncestorVisibleArea(elem, rectList) {
     const root = document.documentElement;
     const body = document.body;
     for (let p = elem.parentNode; p !== root && p !== body; p = p.parentNode) {
         const style = window.getComputedStyle(p, null);
         if (style.overflow === "visible") continue;
-        const pRect = p.getBoundingClientRect();
-        if (isOutOfArea(rect, pRect)) return false;
+        rectList = getRectsInArea(rectList, p.getBoundingClientRect());
+        if (rectList.length === 0) {
+            return [];
+        }
     }
-    return true;
+    return rectList;
 }
 function makeHints(pattern, isFocusType, winArea, frameInfo) {
     const win = window;
@@ -119,12 +121,8 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
 
         // use getClientRects instead of getBoundingClientRect in order to
         // acquire the collect position for text wrapped elements.
-        const rectList = elem.getClientRects();
+        let rectList = getRectsInArea(elem.getClientRects(), winArea);
         if (rectList.length === 0) {
-            continue;
-        }
-        const rect = getFirstRectInArea(rectList, winArea);
-        if (!rect) {
             continue;
         }
         const style = win.getComputedStyle(elem, null);
@@ -136,10 +134,13 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
-        if (!isAncestorVisible(elem, rect)) {
+        // if some of ancestors are scrollable, elem may not be displayed.
+        rectList = getRectsInAncestorVisibleArea(elem, rectList)
+        if (rectList.length === 0) {
             continue;
         }
 
+        const rect = rectList[0];
         if (!isFrame || isFocusType) {
             const span = doc.createElement("span");
             span.style.left = (Math.max(rect.left - 8, 0) + scrX) + "px";
