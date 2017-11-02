@@ -530,16 +530,11 @@ class Command {
         sendTabMessage(sender.tab.id, msg.frameId, msg);
     }
 
-    static execCommand(msg, sender, sendResponse) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
-            gExCommandMap.execCommand(msg.cmd, tab).then((result) => {
-                sendResponse([result, tab.incognito])
-            }).catch((error) => {
-                console.log(error);
-                return [false, tab.incognito];
-            });
+    static execCommand(msg, sender) {
+        return browser.tabs.get(sender.tab.id).then((tab) => {
+            return gExCommandMap.execCommand(msg.cmd, tab)
+                .then((result) => [result, tab.incognito]);
         });
-        return true;
     }
     static getCandidate(msg, sender, sendResponse) {
         browser.tabs.get(sender.tab.id).then((tab) => {

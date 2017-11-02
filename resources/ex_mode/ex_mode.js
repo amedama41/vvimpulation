@@ -213,21 +213,24 @@ class ConsoleCommand {
 
         browser.runtime.sendMessage({ command: "execCommand", cmd: value })
             .then(([result, incognito]) => {
-                if (!result) {
+                if (result === false) {
+                    ConsoleCommand.closeConsoleMode();
                     return;
                 }
                 if (!incognito) { // TODO
                     History.save("command_history", value);
-                }
-                if (Array.isArray(result)) {
-                    result = result.join("\n");
                 }
                 if (result === true) {
                     ConsoleCommand.closeConsoleMode();
                     return;
                 }
                 const output = document.querySelector("#ex_output");
-                output.value = result;
+                output.value =
+                    (Array.isArray(result) ? result.join("\n") : result);
+            })
+            .catch((error) => {
+                const output = document.querySelector("#ex_output");
+                output.value = error;
             });
     }
 

@@ -127,7 +127,7 @@ gExCommandMap.makeCommand("private", (args, tab) => {
         url = "http://" + url;
     }
     browser.windows.create({ url: url, incognito: true });
-    return Promise.reject(true); // always reject to avoid adding to history
+    return Promise.resolve(false); // always reject to avoid adding to history
 }, getHistory);
 class SearchCommand {
     constructor(name, useNewTab) {
