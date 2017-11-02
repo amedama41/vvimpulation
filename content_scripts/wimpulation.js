@@ -475,13 +475,18 @@ class ConsoleMode extends Mode {
         document.documentElement.appendChild(this.container);
     }
     reset() {
+        // Reset focus only when console frame is focused.
+        // If search succeeds or user click elements outside of console,
+        // frame is not focused.
+        if (document.activeElement === this.container.firstChild) {
+            try {
+                this.lastFocusedElem.focus();
+            }
+            catch (e) {
+                console.warn("lastFocusedElem is likely dead:", e);
+            }
+        }
         document.documentElement.removeChild(this.container);
-        try {
-            this.lastFocusedElem.focus();
-        }
-        catch (e) {
-            console.warn("lastFocusedElem is likely dead:", e);
-        }
     }
     handle() {
     }
