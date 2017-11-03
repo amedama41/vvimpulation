@@ -609,15 +609,24 @@ function incrementURL(location, count) {
 
 function getLink(elem) {
     try {
-        if (elem.href !== undefined) {
-            if (elem.href instanceof SVGAnimatedString) {
-                return elem.href.animVal;
+        const link = (() => {
+            if (elem.href) { // anchor, area
+                return elem.href;
             }
-            return elem.href;
-        }
-        if (elem.src !== undefined) {
-            return elem.src;
-        }
+            if (elem.currentSrc) { // video, audio (prefer currentSrc than src)
+                return elem.currentSrc;
+            }
+            if (elem.src) { // img, embed
+                return elem.src;
+            }
+            if (elem.data) { // object
+                return elem.data;
+            }
+            if (elem.toDataURL) { // canvas
+                return elem.toDataURL();
+            }
+        })();
+        return (link instanceof SVGAnimatedString ? link.animVal : link);
     }
     catch (e) {
         console.warn(`Element ${elem} is likely dead:`, e);
