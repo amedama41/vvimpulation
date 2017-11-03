@@ -70,16 +70,10 @@ class TabInfo {
         return port.sendMessage(msg);
     }
 }
-function sendTabMessage(tabId, frameId, msg) {
-    const tabInfo = gTabInfoMap.get(tabId);
-    if (!tabInfo) {
-        return Promise.reject('no tab info: ' + tabId);
-    }
-    return tabInfo.sendMessage(frameId, msg);
-}
-function forwardHintCommand(tabId, frameId, msg) {
-    return sendTabMessage(
-        tabId, frameId, { command: "forwardHintCommand", data: msg });
+
+function forwardHintCommand(tabInfo, frameId, msg) {
+    return tabInfo.sendMessage(
+        frameId, { command: "forwardHintCommand", data: msg });
 }
 const gTabInfoMap = new Map();
 
@@ -115,112 +109,108 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "s": "downloadHintLink",
 });
 class HintCommand {
-    static toNormalMode(tabId, mode) {
-        changeMode(tabId, "NORMAL");
+    static toNormalMode(tabInfo, mode) {
+        changeMode(tabInfo, "NORMAL");
     }
-    static incrementHintNum(tabId, mode) {
-        mode.changeHintNum(mode.getNextIndex(), tabId);
+    static incrementHintNum(tabInfo, mode) {
+        mode.changeHintNum(mode.getNextIndex(), tabInfo);
     }
-    static decrementHintNum(tabId, mode) {
-        mode.changeHintNum(mode.getPreviousIndex(), tabId);
+    static decrementHintNum(tabInfo, mode) {
+        mode.changeHintNum(mode.getPreviousIndex(), tabInfo);
     }
-    static refreshHint(tabId, mode) {
+    static refreshHint(tabInfo, mode) {
         const type = mode.getType();
-        const tabInfo = gTabInfoMap.get(tabId);
-        if (!tabInfo) {
-            return;
-        }
         tabInfo.sendMessage(0, {
             command: "collectHint",
             pattern: gHintPatternMap[type],
             isFocusType: (type === "focus")
         }).then(
-            (hintsInfoList) => changeHintMode(tabId, hintsInfoList, mode),
+            (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, mode),
             handleError);
     }
-    static toggleDefaultFocus(tabId, mode) {
+    static toggleDefaultFocus(tabInfo, mode) {
         mode.setDefaultFocus(!mode.getDefaultFocus());
     }
-    static focusin(tabId, mode) {
+    static focusin(tabInfo, mode) {
         mode.setDefaultFocus(true);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "focusin" });
+            tabInfo, mode.getFocusedFrameId(), { command: "focusin" });
     }
-    static focusout(tabId, mode) {
+    static focusout(tabInfo, mode) {
         mode.setDefaultFocus(false);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "focusout" });
+            tabInfo, mode.getFocusedFrameId(), { command: "focusout" });
     }
-    static clickHintLink(tabId, mode, shift=false, ctrl=false, meta=false) {
+    static clickHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
         const count = (ctrl ? 1 : shift ? 3 : meta ? 4 : 0);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(),
+            tabInfo, mode.getFocusedFrameId(),
             { command: "mouseclick", count: count });
     }
-    static shiftClickHintLink(tabId, mode) {
-        return HintCommand.clickHintLink(tabId, mode, true);
+    static shiftClickHintLink(tabInfo, mode) {
+        return HintCommand.clickHintLink(tabInfo, mode, true);
     }
-    static controlClickHintLink(tabId, mode) {
-        return HintCommand.clickHintLink(tabId, mode, false, true);
+    static controlClickHintLink(tabInfo, mode) {
+        return HintCommand.clickHintLink(tabInfo, mode, false, true);
     }
-    static metaClickHintLink(tabId, mode) {
-        return HintCommand.clickHintLink(tabId, mode, false, false, true);
+    static metaClickHintLink(tabInfo, mode) {
+        return HintCommand.clickHintLink(tabInfo, mode, false, false, true);
     }
-    static mousedownHintLink(tabId, mode, shift=false, ctrl=false) {
+    static mousedownHintLink(tabInfo, mode, shift=false, ctrl=false) {
         const count = (ctrl ? 1 : shift ? 3 : 0);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(),
+            tabInfo, mode.getFocusedFrameId(),
             { command: "mousedown", count: count });
     }
-    static shiftMousedownHintLink(tabId, mode) {
-        return HintCommand.mousedownHintLink(tabId, mode, true);
+    static shiftMousedownHintLink(tabInfo, mode) {
+        return HintCommand.mousedownHintLink(tabInfo, mode, true);
     }
-    static controlMousedownHintLink(tabId, mode) {
-        return HintCommand.mousedownHintLink(tabId, mode, false, true);
+    static controlMousedownHintLink(tabInfo, mode) {
+        return HintCommand.mousedownHintLink(tabInfo, mode, false, true);
     }
-    static mouseinHintLink(tabId, mode) {
+    static mouseinHintLink(tabInfo, mode) {
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "mousein" });
+            tabInfo, mode.getFocusedFrameId(), { command: "mousein" });
     }
-    static mouseoutHintLink(tabId, mode) {
+    static mouseoutHintLink(tabInfo, mode) {
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "mouseout" });
+            tabInfo, mode.getFocusedFrameId(), { command: "mouseout" });
     }
-    static enterHintLink(tabId, mode, shift=false, ctrl=false, meta=false) {
+    static enterHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
         const count = (ctrl ? 1 : shift ? 3 : meta ? 4 : 0);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(),
+            tabInfo, mode.getFocusedFrameId(),
             { command: "pressEnter", count: count});
     }
-    static shiftEnterHintLink(tabId, mode) {
-        return HintCommand.enterHintLink(tabId, mode, true);
+    static shiftEnterHintLink(tabInfo, mode) {
+        return HintCommand.enterHintLink(tabInfo, mode, true);
     }
-    static controlEnterHintLink(tabId, mode) {
-        return HintCommand.enterHintLink(tabId, mode, false, true);
+    static controlEnterHintLink(tabInfo, mode) {
+        return HintCommand.enterHintLink(tabInfo, mode, false, true);
     }
-    static metaEnterHintLink(tabId, mode) {
-        return HintCommand.enterHintLink(tabId, mode, false, false, true);
+    static metaEnterHintLink(tabInfo, mode) {
+        return HintCommand.enterHintLink(tabInfo, mode, false, false, true);
     }
-    static openLink(tabId, mode) {
+    static openLink(tabInfo, mode) {
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "openLink" });
+            tabInfo, mode.getFocusedFrameId(), { command: "openLink" });
     }
-    static openLinkInTab(tabId, mode, active=true) {
+    static openLinkInTab(tabInfo, mode, active=true) {
         const count = (active ? 0 : 1);
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(),
+            tabInfo, mode.getFocusedFrameId(),
             { command: "openLinkInTab", count: count });
     }
-    static openLinkInBackgroundTab(tabId, mode) {
-        HintCommand.openLinkInTab(tabId, mode, false);
+    static openLinkInBackgroundTab(tabInfo, mode) {
+        HintCommand.openLinkInTab(tabInfo, mode, false);
     }
-    static yankHintLink(tabId, mode) {
+    static yankHintLink(tabInfo, mode) {
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "yankLink" });
+            tabInfo, mode.getFocusedFrameId(), { command: "yankLink" });
     }
-    static downloadHintLink(tabId, mode) {
+    static downloadHintLink(tabInfo, mode) {
         forwardHintCommand(
-            tabId, mode.getFocusedFrameId(), { command: "downloadLink" });
+            tabInfo, mode.getFocusedFrameId(), { command: "downloadLink" });
     }
 }
 class HintMode {
@@ -231,24 +221,23 @@ class HintMode {
         this.defaultFocus = true;
         this.mapper = Utils.makeCommandMapper(HINT_KEY_MAP);
     }
-    handle(key, sender) {
-        const tab = sender.tab;
+    handle(key, sender, tabInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
-            this.handleDigit(key, tab);
+            this._handleDigit(key, tabInfo);
             return;
         }
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            HintCommand[optCmd](tab.id, this);
+            HintCommand[optCmd](tabInfo, this);
         }
         if (cmd) {
-            HintCommand[cmd](tab.id, this);
+            HintCommand[cmd](tabInfo, this);
         }
         else if (!consumed) {
-            changeMode(tab.id, "NORMAL", sender.frameId, [key]);
+            changeMode(tabInfo, "NORMAL", sender.frameId, [key]);
         }
     }
-    handleDigit(num, tab) {
+    _handleDigit(num, tabInfo) {
         const length = this.idList.length;
         let index = this.currentIndex.toString() + num;
         while (index && parseInt(index, 10) >= length) {
@@ -256,7 +245,7 @@ class HintMode {
         }
         const nextIndex = (index ? parseInt(index, 10) : length - 1);
 
-        this.changeHintNum(nextIndex, tab.id);
+        this.changeHintNum(nextIndex, tabInfo);
     }
 
     getType() {
@@ -284,13 +273,13 @@ class HintMode {
         this.mapper.reset();
     }
 
-    changeHintNum(nextIndex, tabId) {
+    changeHintNum(nextIndex, tabInfo) {
         const prevId = this.idList[this.currentIndex];
         const nextId = this.idList[nextIndex];
         if (prevId !== nextId) {
-            forwardHintCommand(tabId, prevId, { command: "blurHintLink" });
+            forwardHintCommand(tabInfo, prevId, { command: "blurHintLink" });
         }
-        forwardHintCommand(tabId, nextId, {
+        forwardHintCommand(tabInfo, nextId, {
             command: "focusHintLink",
             index: nextIndex, defaultFocus: this.defaultFocus
         });
@@ -506,13 +495,12 @@ class Command {
 
     static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
-        const tabId = sender.tab.id;
         tabInfo.sendMessage(0, {
             command: "collectHint",
             pattern: gHintPatternMap[type],
             isFocusType: (type === "focus")
         }).then((hintsInfoList) => {
-            changeHintMode(tabId, hintsInfoList, new HintMode(type))
+            changeHintMode(tabInfo, hintsInfoList, new HintMode(type))
         }, handleError);
     }
     static collectHint(msg, sender, tabInfo) {
@@ -522,7 +510,7 @@ class Command {
         if (tabInfo.getMode() !== "HINT") {
             return;
         }
-        return tabInfo.modeInfo.handle(msg.key, sender);
+        return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
     }
 
     static collectFrameId(msg, sender, tabInfo) {
@@ -546,7 +534,7 @@ class Command {
     }
 
     static toNormalMode(msg, sender, tabInfo) {
-        changeMode(sender.tab.id, "NORMAL");
+        changeMode(tabInfo, "NORMAL");
     }
     static toConsoleMode(msg, sender, tabInfo) {
         const mode = "CONSOLE";
@@ -559,12 +547,8 @@ class Command {
     }
 }
 
-function changeHintMode(tabId, idList, hintMode) {
+function changeHintMode(tabInfo, idList, hintMode) {
     if (idList.length === 0) {
-        return;
-    }
-    const tabInfo = gTabInfoMap.get(tabId);
-    if (!tabInfo) {
         return;
     }
     const mode = "HINT";
@@ -583,11 +567,7 @@ function changeHintMode(tabId, idList, hintMode) {
     });
 }
 
-function changeMode(tabId, mode, frameId = undefined, data = undefined) {
-    const tabInfo = gTabInfoMap.get(tabId);
-    if (!tabInfo) {
-        return;
-    }
+function changeMode(tabInfo, mode, frameId = undefined, data = undefined) {
     tabInfo.setMode(mode);
     const msg = { command: "changeMode", mode: mode };
     tabInfo.forEachPort((port, id) => {
@@ -612,7 +592,11 @@ function loadHintPattern() {
 loadHintPattern();
 
 browser.tabs.onActivated.addListener((activeInfo) => {
-    changeMode(activeInfo.tabId, "NORMAL");
+    const tabInfo = gTabInfoMap.get(activeInfo.tabId);
+    if (!tabInfo) {
+        return;
+    }
+    changeMode(tabInfo, "NORMAL");
 });
 
 browser.runtime.onMessage.addListener(invokeCommand);
