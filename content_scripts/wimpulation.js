@@ -96,16 +96,16 @@ const INSERT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-E>": "endLine",
     "<C-N>": "nextLine",
     "<C-P>": "previousLine",
-    "<C-O><C-U>": "undo",
     "<C-O>u": "undo",
+    "<C-O><C-U>": "undo",
     "<C-O>y": "yankValue",
     "<C-O><C-Y>": "yankValue",
     "<C-O>p": "pasteValue",
     "<C-O><C-P>": "pasteValue",
     "<C-C>": "toNormalMode",
     "<C-[>": "toNormalMode",
-    "<Tab>": "goToNextInput",
-    "<S-Tab>": "goToPreviousInput",
+    "<Tab>": "toInsertModeOnNextInput",
+    "<S-Tab>": "toInsertModeOnPreviousInput",
     "<M-A>": "ignore",
     "<M-V>": "ignore",
     "<M-X>": "ignore",
@@ -316,113 +316,25 @@ class NormalMode extends Mode {
     }
 }
 
-class InsertCommand {
-    static deleteCharBackward(count, mode) {
-        const elem = mode.getTarget();
-        const prevValue = elem.value;
-        if (DomUtils.deleteCharBackward(elem)) {
-            mode.undoStack.push(prevValue);
-        }
-    }
-    static deleteWordBackward(count, mode) {
-        const elem = mode.getTarget();
-        const prevValue = elem.value;
-        if (DomUtils.deleteWordBackward(elem)) {
-            mode.undoStack.push(prevValue);
-        }
-    }
-    static deleteToBeggingOfLine(count, mode) {
-        const elem = mode.getTarget();
-        const prevValue = elem.value;
-        if (DomUtils.deleteToBeggingOfLine(elem)) {
-            mode.undoStack.push(prevValue);
-        }
-    }
-    static deleteToEndOfLine(count, mode) {
-        const elem = mode.getTarget();
-        const prevValue = elem.value;
-        if (DomUtils.deleteToEndOfLine(elem)) {
-            mode.undoStack.push(prevValue);
-        }
-    }
-    static charNext(count, mode) {
-        DomUtils.charNext(mode.getTarget());
-    }
-    static charPrevious(count, mode) {
-        DomUtils.charPrevious(mode.getTarget());
-    }
-    static beginLine(count, mode) {
-        DomUtils.beginLine(mode.getTarget());
-    }
-    static endLine(count, mode) {
-        DomUtils.endLine(mode.getTarget());
-    }
-    static nextLine(count, mode) {
-        DomUtils.nextLine(mode.getTarget());
-    }
-    static previousLine(count, mode) {
-        DomUtils.previousLine(mode.getTarget());
-    }
-    static undo(count, mode) {
-        const elem = mode.getTarget();
-        if (mode.undoStack.length !== 0) {
-            elem.setRangeText(
-                mode.undoStack.pop(), 0, elem.value.length, "end");
-        }
-    }
-    static yankValue(count, mode) {
-        const elem = mode.getTarget();
-        DomUtils.setToClipboard(elem.value);
-    }
-    static pasteValue(count, mode) {
-        const elem = mode.getTarget();
-        const start = elem.selectionStart;
-        const end = elem.selectionEnd;
-        const value = DomUtils.getFromClipboard();
-        elem.setRangeText(value, start, end, "end");
-    }
-    static ignore() {
-        return true;
-    }
-    static goToPreviousInput(count, mode) {
-        const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getTarget());
-        if (index === -1) return;
-        mode.changeMode("INSERT", {
-            editableElement: inputs[(index - 1 + inputs.length) % inputs.length]
-        });
-    }
-    static goToNextInput(count, mode) {
-        const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getTarget());
-        if (index === -1) return;
-        mode.changeMode("INSERT", {
-            editableElement: inputs[(index + 1) % inputs.length]
-        });
-    }
-    static toNormalMode(count, mode) {
-        mode.changeMode("NORMAL");
-    }
-}
 class InsertMode extends Mode {
     constructor(frameInfo, keyMap, data) {
         super(frameInfo);
         this.mapper = Utils.makeCommandMapper(keyMap);
         this.lastFocusedElem = data.lastFocusedElem;
         this.editableElement = data.editableElement;
-        this.undoStack = [];
+        this.editableElement.undoStack = [];
         this.editableElement.focus();
         this.editableElement.classList.add("wimpulation-input");
         this.inInvoking = false;
         if (document.activeElement !== this.editableElement) {
-            setTimeout(() => InsertCommand.toNormalMode(0, this), 0);
+            setTimeout(() => FrontendCommand.toNormalMode(0, this), 0);
             return;
         }
         this.blurHandler = (e) => {
             if (this.inInvoking) {
                 return;
             }
-            InsertCommand.toNormalMode(0, this);
+            FrontendCommand.toNormalMode(0, this);
         };
         this.editableElement.addEventListener("blur", this.blurHandler, true);
     }
@@ -444,7 +356,7 @@ class InsertMode extends Mode {
             || key === "<Space>" || key === "<S-Space>"
             || key === "<Backspace>" || key === "<Delete>"
             || key === "<Enter>") {
-            this.undoStack.push(this.editableElement.value);
+            this.editableElement.undoStack.push(this.editableElement.value);
             return false;
         }
         return true;
@@ -467,7 +379,7 @@ class InsertMode extends Mode {
     _invokeCommand(cmd) {
         this.inInvoking = true;
         try {
-            return !InsertCommand[cmd](0, this);
+            return !FrontendCommand[cmd](0, this);
         }
         finally {
             this.inInvoking = false;

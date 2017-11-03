@@ -400,8 +400,70 @@ Loop: ${video.loop}`
             elem, "mousemove", 1, false, false, false, false);
     }
 
+    /**
+     * Commands for text edit
+     **/
+    static deleteCharBackward(count, mode) {
+        _editElement(mode, (elem) => DomUtils.deleteCharBackward(elem));
+    }
+    static deleteWordBackward(count, mode) {
+        _editElement(mode, (elem) => DomUtils.deleteWordBackward(elem));
+    }
+    static deleteToBeggingOfLine(count, mode) {
+        _editElement(mode, (elem) => DomUtils.deleteToBeggingOfLine(elem));
+    }
+    static deleteToEndOfLine(count, mode) {
+        _editElement(mode, (elem) => DomUtils.deleteToEndOfLine(elem));
+    }
+    static charNext(count, mode) {
+        DomUtils.charNext(mode.getTarget());
+    }
+    static charPrevious(count, mode) {
+        DomUtils.charPrevious(mode.getTarget());
+    }
+    static beginLine(count, mode) {
+        DomUtils.beginLine(mode.getTarget());
+    }
+    static endLine(count, mode) {
+        DomUtils.endLine(mode.getTarget());
+    }
+    static nextLine(count, mode) {
+        DomUtils.nextLine(mode.getTarget());
+    }
+    static previousLine(count, mode) {
+        DomUtils.previousLine(mode.getTarget());
+    }
+    static undo(count, mode) {
+        const elem = mode.getTarget();
+        if (!elem.undoStack || elem.undoStack.length === 0) {
+            return;
+        }
+        elem.setRangeText(elem.undoStack.pop(), 0, elem.value.length, "end");
+    }
+    static yankValue(count, mode) {
+        const elem = mode.getTarget();
+        DomUtils.setToClipboard(elem.value);
+    }
+    static pasteValue(count, mode) {
+        _editElement(mode, (elem) => {
+            // Reserve selection range because getFromClipboard can modify that.
+            const start = elem.selectionStart;
+            const end = elem.selectionEnd;
+            const value = DomUtils.getFromClipboard();
+            if (value === "") {
+                return false;
+            }
+            elem.setRangeText(value, start, end, "end");
+            return true;
+        });
+    }
+
+
     static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);
+    }
+    static ignore() {
+        return true;
     }
     static repeatLastCommand(count, mode) {
         const [func, cnt] = mode.lastCmd;
@@ -414,6 +476,9 @@ Loop: ${video.loop}`
     /**
      * Commands for mode changing
      */
+    static toNormalMode(count, mode) {
+        mode.changeMode("NORMAL");
+    }
     static toInsertMode(count, mode) {
         const target = mode.getTarget();
         if (!DomUtils.isEditable(target)) {
@@ -437,6 +502,22 @@ Loop: ${video.loop}`
     }
     static toInsertModeOnLastElement(count, mode) {
         FrontendCommand.toInsertModeOnFirstElement(100000, mode);
+    }
+    static toInsertModeOnPreviousInput(count, mode) {
+        const inputs = DomUtils.getInputList(document);
+        const index = inputs.indexOf(mode.getTarget());
+        if (index === -1) return;
+        mode.changeMode("INSERT", {
+            editableElement: inputs[(index - 1 + inputs.length) % inputs.length]
+        });
+    }
+    static toInsertModeOnNextInput(count, mode) {
+        const inputs = DomUtils.getInputList(document);
+        const index = inputs.indexOf(mode.getTarget());
+        if (index === -1) return;
+        mode.changeMode("INSERT", {
+            editableElement: inputs[(index + 1) % inputs.length]
+        });
     }
     static toHintMode(count, mode) {
         mode.postMessage({ command: "toHintMode", type: "link" });
@@ -558,5 +639,16 @@ function emulateEnter(target, type, ctrl, alt, shift, meta) {
         keyCode: KeyboardEvent.DOM_VK_RETURN
     });
     target.dispatchEvent(keyEvent);
+}
+
+function _editElement(mode, editFunc) {
+    const elem = mode.getTarget();
+    const prevValue = elem.value;
+    if (editFunc(elem)) {
+        if (!elem.undoStack) {
+            elem.undoStack = [];
+        }
+        elem.undoStack.push(prevValue);
+    }
 }
 
