@@ -150,7 +150,7 @@ return (class Edit {
             elem.setRangeText("", start, end, "start");
             return true;
         }
-        const value = ele.value;
+        const value = elem.value;
         const length = value.length
         if (end === length) {
             return false;
