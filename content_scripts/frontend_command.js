@@ -417,8 +417,9 @@ Loop: ${video.loop}`
         if (!(select instanceof HTMLSelectElement)) {
             return;
         }
-        count = Math.max(count, 1);
-        const index = (select.selectedIndex + count) % select.length;
+        const length = select.length;
+        count = Math.max(count, 1) % length;
+        const index = (select.selectedIndex - count + length) % length;
         select.selectedIndex = index;
     }
     static toggleSelectOption(count, mode) {
