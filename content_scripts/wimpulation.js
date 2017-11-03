@@ -99,6 +99,9 @@ const INSERT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-O><C-U>": "undo",
     "<C-O>u": "undo",
     "<C-O>y": "yankValue",
+    "<C-O><C-Y>": "yankValue",
+    "<C-O>p": "pasteValue",
+    "<C-O><C-P>": "pasteValue",
     "<C-C>": "toNormalMode",
     "<C-[>": "toNormalMode",
     "<Tab>": "goToNextInput",
@@ -369,9 +372,14 @@ class InsertCommand {
     }
     static yankValue(count, mode) {
         const elem = mode.getTarget();
-        mode.freeze = true;
         DomUtils.setToClipboard(elem.value);
-        mode.freeze = false;
+    }
+    static pasteValue(count, mode) {
+        const elem = mode.getTarget();
+        const start = elem.selectionStart;
+        const end = elem.selectionEnd;
+        const value = DomUtils.getFromClipboard();
+        elem.setRangeText(value, start, end, "end");
     }
     static ignore() {
         return true;
@@ -405,13 +413,13 @@ class InsertMode extends Mode {
         this.undoStack = [];
         this.editableElement.focus();
         this.editableElement.classList.add("wimpulation-input");
-        this.freeze = false;
+        this.inInvoking = false;
         if (document.activeElement !== this.editableElement) {
             setTimeout(() => InsertCommand.toNormalMode(0, this), 0);
             return;
         }
         this.blurHandler = (e) => {
-            if (this.freeze) {
+            if (this.inInvoking) {
                 return;
             }
             InsertCommand.toNormalMode(0, this);
@@ -424,10 +432,10 @@ class InsertMode extends Mode {
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            InsertCommand[optCmd](0, this);
+            this._invokeCommand(optCmd);
         }
         if (cmd) {
-            return !InsertCommand[cmd](0, this);
+            return this._invokeCommand(cmd);
         }
         if (consumed) {
             return true;
@@ -454,6 +462,15 @@ class InsertMode extends Mode {
         }
         catch (e) {
             console.warn(e);
+        }
+    }
+    _invokeCommand(cmd) {
+        this.inInvoking = true;
+        try {
+            return !InsertCommand[cmd](0, this);
+        }
+        finally {
+            this.inInvoking = false;
         }
     }
 }

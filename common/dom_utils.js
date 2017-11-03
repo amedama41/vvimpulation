@@ -169,19 +169,35 @@ return (class Edit {
     /**
      * functions to manipulation clipboard
      **/
+    static getFromClipboard() {
+        const textarea = document.createElement("textarea");
+        textarea.style.position = "absolute";
+        textarea.style.top = window.scrollY + "px";
+        textarea.style.left = window.scrollX + "px";
+        textarea.contentEditable = true;
+        const root = document.documentElement;
+        root.appendChild(textarea);
+        const activeElement = document.activeElement;
+        textarea.focus();
+        document.execCommand("paste");
+        const value = textarea.value;
+        root.removeChild(textarea);
+        activeElement.focus();
+        return value;
+    }
     static setToClipboard(value) {
-        const focusElem = document.activeElement;
-        const elem = document.createElement("textarea");
-        elem.style.position = "absolute";
-        elem.style.top = window.scrollY + "px";
-        elem.style.left = window.scrollX + "px";
-        elem.value = value;
-        const target = document.documentElement;
-        target.appendChild(elem);
-        elem.select();
+        const textarea = document.createElement("textarea");
+        textarea.style.position = "absolute";
+        textarea.style.top = window.scrollY + "px";
+        textarea.style.left = window.scrollX + "px";
+        textarea.value = value;
+        const root = document.documentElement;
+        root.appendChild(textarea);
+        const activeElement = document.activeElement;
+        textarea.select();
         document.execCommand("copy");
-        target.removeChild(elem);
-        focusElem.focus();
+        root.removeChild(textarea);
+        activeElement.focus();
     }
 });
 
