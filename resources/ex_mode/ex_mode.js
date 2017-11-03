@@ -44,11 +44,12 @@ class Completer {
         return this.candidates.length !== 0;
     }
     setCandidates(candidateInfo) {
+        this.candidates = [];
         let [orgValue, candidateStart, type, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
-        this.changeCandidates(orgValue);
+        this.update(orgValue);
     }
-    changeCandidates(value) {
+    update(value) {
         if (!this.candidateInfo) {
             return;
         }
@@ -76,21 +77,16 @@ class Completer {
         else {
             this.candidates = [];
             this.selectIndex = undefined;
+            this.candidateInfo = undefined;
         }
     }
-    resetCandidates() {
-        this.candidates = [];
-        this.selectIndex = undefined;
-        this.candidateStart = undefined;
-        this.container.innerHTML = "";
-    }
     selectNext(input) {
-        this.selectCandidate(input, 1);
+        this._selectCandidate(input, 1);
     }
     selectPrev(input) {
-        this.selectCandidate(input, -1);
+        this._selectCandidate(input, -1);
     }
-    selectCandidate(input, diff) {
+    _selectCandidate(input, diff) {
         if (!this.candidateInfo) {
             return this.selectIndex;
         }
@@ -180,7 +176,7 @@ function search(keyword, backward) {
         }
         ConsoleCommand.closeConsoleMode();
     }).catch((error) => {
-        console.error(error);
+        console.error(error.toString());
         ConsoleCommand.closeConsoleMode();
     });
 }
@@ -315,6 +311,7 @@ class ConsoleMode {
 
         this.input = document.getElementById("ex_input");
         this.input.value = options.defaultCommand;
+        this.previousValue = this.input.value;
 
         const container = document.getElementById("ex_candidates");
         container.style.maxHeight = (window.innerHeight - 100) + "px";
@@ -328,19 +325,10 @@ class ConsoleMode {
     }
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
-        const previousValue = this.input.value;
+        this.previousValue = this.input.value;
         const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
         if (!result) {
             this.history.reset();
-        }
-        if (!this.isSearch()) {
-            if (previousValue !== this.input.value
-                && !cmd.includes("Candidate")) {
-                this.completer.changeCandidates(this.input.value);
-            }
-            else if (!result && key.length === 1) {
-                this.completer.changeCandidates(this.input.value + key);
-            }
         }
         return result;
     }
@@ -366,19 +354,29 @@ class ConsoleMode {
                 return;
             }
             this.completer.setCandidates(result);
+            this.selectNextCandidate();
         });
+    }
+    updateCandidateList() {
+        if (this.previousValue !== this.input.value) {
+            this.completer.update(this.input.value);
+        }
     }
     selectNextCandidate() {
         this.completer.selectNext(this.getTarget());
+        this.previousValue = this.input.value;
     }
     selectPreviousCandidate() {
         this.completer.selectPrev(this.getTarget());
+        this.previousValue = this.input.value;
     }
     selectNextHistory() {
         this.history.setNext(this.getTarget());
+        this.previousValue = this.input.value;
     }
     selectPreviousHistory() {
         this.history.setPrevious(this.getTarget());
+        this.previousValue = this.input.value;
     }
 }
 window.addEventListener("DOMContentLoaded", () => {
@@ -400,6 +398,11 @@ window.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
             }
         });
+        if (!mode.isSearch()) {
+            input.addEventListener("keyup", (e) => {
+                mode.updateCandidateList();
+            }, true);
+        }
 
         input.focus();
     }).catch((error) => {
