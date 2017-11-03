@@ -101,7 +101,7 @@ class FrontendCommand {
         window.scrollTo(window.scrollX, window.scrollMaxY * count / 100);
     }
     static scrollMiddle(count, mode) {
-        FrontendCommand.scrollPercent(50, mode);
+        return FrontendCommand.scrollPercent(50, mode);
     }
 
     /**
@@ -317,40 +317,32 @@ Loop: ${video.loop}`
     static openLink(count, mode) {
         const elem = mode.getTarget();
         const url = getLink(elem);
-        if (!url) {
-            return false;
+        if (url) {
+            mode.postMessage({ command: 'openLink', url: url });
         }
-        mode.postMessage({ command: 'openLink', url: url });
-        return true;
     }
     static openLinkInTab(count, mode) {
         const elem = mode.getTarget();
         const url = getLink(elem);
-        if (!url) {
-            return false;
+        if (url) {
+            const active = (count === 0);
+            mode.postMessage(
+                { command: 'openLinkInTab', url: url, active: active });
         }
-        const active = (count === 0);
-        mode.postMessage(
-            { command: 'openLinkInTab', url: url, active: active });
-        return true;
     }
     static yankLink(count, mode) {
         const elem = mode.getTarget();
         const url = getLink(elem);
-        if (!url) {
-            return false;
+        if (url) {
+            DomUtils.setToClipboard(url);
         }
-        DomUtils.setToClipboard(url);
-        return true;
     }
     static downloadLink(count, mode) {
         const elem = mode.getTarget();
         const url = getLink(elem);
-        if (!url) {
-            return false;
+        if (url) {
+            mode.postMessage({ command: 'downloadLink', url: url });
         }
-        mode.postMessage({ command: 'downloadLink', url: url });
-        return true;
     }
     static pressEnter(count, mode) {
         const elem = mode.getTarget();
@@ -497,10 +489,11 @@ Loop: ${video.loop}`
     static smartOpen(count, mode) {
         const elem = mode.getTarget();
         if (elem.onclick) {
-            FrontendCommand.mouseclick(count, mode);
-            return;
+            return FrontendCommand.mouseclick(count, mode);
         }
-        if (FrontendCommand.openLink(count, mode)) {
+        const link = getLink(elem);
+        if (link) {
+            mode.postMessage({ command: 'openLink', url: link });
             return;
         }
         if (elem instanceof HTMLSelectElement ||
@@ -510,7 +503,7 @@ Loop: ${video.loop}`
                 new Event("change", { bubbles: true, cancelable: false }));
             FrontendCommand.pressEnter(count, mode);
         }
-        FrontendCommand.mouseclick(count, mode);
+        return FrontendCommand.mouseclick(count, mode);
     }
     static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);
@@ -554,7 +547,7 @@ Loop: ${video.loop}`
         });
     }
     static toInsertModeOnLastElement(count, mode) {
-        FrontendCommand.toInsertModeOnFirstElement(100000, mode);
+        return FrontendCommand.toInsertModeOnFirstElement(100000, mode);
     }
     static toInsertModeOnPreviousInput(count, mode) {
         const inputs = DomUtils.getInputList(document);
@@ -591,16 +584,16 @@ Loop: ${video.loop}`
         });
     }
     static toExModeOpen(count, mode) {
-        FrontendCommand.toExMode(count, mode, "open ");
+        return FrontendCommand.toExMode(count, mode, "open ");
     }
     static toExModeOpenCurrentURL(count, mode) {
-        FrontendCommand.toExMode(count, mode, "open " + location.href);
+        return FrontendCommand.toExMode(count, mode, "open " + location.href);
     }
     static toExModeTabOpen(count, mode) {
-        FrontendCommand.toExMode(count, mode, "tabopen ");
+        return FrontendCommand.toExMode(count, mode, "tabopen ");
     }
     static toExModeTabOpenCurrentURL(count, mode) {
-        FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
+        return FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
     }
     static toSearchMode(count, mode, isBackward=false) {
         mode.postMessage({
@@ -609,7 +602,7 @@ Loop: ${video.loop}`
         });
     }
     static toBackwardSearchMode(count, mode) {
-        FrontendCommand.toSearchMode(count, mode, true);
+        return FrontendCommand.toSearchMode(count, mode, true);
     }
 }
 
@@ -716,20 +709,20 @@ function _editElement(mode, editFunc) {
 
 function invokeCommand(cmdName, count, mode) {
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
-    let result;
+    let isIgnore;
     if (cmdDesc.background) {
         mode.postMessage({ command: cmdName, count: count });
-        result = false;
+        isIgnore = false;
     }
     else if (cmdDesc.topFrame && !mode.frameInfo.isTopFrame()) {
         mode.postMessage({
             command: 'forwardCommand', frameId: 0,
             data: { command: cmdName, count: count }
         });
-        result = false;
+        isIgnore = false;
     }
     else {
-        result = FrontendCommand[cmdName](count, mode);
+        isIgnore = FrontendCommand[cmdName](count, mode);
     }
     if (cmdName !== "repeatLastCommand") {
         mode.lastCommand[0] = cmdName
@@ -740,6 +733,6 @@ function invokeCommand(cmdName, count, mode) {
             mode.lastCommand[1] = count;
         }
     }
-    return result;
+    return isIgnore;
 }
 
