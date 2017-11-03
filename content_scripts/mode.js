@@ -3,6 +3,7 @@ let gMode = undefined;
 class Mode {
     constructor(frameInfo) {
         this._frameInfo = frameInfo;
+        this._lastCommand = [undefined, undefined];
     }
     postMessage(msg) {
         this._frameInfo.postMessage(msg);
@@ -16,6 +17,9 @@ class Mode {
     }
     get frameInfo() {
         return this._frameInfo;
+    }
+    get lastCommand() {
+        return this._lastCommand;
     }
     static createMode(mode, frameInfo, data = undefined) {
         switch (mode) {

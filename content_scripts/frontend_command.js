@@ -519,11 +519,11 @@ Loop: ${video.loop}`
         return true;
     }
     static repeatLastCommand(count, mode) {
-        const [func, cnt] = mode.lastCmd;
-        if (func === undefined) {
+        const [cmdName, lastCount] = mode.lastCommand;
+        if (cmdName === undefined) {
             return;
         }
-        func(count !== 0 ? count : cnt, mode);
+        invokeCommand(cmdName, count !== 0 ? count : lastCount, mode);
     }
 
     /**
@@ -712,5 +712,34 @@ function _editElement(mode, editFunc) {
         }
         elem.undoStack.push(prevValue);
     }
+}
+
+function invokeCommand(cmdName, count, mode) {
+    const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
+    let result;
+    if (cmdDesc.background) {
+        mode.postMessage({ command: cmdName, count: count });
+        result = false;
+    }
+    else if (cmdDesc.topFrame && !mode.frameInfo.isTopFrame()) {
+        mode.postMessage({
+            command: 'forwardCommand', frameId: 0,
+            data: { command: cmdName, count: count }
+        });
+        result = false;
+    }
+    else {
+        result = FrontendCommand[cmdName](count, mode);
+    }
+    if (cmdName !== "repeatLastCommand") {
+        mode.lastCommand[0] = cmdName
+        mode.lastCommand[1] = count;
+    }
+    else {
+        if (count !== 0) {
+            mode.lastCommand[1] = count;
+        }
+    }
+    return result;
 }
 

@@ -250,7 +250,6 @@ class NormalMode extends Mode {
     constructor(frameInfo, keyMap, keyList=undefined) {
         super(frameInfo);
         this.count = "0";
-        this.lastCmd = [undefined, undefined];
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
@@ -265,14 +264,14 @@ class NormalMode extends Mode {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
             if (optCmd.length !== 0) {
-                this._invokeCommand(optCmd);
+                this._invoke(optCmd);
             }
             else {
                 this._resetState();
             }
         }
         if (cmd) {
-            return this._invokeCommand(cmd);
+            return this._invoke(cmd);
         }
         if (consumed) {
             return true;
@@ -290,29 +289,10 @@ class NormalMode extends Mode {
         this._resetState();
     }
 
-    _invokeCommand(cmdName) {
+    _invoke(cmdName) {
         const count = parseInt(this.count, 10);
         this._resetState();
-        const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
-        if (cmdDesc.background) {
-            super.postMessage({ command: cmdName, count: count });
-        }
-        else if (cmdDesc.topFrame && !super.frameInfo.isTopFrame()) {
-            super.postMessage({
-                command: 'forwardCommand', frameId: 0,
-                data: { command: cmdName, count: count }
-            });
-        }
-        else {
-            FrontendCommand[cmdName](count, this);
-        }
-        if (cmdName !== "repeatLastCommand") {
-            this.lastCmd = [FrontendCommand[cmdName], count];
-        }
-        if (count !== 0) {
-            this.lastCmd[1] = count;
-        }
-        return true;
+        return !invokeCommand(cmdName, count, this);
     }
 
     _resetState() {
@@ -348,10 +328,10 @@ class InsertMode extends Mode {
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            this._invokeCommand(optCmd);
+            this._invoke(optCmd);
         }
         if (cmd) {
-            return this._invokeCommand(cmd);
+            return this._invoke(cmd);
         }
         if (consumed) {
             return true;
@@ -380,10 +360,10 @@ class InsertMode extends Mode {
             console.warn(e);
         }
     }
-    _invokeCommand(cmd) {
+    _invoke(cmd) {
         this.inInvoking = true;
         try {
-            return !FrontendCommand[cmd](0, this);
+            return !invokeCommand(cmd, 0, this);
         }
         finally {
             this.inInvoking = false;
@@ -447,7 +427,7 @@ class MessageCommand {
     }
     static forwardCommand(msg, sneder) {
         const data = msg.data;
-        FrontendCommand[data.command](data.count, gMode);
+        invokeCommand(data.command, data.count, gMode);
     }
     static showConsole(msg, sender) {
         if (!(gMode instanceof ConsoleMode)) {

@@ -61,14 +61,14 @@ class VisualModeBase extends Mode {
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            this._invokeCommand(optCmd);
+            this._invoke(optCmd);
         }
         if (cmd) {
-            return this._invokeCommand(cmd);
+            return this._invoke(cmd);
         }
         return true;
     }
-    _invokeCommand(cmd) {
+    _invoke(cmd) {
         if (cmd.startsWith("move ")) {
             const [prefix, direction, granularity] = cmd.split(" ");
             this.selectionModify(this.selection, direction, granularity);

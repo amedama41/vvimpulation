@@ -77,7 +77,7 @@ class HintMode extends Mode {
                     return;
                 }
                 const count = msg.count || 0;
-                return FrontendCommand[msg.command](count, this);
+                return invokeCommand(msg.command, count, this);
         }
     }
 }
