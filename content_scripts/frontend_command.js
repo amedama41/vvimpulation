@@ -401,6 +401,40 @@ Loop: ${video.loop}`
     }
 
     /**
+     * Commands for select manipulation
+     **/
+    static selectNextOption(count, mode) {
+        const select = mode.getTarget();
+        if (!(select instanceof HTMLSelectElement)) {
+            return;
+        }
+        count = Math.max(count, 1);
+        const index = (select.selectedIndex + count) % select.length;
+        select.selectedIndex = index;
+    }
+    static selectPreviousOption(count, mode) {
+        const select = mode.getTarget();
+        if (!(select instanceof HTMLSelectElement)) {
+            return;
+        }
+        count = Math.max(count, 1);
+        const index = (select.selectedIndex + count) % select.length;
+        select.selectedIndex = index;
+    }
+    static toggleSelectOption(count, mode) {
+        const select = mode.getTarget();
+        if (!(select instanceof HTMLSelectElement)) {
+            return;
+        }
+        const options = Array.from(select.options).filter((o) => !o.disabled);
+        if (options.length === 0) {
+            return;
+        }
+        const index = Math.min(count, options.length - 1);
+        options[index].selected = !options[index].selected;
+    }
+
+    /**
      * Commands for text edit
      **/
     static deleteCharBackward(count, mode) {

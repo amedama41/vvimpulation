@@ -96,6 +96,11 @@ const COMMAND_DESCRIPTIONS = {
     mousein: {},
     mouseout: {},
 
+    /** Commands for select manipulation **/
+    selectNextOption: {},
+    selectPreviousOption: {},
+    toggleSelectOption: {},
+
     /** Commands for text edit **/
     deleteCharBackward: {},
     deleteWordBackward: {},
