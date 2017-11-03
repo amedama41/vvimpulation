@@ -493,6 +493,24 @@ Loop: ${video.loop}`
     }
 
 
+    static smartOpen(count, mode) {
+        const elem = mode.getTarget();
+        if (elem.onclick) {
+            FrontendCommand.mouseclick(count, mode);
+            return;
+        }
+        if (FrontendCommand.openLink(count, mode)) {
+            return;
+        }
+        if (elem instanceof HTMLSelectElement ||
+            elem instanceof HTMLInputElement ||
+            elem instanceof HTMLTextAreaElement) {
+            elem.dispatchEvent(
+                new Event("change", { bubbles: true, cancelable: false }));
+            FrontendCommand.pressEnter(count, mode);
+        }
+        FrontendCommand.mouseclick(count, mode);
+    }
     static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);
     }

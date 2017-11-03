@@ -193,7 +193,7 @@ class HintCommand {
     }
     static openLink(tabInfo, mode) {
         forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "openLink" });
+            tabInfo, mode.getFocusedFrameId(), { command: "smartOpen" });
     }
     static openLinkInTab(tabInfo, mode, active=true) {
         const count = (active ? 0 : 1);
