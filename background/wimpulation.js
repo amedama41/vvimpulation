@@ -1,11 +1,16 @@
 "use strict";
 
 class TabInfo {
-    constructor() {
-        var gFrameMap = new Map();
+    constructor(tabId) {
+        this.tabId = tabId;
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
         this.modeInfo = undefined;
+        this._frameIdListCache = [undefined];
+        this._lastSearchInfo = ["", 0];
+    }
+    get id() {
+        return this.tabId;
     }
     getMode() {
         return this.mode;
@@ -14,10 +19,30 @@ class TabInfo {
         this.mode = mode;
         this.modeInfo = modeInfo;
     }
+    frameIdList(continuation) {
+        if (this._frameIdListCache) {
+            return Promise.resolve(this._frameIdListCache).then(continuation);
+        }
+        else {
+            return this.sendMessage(0, { command: "collectFrameId" })
+                .then((frameIdList) => {
+                    this._frameIdListCache = frameIdList;
+                    return continuation(frameIdList);
+                });
+        }
+    }
+    get lastSearchInfo() {
+        return this._lastSearchInfo;
+    }
+    set lastSearchInfo(lastSearchInfo) {
+        this._lastSearchInfo = lastSearchInfo;
+    }
     setPort(frameId, port) {
+        this._frameIdListCache = undefined;
         this.frameInfoMap.set(frameId, port);
     }
     deletePort(frameId, port) {
+        this._frameIdListCache = undefined;
         if (this.frameInfoMap.get(frameId) !== port) {
             console.warn(`missmatch ${frameId} port`);
             return false;
@@ -30,7 +55,8 @@ class TabInfo {
     postMessage(frameId, msg) {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
-            console.warn(`port ${tabId}-${frameId} is already disconnected`);
+            console.warn(
+                `port ${this.tabId}-${frameId} is already disconnected`);
             return;
         }
         port.postMessage(msg);
@@ -39,7 +65,7 @@ class TabInfo {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
             return Promise.reject(
-                `port ${tabId}-${frameId} is already disconnected`);
+                `port ${this.tabId}-${frameId} is already disconnected`);
         }
         return port.sendMessage(msg);
     }
@@ -318,90 +344,68 @@ function moveTab(tabId, distance, toLeft) {
     }, handleError);
 }
 
-let gFindCache = new Map();
-function findAllFrame(tabId, keyword, startIndex, frameIdList, backward) {
+function findAllFrame(tabInfo, keyword, startIndex, frameIdList, backward) {
     const msg = { command: "find", keyword: keyword, backward: backward };
     const diff = (backward ? -1 : 1);
     const length = frameIdList.length;
     const findFrame = (i) => {
         const index = (startIndex + i * diff + length) % length;
         msg.reset = (i !== 0);
-        return sendTabMessage(tabId, frameIdList[index], msg).then((result) => {
-            if (result) {
-                gFindCache.set(tabId, [keyword, index, frameIdList]);
-                return true;
-            }
-            if (i === length) {
-                gFindCache.set(tabId, [keyword, 0, frameIdList]);
-                return false;
-            }
-            else {
-                return findFrame(i + 1);
-            }
-        })
+        return tabInfo.sendMessage(frameIdList[index], msg)
+            .then((result) => {
+                if (result) {
+                    tabInfo.lastSearchInfo = [keyword, index];
+                    return true;
+                }
+                if (i === length) {
+                    tabInfo.lastSearchInfo = [keyword, 0];
+                    return false;
+                }
+                else {
+                    return findFrame(i + 1);
+                }
+            });
     };
     return findFrame(0);
 }
 class Command {
-    static focusNextFrame(msg, sender) {
-        const tabId = sender.tab.id;
-        const cache = gFindCache.get(tabId);
+    static focusNextFrame(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
-        if (!cache) {
-            sendTabMessage(tabId, 0, { command: "collectFrameId" })
-                .then((frameIdList) => {
-                    const index = frameIdList.indexOf(sender.frameId);
-                    sendTabMessage(
-                        tabId, frameIdList[(index + count) % frameIdList.length],
-                        { command: "focusFrame" });
-                }, handleError);
-        }
-        else {
-            const [keyword, i, frameIdList] = cache;
+        tabInfo.frameIdList((frameIdList) => {
             const index = frameIdList.indexOf(sender.frameId);
-            sendTabMessage(
-                tabId, frameIdList[(index + count) % frameIdList.length],
+            tabInfo.sendMessage(
+                frameIdList[(index + count) % frameIdList.length],
                 { command: "focusFrame" });
-        }
+        });
     }
-    static find(msg, sender) {
-        const tabId = sender.tab.id;
-        const cache = gFindCache.get(tabId);
-        if (!cache) {
-            return sendTabMessage(tabId, 0, { command: "collectFrameId" })
-                .then((frameIdList) => {
-                    gFindCache.set(tabId, [msg.keyword, 0, frameIdList]);
-                    return findAllFrame(
-                        tabId, msg.keyword, 0, frameIdList, msg.backward);
-                });
-        }
-        else {
-            const [keyword, index, frameIdList] = cache;
+    static find(msg, sender, tabInfo) {
+        tabInfo.frameIdList((frameIdList) => {
+            const [keyword, index] = tabInfo.lastSearchInfo;
             const startIndex = (keyword === msg.keyword ? index : 0);
             return findAllFrame(
-                tabId, msg.keyword, startIndex, frameIdList, msg.backward)
-        }
+                tabInfo, msg.keyword, startIndex, frameIdList, msg.backward)
+        });
     }
-    static findNext(msg, sender) {
-        const tabId = sender.tab.id;
-        const cache = gFindCache.get(tabId);
-        if (!cache) {
+    static findNext(msg, sender, tabInfo) {
+        const [keyword, index] = tabInfo.lastSearchInfo;
+        if (keyword === "") {
             return;
         }
-        const [keyword, index, frameIdList] = cache;
-        findAllFrame(tabId, keyword, index, frameIdList, false);
+        tabInfo.frameIdList((frameIdList) => {
+            findAllFrame(tabInfo, keyword, index, frameIdList, false);
+        });
     }
-    static findPrevious(msg, sender) {
-        const tabId = sender.tab.id;
-        const cache = gFindCache.get(tabId);
-        if (!cache) {
+    static findPrevious(msg, sender, tabInfo) {
+        const [keyword, index] = tabInfo.lastSearchInfo;
+        if (keyword === "") {
             return;
         }
-        const [keyword, index, frameIdList] = cache;
-        findAllFrame(tabId, keyword, index, frameIdList, true);
+        tabInfo.frameIdList((frameIdList) => {
+            findAllFrame(tabInfo, keyword, index, frameIdList, true);
+        });
     }
 
-    static nextTab(msg, sender) {
+    static nextTab(msg, sender, tabInfo) {
         const tab = sender.tab;
         const count = msg.count;
         if (count === 0) {
@@ -412,28 +416,28 @@ class Command {
                 tab.id, (index, tabLen) => (count < tabLen) ?  count : index);
         }
     }
-    static previousTab(msg, sender) {
+    static previousTab(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
         selectTab(
             sender.tab.id,
             (index, tabLen) => (index + tabLen - (count % tabLen)) % tabLen);
     }
-    static firstTab(msg, sender) {
+    static firstTab(msg, sender, tabInfo) {
         selectTab(sender.tab.id, (index, tabLen) => 0);
     }
-    static lastTab(msg, sender) {
+    static lastTab(msg, sender, tabInfo) {
         selectTab(sender.tab.id, (index, tabLen) => tabLen - 1);
     }
-    static moveTabToLeft(msg, sender) {
+    static moveTabToLeft(msg, sender, tabInfo) {
         moveTab(sender.tab.id, Math.max(msg.count, 1), true);
     }
-    static moveTabToRight(msg, sender) {
+    static moveTabToRight(msg, sender, tabInfo) {
         moveTab(sender.tab.id, Math.max(msg.count, 1), false);
     }
-    static removeCurrentTab(msg, sender) {
+    static removeCurrentTab(msg, sender, tabInfo) {
         browser.tabs.remove(sender.tab.id);
     }
-    static undoCloseTab(msg, sender) {
+    static undoCloseTab(msg, sender, tabInfo) {
         browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter((s) => s.tab !== undefined);
             if (tabSessions.length === 0) {
@@ -443,67 +447,67 @@ class Command {
             return browser.sessions.restore(tab.tab.sessionId);
         }, handleError);
     }
-    static duplicateTab(msg, sender) {
+    static duplicateTab(msg, sender, tabInfo) {
         browser.tabs.duplicate(sender.tab.id);
     }
-    static openTab(msg, sender) {
+    static openTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             return browser.tabs.create(
                 { index: tab.index + 1, windowId: tab.windowId });
         }, handleError);
     }
-    static removeCurrentWindow(msg, sender) {
+    static removeCurrentWindow(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             return browser.windows.remove(tab.windowId);
         }, handleError);
     }
-    static reload(msg, sender) {
+    static reload(msg, sender, tabInfo) {
         browser.tabs.reload(sender.tab.id);
     }
-    static reloadSkipCache(msg, sender) {
+    static reloadSkipCache(msg, sender, tabInfo) {
         browser.tabs.reload(sender.tab.id, { bypassCache: true });
     }
-    static zoomIn(msg, sender) {
+    static zoomIn(msg, sender, tabInfo) {
         const tabId = sender.tab.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
             browser.tabs.setZoom(tabId, Math.min(factor + count / 10, 3));
         }, handleError);
     }
-    static zoomOut(msg, sender) {
+    static zoomOut(msg, sender, tabInfo) {
         const tabId = sender.tab.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
             browser.tabs.setZoom(tabId, Math.max(factor - count / 10, 0.3));
         }, handleError);
     }
-    static zoomReset(msg, sender) {
+    static zoomReset(msg, sender, tabInfo) {
         browser.tabs.setZoom(sender.tab.id, 0);
     }
-    static openLink(msg, sender) {
+    static openLink(msg, sender, tabInfo) {
         browser.tabs.update(sender.tab.id, { url: msg.url });
     }
-    static openLinkInTab(msg, sender) {
+    static openLinkInTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             // TODO openerTabId
             browser.tabs.create(
                 { url: msg.url, index: tab.index + 1, active: msg.active });
         }, handleError);
     }
-    static downloadLink(msg, sender) {
+    static downloadLink(msg, sender, tabInfo) {
         browser.downloads.download({
             url: msg.url, /* TODO incognito: tab.incognito,*/ saveAs: true
         }, handleError);
     }
 
-    static reloadHintPattern(msg, sender) {
+    static reloadHintPattern(msg, sender, tabInfo) {
         loadHintPattern();
     }
 
-    static toHintMode(msg, sender) {
+    static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
         const tabId = sender.tab.id;
-        sendTabMessage(tabId, 0, {
+        tabInfo.sendMessage(0, {
             command: "collectHint",
             pattern: gHintPatternMap[type],
             isFocusType: (type === "focus")
@@ -511,54 +515,47 @@ class Command {
             changeHintMode(tabId, hintsInfoList, new HintMode(type))
         }, handleError);
     }
-    static collectHint(msg, sender) {
-        return sendTabMessage(sender.tab.id, msg.frameId, msg);
+    static collectHint(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, msg);
     }
-    static forwardHintKeyEvent(msg, sender) {
-        const tabInfo = gTabInfoMap.get(sender.tab.id);
-        if (!tabInfo || tabInfo.getMode() !== "HINT") {
+    static forwardHintKeyEvent(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
             return;
         }
         return tabInfo.modeInfo.handle(msg.key, sender);
     }
 
-    static collectFrameId(msg, sender) {
-        return sendTabMessage(sender.tab.id, msg.frameId, msg);
+    static collectFrameId(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, msg);
     }
 
-    static forwardCommand(msg, sender) {
-        sendTabMessage(sender.tab.id, msg.frameId, msg);
+    static forwardCommand(msg, sender, tabInfo) {
+        tabInfo.sendMessage(msg.frameId, msg);
     }
 
-    static execCommand(msg, sender) {
+    static execCommand(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {
             return gExCommandMap.execCommand(msg.cmd, tab)
                 .then((result) => [result, tab.incognito]);
         });
     }
-    static getCandidate(msg, sender, sendResponse) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
-            const result = gExCommandMap.getCandidate(msg.value, sender.tab);
-            result.then(sendResponse);
+    static getCandidate(msg, sender, tabInfo) {
+        return browser.tabs.get(sender.tab.id).then((tab) => {
+            return gExCommandMap.getCandidate(msg.value, sender.tab);
         });
-        return true;
     }
 
-    static toNormalMode(msg, sender) {
+    static toNormalMode(msg, sender, tabInfo) {
         changeMode(sender.tab.id, "NORMAL");
     }
-    static toConsoleMode(msg, sender) {
-        const tabInfo = gTabInfoMap.get(sender.tab.id);
-        if (!tabInfo) {
-            return;
-        }
+    static toConsoleMode(msg, sender, tabInfo) {
         const mode = "CONSOLE";
         tabInfo.setMode(mode);
         tabInfo.postMessage(
             0, { command: "changeMode", mode: mode, data: msg.data });
     }
-    static showConsole(msg, sender) {
-        return sendTabMessage(sender.tab.id, 0, msg);
+    static showConsole(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(0, msg);
     }
 }
 
@@ -618,9 +615,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     changeMode(activeInfo.tabId, "NORMAL");
 });
 
-browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    return Command[msg.command](msg, sender, sendResponse);
-});
+browser.runtime.onMessage.addListener(invokeCommand);
 
 browser.runtime.onConnect.addListener((port) => {
     const sender = port.sender;
@@ -643,7 +638,7 @@ browser.runtime.onConnect.addListener((port) => {
     port.onDisconnect.addListener(clearnupFrameInfo.bind(null, tabId, frameId));
 
     if (!gTabInfoMap.has(tabId)) {
-        gTabInfoMap.set(tabId, new TabInfo());
+        gTabInfoMap.set(tabId, new TabInfo(tabId));
     }
     const tabInfo = gTabInfoMap.get(tabId);
     tabInfo.setPort(frameId, port);
@@ -652,7 +647,12 @@ browser.runtime.onConnect.addListener((port) => {
     });
 });
 function invokeCommand(msg, sender) {
-    return Command[msg.command](msg, sender);
+    const tabInfo = gTabInfoMap.get(sender.tab.id);
+    if (!tabInfo) {
+        console.warn(`tabInfo for ${sender.tab.id} is not found`);
+        return;
+    }
+    return Command[msg.command](msg, sender, tabInfo);
 }
 function clearnupFrameInfo(tabId, frameId, port, error) {
     console.debug(`Port(${tabId}-${frameId}) is disconnected: ${error}`);
