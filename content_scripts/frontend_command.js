@@ -346,10 +346,7 @@ Loop: ${video.loop}`
     }
     static pressEnter(count, mode) {
         const elem = mode.getTarget();
-        const ctrl = (count === 1);
-        const shift = (count === 2);
-        const alt = (count === 3);
-        const meta = (count === 4);
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateEnter(elem, "keypress", ctrl, alt, shift, meta);
     }
 
@@ -358,20 +355,13 @@ Loop: ${video.loop}`
      **/
     static mouseclick(count, mode) {
         const elem = mode.getTarget();
-        const ctrl = (count === 1);
-        const shift = (count === 2);
-        const alt = (count === 3);
-        const meta = (count === 4);
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateClick(elem, ctrl, alt, shift, meta);
     }
     static mousedown(count, mode) {
         const elem = mode.getTarget();
-        const ctrl = (count === 1);
-        const shift = (count === 2);
-        const alt = (count === 3);
-        const meta = (count === 4);
-        emulateMouseEvent(
-            elem, "mousedown", 0, ctrl, alt, shift, meta);
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
+        emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
     }
     static mousein(count, mode) {
         const elem = mode.getTarget();
@@ -492,7 +482,9 @@ Loop: ${video.loop}`
         smartOpenImpl(count, mode, { command: 'openLink' });
     }
     static smartOpenInTab(count, mode) {
-        smartOpenImpl(count, mode, { command: 'openLinkInTab', active: true });
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
+        smartOpenImpl(
+            count, mode, { command: 'openLinkInTab', active: !shift });
     }
     static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);

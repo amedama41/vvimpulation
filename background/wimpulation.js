@@ -141,7 +141,7 @@ class HintCommand {
             tabInfo, mode.getFocusedFrameId(), { command: "focusout" });
     }
     static clickHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
-        const count = (ctrl ? 1 : shift ? 3 : meta ? 4 : 0);
+        const count = Utils.modifiersToCount(ctrl, shift, false, meta);
         forwardHintCommand(
             tabInfo, mode.getFocusedFrameId(),
             { command: "mouseclick", count: count });
@@ -156,7 +156,7 @@ class HintCommand {
         return HintCommand.clickHintLink(tabInfo, mode, false, false, true);
     }
     static mousedownHintLink(tabInfo, mode, shift=false, ctrl=false) {
-        const count = (ctrl ? 1 : shift ? 3 : 0);
+        const count = Utils.modifiersToCount(ctrl, shift, false, false);
         forwardHintCommand(
             tabInfo, mode.getFocusedFrameId(),
             { command: "mousedown", count: count });
@@ -176,7 +176,7 @@ class HintCommand {
             tabInfo, mode.getFocusedFrameId(), { command: "mouseout" });
     }
     static enterHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
-        const count = (ctrl ? 1 : shift ? 3 : meta ? 4 : 0);
+        const count = Utils.modifiersToCount(ctrl, shift, false, meta);
         forwardHintCommand(
             tabInfo, mode.getFocusedFrameId(),
             { command: "pressEnter", count: count});

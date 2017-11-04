@@ -143,6 +143,31 @@ return class {
     static makeCommandMapper(cmdMap) {
         return new CommandMapper(cmdMap);
     }
+
+    static countToModifiers(count) {
+        const ctrl = !!(count & 0b0001);
+        const shift = !!(count & 0b0010);
+        const alt = !!(count & 0b0100);
+        const meta = !!(count & 0b1000);
+        return [ctrl, shift, alt, meta];
+    }
+
+    static modifiersToCount(ctrl, shift, alt, meta) {
+        let count = 0;
+        if (ctrl) {
+            count |= 0b0001;
+        }
+        if (shift) {
+            count |= 0b0010;
+        }
+        if (alt) {
+            count |= 0b0100;
+        }
+        if (meta) {
+            count |= 0b1000;
+        }
+        return count;
+    }
 };
 
 })();
