@@ -310,7 +310,7 @@ class Command {
         });
     }
     static find(msg, sender, tabInfo) {
-        tabInfo.frameIdList((frameIdList) => {
+        return tabInfo.frameIdList((frameIdList) => {
             const [keyword, index] = tabInfo.lastSearchInfo;
             const startIndex = (keyword === msg.keyword ? index : 0);
             return findAllFrame(
