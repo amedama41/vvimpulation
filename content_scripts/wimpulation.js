@@ -378,34 +378,33 @@ class ConsoleMode extends Mode {
         this.options = options;
         this.lastFocusedElem = document.activeElement;
         this.lastFocusedElem.blur();
-        const div = document.createElement("div");
-        div.id = "wimpulation-console-container";
-        div.style.display = 'none';
-        const iframe = document.createElement("iframe");
-        iframe.id = "wimpulation-console";
-        iframe.src = browser.runtime.getURL("resources/ex_mode/ex_mode.html");
-        div.appendChild(iframe);
-        this.container = div;
-        document.documentElement.appendChild(this.container);
+        this.consoleFrame = document.getElementById("wimpulation-console");
+        if (!this.consoleFrame) { // frame is not loaded yet.
+            setTimeout(() => FrontendCommand.toNormalMode(0, this), 0);
+            return;
+        }
+        this.consoleFrame.classList.add("wimpulation-show-console");
+        this.consoleFrame.focus();
     }
     reset() {
         // Reset focus only when console frame is focused.
         // If search succeeds or user click elements outside of console,
         // frame is not focused.
-        if (document.activeElement === this.container.firstChild) {
+        if (document.activeElement === this.consoleFrame) {
             try {
+                // Need blur because lastFocusedElem may not be focusable.
+                this.consoleFrame.blur();
                 this.lastFocusedElem.focus();
             }
             catch (e) {
                 console.warn("lastFocusedElem is likely dead:", e);
             }
         }
-        document.documentElement.removeChild(this.container);
+        this.consoleFrame.classList.remove("wimpulation-show-console");
     }
     handle() {
     }
-    showConsole() {
-        this.container.style.display = 'inline';
+    getConsoleOptions() {
         return this.options;
     }
 }
@@ -429,11 +428,11 @@ class MessageCommand {
         const data = msg.data;
         invokeCommand(data.command, data.count, gMode);
     }
-    static showConsole(msg, sender) {
+    static getConsoleOptions(msg, sender) {
         if (!(gMode instanceof ConsoleMode)) {
             throw new Error('no console mode');
         }
-        return gMode.showConsole();
+        return gMode.getConsoleOptions();
     }
     static collectFrameId(msg) {
         const frameIdList = Array.from(window.frames)
@@ -528,6 +527,10 @@ function connectToBackGround(reconnectTimeout) {
                 port.disconnect();
                 gMode.reset();
             }, { capture: true, once : true });
+
+            if (msg.frameId === 0) {
+                createConsoleFrame();
+            }
         }
         else if (msg.command === "changeMode") {
             gMode.changeMode(msg.mode, msg.data);
@@ -560,6 +563,34 @@ function connectToBackGround(reconnectTimeout) {
         port.onRequest.removeListener(handleRequest);
         port.onNotification.removeListener(handleNotification);
     });
+}
+
+function createConsoleFrame() {
+    const create = () => {
+        // for reinstall
+        const oldContainer =
+            document.getElementById("wimpulation-console-container");
+        if (oldContainer) {
+            document.documentElement.removeChild(oldContainer);
+        }
+
+        const container = document.createElement("div");
+        container.id = "wimpulation-console-container";
+        const consoleFrame = document.createElement("iframe");
+        consoleFrame.id = "wimpulation-console";
+        consoleFrame.src =
+            browser.runtime.getURL("resources/ex_mode/ex_mode.html");
+        container.appendChild(consoleFrame);
+        document.documentElement.appendChild(container);
+    };
+
+    if (document.readyState === "loading") {
+        window.addEventListener(
+            "DOMContentLoaded", create, { capture: true, once: true });
+    }
+    else {
+        create();
+    }
 }
 
 console.log(location.href.substr(0, 64), document.readyState);

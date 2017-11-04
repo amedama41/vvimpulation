@@ -489,7 +489,7 @@ class Command {
         tabInfo.postMessage(
             0, { command: "changeMode", mode: mode, data: msg.data });
     }
-    static showConsole(msg, sender, tabInfo) {
+    static getConsoleOptions(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);
     }
 }

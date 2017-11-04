@@ -45,15 +45,17 @@
     padding: 0px !important;
     margin: 0px !important;
     overflow: hidden !important;
-    display: block !important;
     position: fixed !important;
     bottom: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    display: block !important;
     border: none !important;
     z-index: 2147483647 !important;
+    display: none !important;
     /* pointer-events: none; */
+}
+#wimpulation-console.wimpulation-show-console {
+    display: block !important;
 }
 
 .wimpulation-input {

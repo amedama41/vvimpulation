@@ -167,57 +167,57 @@ class History {
     }
 };
 
-function search(keyword, backward) {
+function search(keyword, backward, mode) {
     browser.runtime.sendMessage({
         command: "find", keyword: keyword, backward: backward
     }).then((result) => {
         if (result && !browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
         }
-        ConsoleCommand.closeConsoleMode();
+        ConsoleCommand.closeConsoleMode(mode);
     }).catch((error) => {
         console.error(error.toString());
-        ConsoleCommand.closeConsoleMode();
+        ConsoleCommand.closeConsoleMode(mode);
     });
 }
 
 class ConsoleCommand {
-    static closeConsoleMode() {
-        browser.runtime.sendMessage({ command: "toNormalMode" });
+    static closeConsoleMode(mode) {
+        mode.stopConsole();
     }
 
     static execSearch(mode) {
         const value = mode.getTarget().value;
         if (value === "") {
-            ConsoleCommand.closeConsoleMode();
+            ConsoleCommand.closeConsoleMode(mode);
             return;
         }
-        search(value, mode.isBackward());
+        search(value, mode.isBackward(), mode);
     }
 
     static execCommand(mode) {
         const value = mode.getTarget().value;
         if (value === "") {
-            ConsoleCommand.closeConsoleMode();
+            ConsoleCommand.closeConsoleMode(mode);
             return;
         }
         const prefix = value.charAt(0);
         if (prefix === "/" || prefix === "?") {
-            search(value.substr(1), prefix === '?');
+            search(value.substr(1), prefix === '?', mode);
             return;
         }
 
         browser.runtime.sendMessage({ command: "execCommand", cmd: value })
             .then((result) => {
                 if (result === false) {
-                    ConsoleCommand.closeConsoleMode();
+                    ConsoleCommand.closeConsoleMode(mode);
                     return;
                 }
                 if (!browser.extension.inIncognitoContext) { // TODO
                     History.save("command_history", value);
                 }
                 if (result === true) {
-                    ConsoleCommand.closeConsoleMode();
+                    ConsoleCommand.closeConsoleMode(mode);
                     return;
                 }
                 const output = document.querySelector("#ex_output");
@@ -263,7 +263,7 @@ class ConsoleCommand {
 
     static deleteCharBackward(mode) {
         if (!DomUtils.deleteCharBackward(mode.getTarget())) {
-            ConsoleCommand.closeConsoleMode();
+            ConsoleCommand.closeConsoleMode(mode);
         }
     }
     static deleteWordBackward(mode) {
@@ -304,24 +304,43 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-C>": "closeConsoleMode",
 });
 class ConsoleMode {
-    constructor(options) {
-        const prompt = document.getElementById("ex_prompt");
-        prompt.textContent = options.prompt;
-        this.prompt = options.prompt;
-
+    constructor() {
+        this._isOpened = false;
+        this.prompt = ":";
         this.input = document.getElementById("ex_input");
-        this.input.value = options.defaultCommand;
-        this.previousValue = this.input.value;
+        this.previousValue = undefined;
 
         const container = document.getElementById("ex_candidates");
         container.style.maxHeight = (window.innerHeight - 100) + "px";
         this.completer = new Completer(container);
 
-        const isSearch = this.isSearch();
+        this.history = undefined;
+        this.mapper = undefined;
+    }
+    startConsole(options) {
+        this._isOpened = true;
+
+        const prompt = document.getElementById("ex_prompt");
+        prompt.textContent = options.prompt;
+        this.prompt = options.prompt;
+
+        this.input.value = options.defaultCommand;
+        this.previousValue = this.input.value;
+
+        const isSearch = (this.prompt !== ":");
         this.history =
             new History(isSearch ? "search_history" : "command_history");
         this.mapper =
             Utils.makeCommandMapper(isSearch ? SEARCH_CMD_MAP : EX_CMD_MAP);
+
+        this.input.focus();
+    }
+    stopConsole() {
+        this._isOpened = false;
+        browser.runtime.sendMessage({ command: "toNormalMode" });
+    }
+    get isOpened() {
+        return this._isOpened;
     }
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
@@ -334,9 +353,6 @@ class ConsoleMode {
     }
     getTarget() {
         return this.input;
-    }
-    isSearch() {
-        return this.prompt !== ':';
     }
     isBackward() {
         return this.prompt === '?';
@@ -358,7 +374,7 @@ class ConsoleMode {
         });
     }
     updateCandidateList() {
-        if (this.previousValue !== this.input.value) {
+        if (this.prompt === ":" && this.previousValue !== this.input.value) {
             this.completer.update(this.input.value);
         }
     }
@@ -379,36 +395,43 @@ class ConsoleMode {
         this.previousValue = this.input.value;
     }
 }
-window.addEventListener("DOMContentLoaded", () => {
-    browser.runtime.sendMessage({ command: 'showConsole' }).then((options) => {
-        const mode = new ConsoleMode(options);
-        const input = mode.getTarget();
-        input.addEventListener("keydown", (e) => {
-            const key = Utils.getRegulatedKey(e);
-            if (!key) {
-                return;
-            }
 
-            // console.debug(e.type, key, e.defaultPrevented);
-            if (key.endsWith("Esc>") || key === "<C-[>") {
-                ConsoleCommand.closeConsoleMode();
-            };
-            if (mode.handle(key)) {
-                e.stopPropagation();
-                e.preventDefault();
-            }
-        });
-        if (!mode.isSearch()) {
-            input.addEventListener("keyup", (e) => {
-                mode.updateCandidateList();
-            }, true);
+window.addEventListener("DOMContentLoaded", (e) => {
+    const mode = new ConsoleMode();
+
+    const input = mode.getTarget();
+    input.addEventListener("keydown", (e) => {
+        const key = Utils.getRegulatedKey(e);
+        if (!key) {
+            return;
         }
 
-        input.focus();
-    }).catch((error) => {
-        console.error(error);
-        ConsoleCommand.closeConsoleMode();
+        // console.debug(e.type, key, e.defaultPrevented);
+        if (key.endsWith("Esc>") || key === "<C-[>") {
+            ConsoleCommand.closeConsoleMode(mode);
+        };
+        if (mode.handle(key)) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
     });
-    // input.addEventListener("blur", (e) => closeConsoleMode());
+    input.addEventListener("keyup", (e) => {
+        mode.updateCandidateList();
+    }, true);
+
+    window.addEventListener("focus", (e) => {
+        if (mode.isOpened) {
+            return;
+        }
+        browser.runtime.sendMessage({ command: 'getConsoleOptions' })
+            .then((options) => {
+                mode.startConsole(options);
+            })
+            .catch((error) => {
+                console.error(error.toString());
+                ConsoleCommand.closeConsoleMode(mode);
+            });
+        // input.addEventListener("blur", (e) => closeConsoleMode());
+    });
 }, { capture: true, once: true });
 
