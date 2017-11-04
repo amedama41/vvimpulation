@@ -171,7 +171,7 @@ function search(keyword, backward) {
     browser.runtime.sendMessage({
         command: "find", keyword: keyword, backward: backward
     }).then((result) => {
-        if (result) {
+        if (result && !browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
         }
         ConsoleCommand.closeConsoleMode();
@@ -208,12 +208,12 @@ class ConsoleCommand {
         }
 
         browser.runtime.sendMessage({ command: "execCommand", cmd: value })
-            .then(([result, incognito]) => {
+            .then((result) => {
                 if (result === false) {
                     ConsoleCommand.closeConsoleMode();
                     return;
                 }
-                if (!incognito) { // TODO
+                if (!browser.extension.inIncognitoContext) { // TODO
                     History.save("command_history", value);
                 }
                 if (result === true) {

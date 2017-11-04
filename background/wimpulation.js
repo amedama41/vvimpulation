@@ -468,7 +468,6 @@ class Command {
     static execCommand(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {
             return gExCommandMap.execCommand(msg.cmd, tab)
-                .then((result) => [result, tab.incognito]);
         });
     }
     static getCandidate(msg, sender, tabInfo) {
