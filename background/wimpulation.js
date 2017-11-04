@@ -71,41 +71,37 @@ class TabInfo {
     }
 }
 
-function forwardHintCommand(tabInfo, frameId, msg) {
-    return tabInfo.sendMessage(
-        frameId, { command: "forwardHintCommand", data: msg });
-}
 const gTabInfoMap = new Map();
 
 const HINT_KEY_MAP = Utils.toPreparedCmdMap({
-    "<C-C>": "toNormalMode",
-    "<C-[>": "toNormalMode",
-    "<C-L>": "refreshHint",
-    "<Tab>": "incrementHintNum",
-    "<S-Tab>": "decrementHintNum",
-    ";": "incrementHintNum",
-    ",": "decrementHintNum",
-    "ff": "toggleDefaultFocus",
-    "fi": "focusin",
-    "fo": "focusout",
-    "c": "clickHintLink",
-    "mc": "clickHintLink",
-    "mC": "shiftClickHintLink",
-    "m<C-C>": "controlClickHintLink",
-    "m<M-C>": "metaClickHintLink",
-    "md": "mousedownHintLink",
-    "mD": "shiftMousedownHintLink",
-    "m<C-D>": "controlMousedownHintLink",
-    "mi": "mouseinHintLink",
-    "mo": "mouseoutHintLink",
-    "e": "enterHintLink",
-    "E": "shiftEnterHintLink",
-    "<C-E>": "controlEnterHintLink",
-    "<M-E>": "metaEnterHintLink",
-    "o": "openLink",
-    "O": "openLinkInTab",
-    "y": "yankHintLink",
-    "s": "downloadHintLink",
+    "<C-C>": { name: "toNormalMode" },
+    "<C-[>": { name: "toNormalMode" },
+    "<C-L>": { name: "refreshHint" },
+    "<Tab>": { name: "incrementHintNum" },
+    "<S-Tab>": { name: "decrementHintNum" },
+    ";": { name: "incrementHintNum" },
+    ",": { name: "decrementHintNum" },
+    "ff": { name: "toggleDefaultFocus" },
+    "fi": { name: "focusin", frontend: true },
+    "fo": { name: "focusout", frontend: true },
+    "c": { name: "mouseclick", frontend: true },
+    "mc": { name: "mouseclick", frontend: true },
+    "mC": { name: "mouseclick", frontend: true, modifiers : { shift: true } },
+    "m<C-C>": { name: "mouseclick", frontend: true, modifiers: { ctrl: true } },
+    "m<M-C>": { name: "mouseclick", frontend: true, modifiers: { meta: true } },
+    "md": { name: "mousedown", frontend: true },
+    "mD": { name: "mousedown", frontend: true, modifiers: { shift: true } },
+    "m<C-D>": { name: "mousedown", frontend: true, modifiers: { ctrl: true } },
+    "mi": { name: "mousein", frontend: true },
+    "mo": { name: "mouseout", frontend: true },
+    "e": { name: "pressEnter", frontend: true },
+    "E": { name: "pressEnter", frontend: true, modifiers: { shift: true } },
+    "<C-E>": { name: "pressEnter", frontend: true, modifiers: { ctrl: true } },
+    "<M-E>": { name: "pressEnter", frontend: true, modifiers: { meta: true } },
+    "o": { name: "smartOpen", frontend: true },
+    "O": { name: "smartOpenInTab", frontend: true },
+    "y": { name: "yankLink", frontend: true },
+    "s": { name: "downloadLink", frontend: true },
 });
 class HintCommand {
     static toNormalMode(tabInfo, mode) {
@@ -128,84 +124,7 @@ class HintCommand {
             handleError);
     }
     static toggleDefaultFocus(tabInfo, mode) {
-        mode.setDefaultFocus(!mode.getDefaultFocus());
-    }
-    static focusin(tabInfo, mode) {
-        mode.setDefaultFocus(true);
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "focusin" });
-    }
-    static focusout(tabInfo, mode) {
-        mode.setDefaultFocus(false);
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "focusout" });
-    }
-    static clickHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
-        const count = Utils.modifiersToCount(ctrl, shift, false, meta);
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(),
-            { command: "mouseclick", count: count });
-    }
-    static shiftClickHintLink(tabInfo, mode) {
-        return HintCommand.clickHintLink(tabInfo, mode, true);
-    }
-    static controlClickHintLink(tabInfo, mode) {
-        return HintCommand.clickHintLink(tabInfo, mode, false, true);
-    }
-    static metaClickHintLink(tabInfo, mode) {
-        return HintCommand.clickHintLink(tabInfo, mode, false, false, true);
-    }
-    static mousedownHintLink(tabInfo, mode, shift=false, ctrl=false) {
-        const count = Utils.modifiersToCount(ctrl, shift, false, false);
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(),
-            { command: "mousedown", count: count });
-    }
-    static shiftMousedownHintLink(tabInfo, mode) {
-        return HintCommand.mousedownHintLink(tabInfo, mode, true);
-    }
-    static controlMousedownHintLink(tabInfo, mode) {
-        return HintCommand.mousedownHintLink(tabInfo, mode, false, true);
-    }
-    static mouseinHintLink(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "mousein" });
-    }
-    static mouseoutHintLink(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "mouseout" });
-    }
-    static enterHintLink(tabInfo, mode, shift=false, ctrl=false, meta=false) {
-        const count = Utils.modifiersToCount(ctrl, shift, false, meta);
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(),
-            { command: "pressEnter", count: count});
-    }
-    static shiftEnterHintLink(tabInfo, mode) {
-        return HintCommand.enterHintLink(tabInfo, mode, true);
-    }
-    static controlEnterHintLink(tabInfo, mode) {
-        return HintCommand.enterHintLink(tabInfo, mode, false, true);
-    }
-    static metaEnterHintLink(tabInfo, mode) {
-        return HintCommand.enterHintLink(tabInfo, mode, false, false, true);
-    }
-    static openLink(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "smartOpen" });
-    }
-    static openLinkInTab(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(),
-            { command: "smartOpenInTab", count: 0 });
-    }
-    static yankHintLink(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "yankLink" });
-    }
-    static downloadHintLink(tabInfo, mode) {
-        forwardHintCommand(
-            tabInfo, mode.getFocusedFrameId(), { command: "downloadLink" });
+        mode.toggleDefaultFocus();
     }
 }
 class HintMode {
@@ -223,13 +142,26 @@ class HintMode {
         }
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            HintCommand[optCmd](tabInfo, this);
+            this._invoke(optCmd, tabInfo);
         }
         if (cmd) {
-            HintCommand[cmd](tabInfo, this);
+            this._invoke(cmd, tabInfo);
         }
         else if (!consumed) {
             changeMode(tabInfo, "NORMAL", sender.frameId, [key]);
+        }
+    }
+    _invoke(cmd, tabInfo) {
+        if (cmd.frontend) {
+            const currentFrameId = this.idList[this.currentIndex];
+            const modifiers = cmd.modifiers || {};
+            const count = Utils.modifiersToCount(
+                modifiers.ctrl, modifiers.shift, modifiers.alt, modifiers.meta);
+            HintMode._forwardHintCommand(
+                tabInfo, currentFrameId, { command: cmd.name, count: count });
+        }
+        else {
+            HintCommand[cmd.name](tabInfo, this);
         }
     }
     _handleDigit(num, tabInfo) {
@@ -246,9 +178,6 @@ class HintMode {
     getType() {
         return this.type;
     }
-    getFocusedFrameId() {
-        return this.idList[this.currentIndex];
-    }
     getPreviousIndex() {
         const length = this.idList.length;
         return (this.currentIndex - 1 + length) % length;
@@ -256,29 +185,30 @@ class HintMode {
     getNextIndex() {
         return (this.currentIndex + 1) % this.idList.length;
     }
-    getDefaultFocus() {
-        return this.defaultFocus;
-    }
-    setDefaultFocus(defaultFocus) {
-        this.defaultFocus = defaultFocus;
+    toggleDefaultFocus() {
+        this.defaultFocus = !this.defaultFocus;
     }
     setIdList(idList) {
         this.idList = idList;
         this.currentIndex = 0;
         this.mapper.reset();
     }
-
     changeHintNum(nextIndex, tabInfo) {
         const prevId = this.idList[this.currentIndex];
         const nextId = this.idList[nextIndex];
         if (prevId !== nextId) {
-            forwardHintCommand(tabInfo, prevId, { command: "blurHintLink" });
+            HintMode._forwardHintCommand(
+                tabInfo, prevId, { command: "blurHintLink" });
         }
-        forwardHintCommand(tabInfo, nextId, {
+        HintMode._forwardHintCommand(tabInfo, nextId, {
             command: "focusHintLink",
             index: nextIndex, defaultFocus: this.defaultFocus
         });
         this.currentIndex = nextIndex;
+    }
+    static _forwardHintCommand(tabInfo, frameId, msg) {
+        return tabInfo.sendMessage(
+            frameId, { command: "forwardHintCommand", data: msg });
     }
 }
 
