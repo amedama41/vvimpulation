@@ -365,21 +365,21 @@ Loop: ${video.loop}`
     }
     static mousein(count, mode) {
         const elem = mode.getTarget();
+        const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
         emulateMouseEvent(
             elem, "mouseover", 0, false, false, false, false, body);
-        emulateMouseEvent(
-            elem, "mousemove", 0, false, false, false, false);
+        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
     }
     static mouseout(count, mode) {
         const elem = mode.getTarget();
+        const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
         emulateMouseEvent(
             elem, "mouseout", 1, false, false, false, false, body);
-        emulateMouseEvent(
-            elem, "mousemove", 1, false, false, false, false);
+        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
     }
 
     /**
