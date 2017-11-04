@@ -67,7 +67,7 @@ class Port {
                 handler(this, port.error);
             }
             catch (e) {
-                console.error('disconnect handling error', e);
+                console.error('disconnect handler error:', Port._toString(e));
             }
         });
         this._clearHandlers(); // avoid circular reference
@@ -132,7 +132,7 @@ class Port {
                 handler(msg.msg, this.port.sender);
             }
             catch (e) {
-                console.error('notification handling error', e);
+                console.error('notification handler error:', Port._toString(e));
             }
         });
     }
@@ -152,8 +152,15 @@ class Port {
             this.port.postMessage(msg);
         }
         catch (e) {
-            console.error(
-                'failed to send message', e.message, e.fileName, e.lineNumber);
+            console.error('failed to send message:', Port._toString(e));
+        }
+    }
+    static _toString(e) {
+        if (e instanceof Error) {
+            return `${e.message} (${e.fileName}:${e.lineNumber})`;
+        }
+        else {
+            return e.toString();
         }
     }
 }
