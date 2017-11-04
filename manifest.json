@@ -12,7 +12,6 @@
         "sessions",
         "storage",
         "tabs",
-        "webNavigation",
         "https://suggestqueries.google.com/complete/search"
     ],
 
@@ -49,7 +48,6 @@
 
     "web_accessible_resources": [
         "resources/ex_mode/ex_mode.html",
-        "resources/hint_pattern.json",
-        "resources/rm_pattern.json"
+        "resources/hint_pattern.json"
     ]
 }
