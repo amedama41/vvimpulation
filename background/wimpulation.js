@@ -282,6 +282,9 @@ function findAllFrame(tabInfo, keyword, startIndex, frameIdList, backward) {
     };
     return findFrame(0);
 }
+
+const IS_TAB_DEFAULT_INACTIVE = true;
+
 class Command {
     static focusNextFrame(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
@@ -403,9 +406,10 @@ class Command {
     }
     static openLinkInTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
+            const active = (IS_TAB_DEFAULT_INACTIVE ? !msg.active : msg.active);
             // TODO openerTabId
             browser.tabs.create(
-                { url: msg.url, index: tab.index + 1, active: msg.active });
+                { url: msg.url, index: tab.index + 1, active: active });
         }, handleError);
     }
     static downloadLink(msg, sender, tabInfo) {
