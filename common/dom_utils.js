@@ -182,7 +182,9 @@ return (class Edit {
         document.execCommand("paste");
         const value = textarea.value;
         root.removeChild(textarea);
-        activeElement.focus();
+        if (activeElement) { // activeElement may be null (e.g. about:blank)
+            activeElement.focus();
+        }
         return value;
     }
     static setToClipboard(value) {
@@ -197,7 +199,9 @@ return (class Edit {
         textarea.select();
         document.execCommand("copy");
         root.removeChild(textarea);
-        activeElement.focus();
+        if (activeElement) { // activeElement may be null (e.g. about:blank)
+            activeElement.focus();
+        }
     }
 });
 

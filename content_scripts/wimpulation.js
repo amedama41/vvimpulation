@@ -259,7 +259,8 @@ class NormalMode extends Mode {
         }
     }
     getTarget() {
-        return document.activeElement;
+        // activeElement may be null (e.g. about:blank)
+        return document.activeElement || document.documentElement;
     }
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
@@ -377,7 +378,10 @@ class ConsoleMode extends Mode {
         super(frameInfo);
         this.options = options;
         this.lastFocusedElem = document.activeElement;
-        this.lastFocusedElem.blur();
+        // activeElement may be null (e.g. about:blank).
+        if (this.lastFocusedElem) {
+            this.lastFocusedElem.blur();
+        }
         this.consoleFrame = document.getElementById("wimpulation-console");
         if (!this.consoleFrame) { // frame is not loaded yet.
             setTimeout(() => FrontendCommand.toNormalMode(0, this), 0);
@@ -394,7 +398,9 @@ class ConsoleMode extends Mode {
             try {
                 // Need blur because lastFocusedElem may not be focusable.
                 this.consoleFrame.blur();
-                this.lastFocusedElem.focus();
+                if (this.lastFocusedElem) {
+                    this.lastFocusedElem.focus();
+                }
             }
             catch (e) {
                 console.warn("lastFocusedElem is likely dead:", e);
