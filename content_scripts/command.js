@@ -117,6 +117,7 @@ const COMMAND_DESCRIPTIONS = {
     pasteValue: {},
 
     smartOpen: {},
+    smartOpenInTab: {},
     yankCurrentURL: { topFrame: true },
     reloadHintPattern: { background: true },
     repeatLastCommand: {},

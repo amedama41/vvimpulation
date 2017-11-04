@@ -103,8 +103,7 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-E>": "controlEnterHintLink",
     "<M-E>": "metaEnterHintLink",
     "o": "openLink",
-    "t": "openLinkInTab",
-    "T": "openLinkInBackgroundTab",
+    "O": "openLinkInTab",
     "y": "yankHintLink",
     "s": "downloadHintLink",
 });
@@ -195,14 +194,10 @@ class HintCommand {
         forwardHintCommand(
             tabInfo, mode.getFocusedFrameId(), { command: "smartOpen" });
     }
-    static openLinkInTab(tabInfo, mode, active=true) {
-        const count = (active ? 0 : 1);
+    static openLinkInTab(tabInfo, mode) {
         forwardHintCommand(
             tabInfo, mode.getFocusedFrameId(),
-            { command: "openLinkInTab", count: count });
-    }
-    static openLinkInBackgroundTab(tabInfo, mode) {
-        HintCommand.openLinkInTab(tabInfo, mode, false);
+            { command: "smartOpenInTab", count: 0 });
     }
     static yankHintLink(tabInfo, mode) {
         forwardHintCommand(

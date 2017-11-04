@@ -485,25 +485,14 @@ Loop: ${video.loop}`
         });
     }
 
-
+    /**
+     * Commands for various applications
+     **/
     static smartOpen(count, mode) {
-        const elem = mode.getTarget();
-        if (elem.onclick) {
-            return FrontendCommand.mouseclick(count, mode);
-        }
-        const link = getLink(elem);
-        if (link) {
-            mode.postMessage({ command: 'openLink', url: link });
-            return;
-        }
-        if (elem instanceof HTMLSelectElement ||
-            elem instanceof HTMLInputElement ||
-            elem instanceof HTMLTextAreaElement) {
-            elem.dispatchEvent(
-                new Event("change", { bubbles: true, cancelable: false }));
-            FrontendCommand.pressEnter(count, mode);
-        }
-        return FrontendCommand.mouseclick(count, mode);
+        smartOpenImpl(count, mode, { command: 'openLink' });
+    }
+    static smartOpenInTab(count, mode) {
+        smartOpenImpl(count, mode, { command: 'openLinkInTab', active: true });
     }
     static yankCurrentURL(count, mode) {
         DomUtils.setToClipboard(location.href);
@@ -644,6 +633,27 @@ function getLink(elem) {
         console.warn(`Element ${elem} is likely dead:`, e);
     }
     return undefined;
+}
+
+function smartOpenImpl(count, mode, openLinkMsg) {
+    const elem = mode.getTarget();
+    if (elem.onclick) {
+        return FrontendCommand.mouseclick(count, mode);
+    }
+    const link = getLink(elem);
+    if (link) {
+        openLinkMsg.url = link;
+        mode.postMessage(openLinkMsg);
+        return;
+    }
+    if (elem instanceof HTMLSelectElement ||
+        elem instanceof HTMLInputElement ||
+        elem instanceof HTMLTextAreaElement) {
+        elem.dispatchEvent(
+            new Event("change", { bubbles: true, cancelable: false }));
+        FrontendCommand.pressEnter(count, mode);
+    }
+    return FrontendCommand.mouseclick(count, mode);
 }
 
 function emulateClick(target, ctrl, alt, shift, meta) {
