@@ -34,8 +34,7 @@ class VisualModeBase extends Mode {
         super(frameInfo);
         const selection  = window.getSelection();
         if (selection.rangeCount === 0) {
-            setTimeout(() => super.changeMode("NORMAL"), 0);
-            return;
+            throw new Error("No selection");
         }
         this.selection = selection;
         this.init(this.selection);

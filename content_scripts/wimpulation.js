@@ -310,12 +310,12 @@ class InsertMode extends Mode {
         this.editableElement = data.editableElement;
         this.editableElement.undoStack = [];
         this.editableElement.focus();
+        if (document.activeElement !== this.editableElement) {
+            throw new Error(
+                `Target element is not focusable (${this.editableElement})`);
+        }
         this.editableElement.classList.add("wimpulation-input");
         this.inInvoking = false;
-        if (document.activeElement !== this.editableElement) {
-            setTimeout(() => FrontendCommand.toNormalMode(0, this), 0);
-            return;
-        }
         this.blurHandler = (e) => {
             if (this.inInvoking) {
                 return;
@@ -378,14 +378,14 @@ class ConsoleMode extends Mode {
         super(frameInfo);
         this.options = options;
         this.lastFocusedElem = document.activeElement;
+        this.consoleFrame = document.getElementById("wimpulation-console");
+        if (!this.consoleFrame) {
+            throw new Error("Console frame is not loaded yet");
+        }
+
         // activeElement may be null (e.g. about:blank).
         if (this.lastFocusedElem) {
             this.lastFocusedElem.blur();
-        }
-        this.consoleFrame = document.getElementById("wimpulation-console");
-        if (!this.consoleFrame) { // frame is not loaded yet.
-            setTimeout(() => FrontendCommand.toNormalMode(0, this), 0);
-            return;
         }
         this.consoleFrame.classList.add("wimpulation-show-console");
         this.consoleFrame.focus();
