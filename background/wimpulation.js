@@ -448,6 +448,7 @@ class Command {
             command: "collectHint",
             type: msg.type,
             pattern: HintMode._makePattern(msg.type, msg.url),
+            area: msg.area,
         });
     }
     static forwardHintKeyEvent(msg, sender, tabInfo) {
