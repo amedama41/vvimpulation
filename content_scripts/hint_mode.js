@@ -150,7 +150,7 @@ function getRectsOfAreaElement(area) {
             return [rect];
     }
 }
-function makeHints(pattern, isFocusType, winArea, frameInfo) {
+function makeHints(pattern, type, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
 
@@ -161,6 +161,7 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
 
     const scrX = win.scrollX, scrY = win.scrollY;
     const elems = win.document.querySelectorAll("frame, iframe, " + pattern);
+    const isFocusType = (type === 'focus');
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
 
@@ -211,8 +212,7 @@ function makeHints(pattern, isFocusType, winArea, frameInfo) {
             };
             idOrPromiseList.push(frameInfo.sendMessage({
                 command: "collectHint",
-                pattern: pattern, isFocusType: isFocusType, area: frameArea,
-                frameId: frameId
+                type: type, area: frameArea, frameId: frameId, url: elem.src
             }));
         }
     }

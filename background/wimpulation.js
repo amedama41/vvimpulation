@@ -1,8 +1,8 @@
 "use strict";
 
 class TabInfo {
-    constructor(tabId) {
-        this.tabId = tabId;
+    constructor(tab) {
+        this.tab = tab;
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
         this.modeInfo = undefined;
@@ -10,7 +10,7 @@ class TabInfo {
         this._lastSearchInfo = ["", 0];
     }
     get id() {
-        return this.tabId;
+        return this.tab.id;
     }
     getMode() {
         return this.mode;
@@ -56,7 +56,7 @@ class TabInfo {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
             console.warn(
-                `port ${this.tabId}-${frameId} is already disconnected`);
+                `port ${this.id}-${frameId} is already disconnected`);
             return;
         }
         port.postMessage(msg);
@@ -65,7 +65,7 @@ class TabInfo {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
             return Promise.reject(
-                `port ${this.tabId}-${frameId} is already disconnected`);
+                `port ${this.id}-${frameId} is already disconnected`);
         }
         return port.sendMessage(msg);
     }
@@ -117,8 +117,8 @@ class HintCommand {
         const type = mode.getType();
         tabInfo.sendMessage(0, {
             command: "collectHint",
-            pattern: gHintPatternMap[type],
-            isFocusType: (type === "focus")
+            type: type,
+            pattern: HintMode._makePattern(type, tabInfo.tab.url),
         }).then(
             (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, mode),
             handleError);
@@ -209,6 +209,17 @@ class HintMode {
     static _forwardHintCommand(tabInfo, frameId, msg) {
         return tabInfo.sendMessage(
             frameId, { command: "forwardHintCommand", data: msg });
+    }
+    static _makePattern(type, url) {
+        const globalPattern = gHintPatternMap["global"][type];
+        url = new URL(url);
+        const localPatternMap = gHintPatternMap["local"][url.host];
+        if (localPatternMap && localPatternMap[type]) {
+            return globalPattern + ", " + localPatternMap[type];
+        }
+        else {
+            return globalPattern;
+        }
     }
 }
 
@@ -426,14 +437,18 @@ class Command {
         const type = msg.type;
         tabInfo.sendMessage(0, {
             command: "collectHint",
-            pattern: gHintPatternMap[type],
-            isFocusType: (type === "focus")
+            type: type,
+            pattern: HintMode._makePattern(type, sender.tab.url),
         }).then((hintsInfoList) => {
             changeHintMode(tabInfo, hintsInfoList, new HintMode(type))
         }, handleError);
     }
     static collectHint(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, msg);
+        return tabInfo.sendMessage(msg.frameId, {
+            command: "collectHint",
+            type: msg.type,
+            pattern: HintMode._makePattern(msg.type, msg.url),
+        });
     }
     static forwardHintKeyEvent(msg, sender, tabInfo) {
         if (tabInfo.getMode() !== "HINT") {
@@ -511,12 +526,24 @@ function changeMode(tabInfo, mode, frameId = undefined, data = undefined) {
 
 let gHintPatternMap = undefined;
 function loadHintPattern() {
+    function normalizePatternMap(patternMap) {
+        Object.keys(patternMap).forEach((type) => {
+            patternMap[type] =
+                patternMap[type].map(([pat, desc]) => pat).join(",");
+        });
+    }
     const url = browser.runtime.getURL("resources/hint_pattern.json");
     const headers = new Headers(
         { "Content-Type": "application/x-suggestions+json" });
     fetch(url, { header: headers })
         .then((response) => response.json())
-        .then((json) => gHintPatternMap = json, handleError);
+        .then((json) => {
+            const local = json.local;
+            Object.keys(local).forEach(
+                (host) => normalizePatternMap(local[host]));
+            gHintPatternMap = json;
+        })
+        .catch(handleError);
 }
 loadHintPattern();
 
@@ -543,7 +570,6 @@ browser.runtime.onConnect.addListener((port) => {
         console.info("TAB_ID_NONE:", tab);
         return;
     }
-
     const frameId = sender.frameId;
 
     port.onNotification.addListener(invokeCommand);
@@ -551,7 +577,7 @@ browser.runtime.onConnect.addListener((port) => {
     port.onDisconnect.addListener(clearnupFrameInfo.bind(null, tabId, frameId));
 
     if (!gTabInfoMap.has(tabId)) {
-        gTabInfoMap.set(tabId, new TabInfo(tabId));
+        gTabInfoMap.set(tabId, new TabInfo(tab));
     }
     const tabInfo = gTabInfoMap.get(tabId);
     tabInfo.setPort(frameId, port);

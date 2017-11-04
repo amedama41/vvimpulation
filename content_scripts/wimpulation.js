@@ -416,8 +416,7 @@ class MessageCommand {
             top: 0, left: 0,
             bottom: window.innerHeight, rigth: window.innerWidth
         };
-        return makeHints(
-            msg.pattern, msg.isFocusType, winArea, gMode.frameInfo);
+        return makeHints(msg.pattern, msg.type, winArea, gMode.frameInfo);
     }
     static forwardHintCommand(msg) {
         if (!(gMode instanceof HintMode)) {

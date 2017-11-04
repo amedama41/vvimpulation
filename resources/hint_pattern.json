@@ -1,5 +1,15 @@
 {
-    "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area",
-    "focus": "body *",
-    "media": "img, canvas, video"
+    "global": {
+        "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area",
+        "focus": "body *",
+        "media": "img, canvas, video, object, embed"
+    },
+    "local": {
+        "github.com": {
+            "link": [
+                ["#user-links svg.octicon-plus, #user-links img.avatar", "Header dropdown list icons"],
+                ["details.get-repo-select-menu > summary.btn", "Clone or download button"]
+            ]
+        }
+    }
 }
