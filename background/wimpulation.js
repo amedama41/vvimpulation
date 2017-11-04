@@ -212,6 +212,9 @@ class HintMode {
     }
     static _makePattern(type, url) {
         const globalPattern = gHintPatternMap["global"][type];
+        if (url === "") {
+            return globalPattern;
+        }
         url = new URL(url);
         const localPatternMap = gHintPatternMap["local"][url.host];
         if (localPatternMap && localPatternMap[type]) {
