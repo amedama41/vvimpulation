@@ -44,14 +44,15 @@ class VisualModeBase extends Mode {
     reset() {
         if (this.selection) {
             try {
-                this.selection.collapseToStart();
+                this.destroy(this.selection);
             }
             catch (e if e instanceof Error) {
                 console.error(
-                    'visual mode reset error', e.message, e.fileName, e.lineNumber);
+                    'visual mode reset error:',
+                    e.message, e.fileName, e.lineNumber);
             }
             catch (e) {
-                console.error('visual mode reset error', e);
+                console.error('visual mode reset error:', e.toString());
             }
         }
     }
@@ -82,6 +83,9 @@ class VisualModeBase extends Mode {
 
 class VisualMode extends VisualModeBase {
     init(selection) {}
+    destroy(selection) {
+        selection.collapseToEnd();
+    }
     selectionModify(selection, direction, granularity) {
         selection.modify("extend", direction, granularity);
     }
@@ -92,6 +96,10 @@ class CaretMode extends VisualModeBase {
         const node = this.selection.focusNode;
         const offset = this.selection.focusOffset;
         selection.setBaseAndExtent(node, offset, node, offset);
+        selection.modify("extend", "forward", "character");
+    }
+    destroy(selection) {
+        selection.collapseToStart();
     }
     selectionModify(selection, direction, granularity) {
         selection.collapseToStart();
