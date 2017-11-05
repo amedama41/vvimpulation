@@ -125,7 +125,8 @@ class FrontendCommand {
             elem.focus();
         }
         catch (e) {
-            console.warn(`Element ${elem} is likely dead:`, e);
+            console.warn(
+                `Element ${elem} is likely dead:`, Utils.errorString(e));
         }
     }
     static focusout(count, mode) {
@@ -134,7 +135,8 @@ class FrontendCommand {
             elem.blur();
         }
         catch (e) {
-            console.warn(`Element ${elem} is likely dead:`, e);
+            console.warn(
+                `Element ${elem} is likely dead:`, Utils.errorString(e));
         }
     }
 
@@ -618,7 +620,7 @@ function getLink(elem) {
         return (link instanceof SVGAnimatedString ? link.animVal : link);
     }
     catch (e) {
-        console.warn(`Element ${elem} is likely dead:`, e);
+        console.warn(`Element ${elem} is likely dead:`, Utils.errorString(e));
     }
     return undefined;
 }

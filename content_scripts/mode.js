@@ -45,7 +45,7 @@ class Mode {
             }
         }
         catch (e) {
-            console.warn("change mode error:", e.toString());
+            console.warn("change mode error:", Utils.errorString(e));
             return new NormalMode(frameInfo, NORMAL_KEY_MAP);
         }
     }

@@ -45,13 +45,8 @@ class VisualModeBase extends Mode {
             try {
                 this.destroy(this.selection);
             }
-            catch (e if e instanceof Error) {
-                console.error(
-                    'visual mode reset error:',
-                    e.message, e.fileName, e.lineNumber);
-            }
             catch (e) {
-                console.error('visual mode reset error:', e.toString());
+                console.error('visual mode reset error:', Utils.errorString(e));
             }
         }
     }

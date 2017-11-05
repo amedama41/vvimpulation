@@ -18,11 +18,6 @@ class HintMode extends Mode {
         const target = document.documentElement;
         target.appendChild(container);
         this.indexMap = indexMap;
-        if (document.querySelectorAll(
-            "#wimpulation-hint-container").length > 1) {
-            const frameId = frameInfo.getSelfFrameId();
-            console.warn("multiple wimpulation-hint-container", frameId);
-        }
     }
     handle(key) {
         super.postMessage({ command: "forwardHintKeyEvent", key: key });
@@ -43,7 +38,7 @@ class HintMode extends Mode {
         this.blurHintLink();
         const localIndex = this.indexMap[msg.index];
         if (localIndex === undefined) {
-            console.warn(`unknown index (${msg.index})`);
+            console.error(`unknown index (${msg.index})`);
             return;
         }
         const [span, elem] = this.hints[localIndex];

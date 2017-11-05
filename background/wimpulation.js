@@ -44,7 +44,8 @@ class TabInfo {
     deletePort(frameId, port) {
         this._frameIdListCache = undefined;
         if (this.frameInfoMap.get(frameId) !== port) {
-            console.warn(`missmatch ${frameId} port`);
+            // This case occurs when port is overwrite by new frame's port.
+            console.warn(`missmatch ${this.id}-${frameId} port`);
             return false;
         }
         return this.frameInfoMap.delete(frameId);
@@ -55,8 +56,7 @@ class TabInfo {
     postMessage(frameId, msg) {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
-            console.warn(
-                `port ${this.id}-${frameId} is already disconnected`);
+            console.warn(`port ${this.id}-${frameId} is already disconnected`);
             return;
         }
         port.postMessage(msg);
@@ -230,12 +230,7 @@ function handleError(error) {
     if (error === undefined) {
         error = 'some error occured';
     }
-    if (error instanceof Error) {
-        console.error(error.message, error.lineNumber, error.fileName);
-    }
-    else {
-        console.error(error);
-    }
+    console.error(Utils.errorString(error));
     browser.notifications.create("wimpulation-error-notification", {
         type: "basic",
         message: error.toString(),
@@ -564,7 +559,7 @@ browser.runtime.onConnect.addListener((port) => {
     }
     const tabId = tab.id;
     if (tabId === browser.tabs.TAB_ID_NONE) {
-        console.info("TAB_ID_NONE:", tab);
+        console.warn("TAB_ID_NONE:", tab.url);
         return;
     }
     const frameId = sender.frameId;

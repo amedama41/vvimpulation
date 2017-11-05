@@ -256,7 +256,6 @@ gExCommandMap.makeCommand("tab", (args, tab) => {
 });
 gExCommandMap.makeCommand("download", (args, tab) => {
     return browser.downloads.search({}).then((dlItems) => {
-        console.table(dlItems);
         if (!tab.incognito) {
             dlItems = dlItems.filter((item) => !item.incognito);
         }
@@ -355,7 +354,6 @@ gExCommandMap.makeCommand("undoWindow",
     (value, tab) => {
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
-            console.table(winSessions);
             return [
                 0, 2, winSessions.map((s, index) => [
                     index, s.window.title || s.window.tabs[0].title

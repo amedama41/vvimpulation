@@ -168,6 +168,15 @@ return class {
         }
         return count;
     }
+
+    static errorString(error) {
+        if (error instanceof Error) {
+            return `${error.message} (${error.fileName}:${error.lineNumber})`;
+        }
+        else {
+            return error && error.toString();
+        }
+    }
 };
 
 })();

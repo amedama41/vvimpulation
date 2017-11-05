@@ -359,7 +359,7 @@ class InsertMode extends Mode {
             }
         }
         catch (e) {
-            console.warn(e);
+            console.warn("Some error occured:", Utils.errorString(e));
         }
     }
     _invoke(cmd) {
@@ -403,7 +403,8 @@ class ConsoleMode extends Mode {
                 }
             }
             catch (e) {
-                console.warn("lastFocusedElem is likely dead:", e);
+                console.warn(
+                    "lastFocusedElem is likely dead:", Utils.errorString(e));
             }
         }
         this.consoleFrame.classList.remove("wimpulation-show-console");
@@ -554,7 +555,7 @@ function connectToBackGround(reconnectTimeout) {
     port.onNotification.addListener(handleNotification);
     port.onRequest.addListener(handleRequest);
     port.onDisconnect.addListener((port, error) => {
-        console.debug("Port disconnected:", error.toString());
+        console.debug("Port disconnected:", error && error.toString());
         if (gMode === undefined) {
             // reconnect because background may not listen yet
             window.setTimeout(
