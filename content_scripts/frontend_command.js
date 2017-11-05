@@ -559,10 +559,8 @@ Loop: ${video.loop}`
         mode.changeMode("VISUAL");
     }
     static toExMode(count, mode, defaultCommand="") {
-        mode.postMessage({
-            command: "toConsoleMode",
-            data: { defaultCommand: defaultCommand, prompt: ':' }
-        });
+        mode.changeMode(
+            "CONSOLE", { defaultCommand: defaultCommand, prompt: ':' });
     }
     static toExModeOpen(count, mode) {
         return FrontendCommand.toExMode(count, mode, "open ");
@@ -577,10 +575,8 @@ Loop: ${video.loop}`
         return FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
     }
     static toSearchMode(count, mode, isBackward=false) {
-        mode.postMessage({
-            command: "toConsoleMode",
-            data: { defaultCommand: '', prompt: (isBackward ? '?' : '/') }
-        });
+        mode.changeMode(
+            "CONSOLE", { defaultCommand: '', prompt: (isBackward ? '?' : '/') });
     }
     static toBackwardSearchMode(count, mode) {
         return FrontendCommand.toSearchMode(count, mode, true);

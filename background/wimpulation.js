@@ -483,12 +483,6 @@ class Command {
     static toNormalMode(msg, sender, tabInfo) {
         changeMode(tabInfo, "NORMAL");
     }
-    static toConsoleMode(msg, sender, tabInfo) {
-        const mode = "CONSOLE";
-        tabInfo.setMode(mode);
-        tabInfo.postMessage(
-            0, { command: "changeMode", mode: mode, data: msg.data });
-    }
     static getConsoleOptions(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);
     }
