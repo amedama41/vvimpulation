@@ -120,6 +120,7 @@ const COMMAND_DESCRIPTIONS = {
     clearSelection: {},
     yankSelection: {},
     deleteSelection: {},
+    reverseSelectionEndpoints: {},
 
     /** Commands for element manipulation **/
     selectElement: {},
@@ -146,6 +147,7 @@ const COMMAND_DESCRIPTIONS = {
     toHintFocusMode: {},
     toHintMediaMode: {},
     toVisualMode: {},
+    toCaretMode: {},
     toExMode: { topFrame: true },
     toExModeOpen: { topFrame: true },
     toExModeOpenCurrentURL: { topFrame: true },

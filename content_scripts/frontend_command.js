@@ -501,6 +501,18 @@ Loop: ${video.loop}`
         }
         selection.deleteFromDocument();
     }
+    static reverseSelectionEndpoints(count, mode) {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+            return;
+        }
+        const anchorNode = selection.anchorNode;
+        const anchorOffset = selection.anchorOffset;
+        const focusNode = selection.focusNode;
+        const focusOffset = selection.focusOffset;
+        selection.setBaseAndExtent(
+            focusNode, focusOffset, anchorNode, anchorOffset);
+    }
 
     /**
      * Commands for element manipulation
@@ -612,6 +624,9 @@ Loop: ${video.loop}`
     }
     static toVisualMode(count, mode) {
         mode.changeMode("VISUAL");
+    }
+    static toCaretMode(selection, mode) {
+        mode.changeMode("CARET");
     }
     static toExMode(count, mode, defaultCommand="") {
         mode.changeMode(

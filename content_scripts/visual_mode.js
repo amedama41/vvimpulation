@@ -1,30 +1,3 @@
-class VisualCommand {
-    static yankSelection(selection) {
-        DomUtils.setToClipboard(selection.toString());
-        VisualCommand.toNormalMode();
-    }
-    static reverseCursor(selection) {
-        if (selection.isCollapsed) {
-            return;
-        }
-        const anchorNode = selection.anchorNode;
-        const anchorOffset = selection.anchorOffset;
-        const focusNode = selection.focusNode;
-        const focusOffset = selection.focusOffset;
-        selection.setBaseAndExtent(
-            focusNode, focusOffset, anchorNode, anchorOffset);
-    }
-    static toCaretMode(selection, mode) {
-        mode.changeMode("CARET");
-    }
-    static toVisualMode(selection, mode) {
-        mode.changeMode("VISUAL");
-    }
-    static toNormalMode(selection, mode) {
-        mode.changeMode("NORMAL");
-    }
-}
-
 /**
  * Classes derived from this class must implements init and selectionModify
  * methods.
@@ -70,7 +43,7 @@ class VisualModeBase extends Mode {
             return true;
         }
         else {
-            return !VisualCommand[cmd](this.selection, this);
+            return !invokeCommand(cmd, 0, this);
         }
     }
 }

@@ -135,10 +135,12 @@ const VISUAL_KEY_MAP = Utils.toPreparedCmdMap({
     "G": "move forward documentboundary",
     "gg": "move backward documentboundary",
     "y": "yankSelection",
-    "o": "reverseCursor",
+    "d": "deleteSelection",
+    "o": "reverseSelectionEndpoints",
     "c": "toCaretMode",
     "v": "toVisualMode",
     "<C-[>": "toNormalMode",
+    "<C-C>": "toNormalMode",
 });
 
 class FrameInfo {
