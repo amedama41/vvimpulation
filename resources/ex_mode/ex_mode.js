@@ -40,6 +40,12 @@ class Completer {
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
     }
+    reset() {
+        this.candidates = [];
+        this.selectIndex = undefined;
+        this.candidateInfo = undefined;
+        this.container.innerHTML = "";
+    }
     hasCandidates() {
         return this.candidates.length !== 0;
     }
@@ -337,6 +343,7 @@ class ConsoleMode {
     }
     stopConsole() {
         this._isOpened = false;
+        this.completer.reset();
         browser.runtime.sendMessage({ command: "toNormalMode" });
     }
     get isOpened() {
