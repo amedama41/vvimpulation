@@ -539,7 +539,7 @@ function connectToBackGround(reconnectTimeout) {
             }
         }
         else if (msg.command === "changeMode") {
-            gMode.changeMode(msg.mode, msg.data);
+            gMode.changeModeNow(msg.mode, msg.data);
         }
     };
     const handleRequest = (msg, sender) => {

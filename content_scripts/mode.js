@@ -12,6 +12,9 @@ class Mode {
         return this._frameInfo.sendMessage(msg);
     }
     changeMode(mode, data) {
+        setTimeout(() => { this.changeModeNow(mode, data); }, 0);
+    }
+    changeModeNow(mode, data) {
         this.reset();
         gMode = Mode.createMode(mode, this._frameInfo, data);
     }
