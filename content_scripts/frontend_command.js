@@ -385,7 +385,7 @@ Loop: ${video.loop}`
     }
 
     /**
-     * Commands for select manipulation
+     * Commands for select element manipulation
      **/
     static selectNextOption(count, mode) {
         const select = mode.getTarget();
@@ -475,6 +475,59 @@ Loop: ${video.loop}`
             elem.setRangeText(value, start, end, "end");
             return true;
         });
+    }
+
+    /**
+     * Commands for selection manipulation
+     **/
+    static clearSelection(count, mode) {
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        selection.removeAllRanges();
+    }
+    static yankSelection(count, mode) {
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        DomUtils.setToClipboard(selection.toString());
+    }
+    static deleteSelection(count, mode) {
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        selection.deleteFromDocument();
+    }
+
+    /**
+     * Commands for element manipulation
+     **/
+    static selectElement(count, mode) {
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        const target = mode.getTarget();
+        const parent = target.parentNode;
+        const index = Array.from(parent.childNodes).indexOf(target);
+        selection.removeAllRanges();
+        selection.setBaseAndExtent(parent, index, parent, index + 1);
+    }
+    static yankInnerText(count, mode) {
+        DomUtils.setToClipboard(mode.getTarget().innerText);
+    }
+    static yankInnerHTML(count, mode) {
+        DomUtils.setToClipboard(mode.getTarget().innerHTML);
+    }
+    static yankOuterHTML(count, mode) {
+        DomUtils.setToClipboard(mode.getTarget().outerHTML);
+    }
+    static deleteElement(count, mode) {
+        const target = mode.getTarget();
+        target.parentNode.removeChild(target);
     }
 
     /**

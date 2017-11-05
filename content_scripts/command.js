@@ -116,6 +116,19 @@ const COMMAND_DESCRIPTIONS = {
     yankValue: {},
     pasteValue: {},
 
+    /** Commands for selection manipulation **/
+    clearSelection: {},
+    yankSelection: {},
+    deleteSelection: {},
+
+    /** Commands for element manipulation **/
+    selectElement: {},
+    yankInnerText: {},
+    yankInnerHTML: {},
+    yankOuterHTML: {},
+    deleteElement: {},
+
+    /** Commands for various applications **/
     smartOpen: {},
     smartOpenInTab: {},
     yankCurrentURL: { topFrame: true },

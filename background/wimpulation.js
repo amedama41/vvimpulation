@@ -102,6 +102,8 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "O": { name: "smartOpenInTab", frontend: true },
     "y": { name: "yankLink", frontend: true },
     "s": { name: "downloadLink", frontend: true },
+    "v": { name: "selectElement", frontend: true },
+    "de": { name: "deleteElement", frontend: true },
 });
 class HintCommand {
     static toNormalMode(tabInfo, mode) {
