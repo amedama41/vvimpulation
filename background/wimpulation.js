@@ -7,7 +7,7 @@ class TabInfo {
         this.frameInfoMap = new Map();
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
-        this._lastSearchInfo = ["", 0];
+        this._lastSearchInfo = ["", false, 0];
     }
     get id() {
         return this.tab.id;
@@ -279,12 +279,10 @@ function findAllFrame(tabInfo, keyword, startIndex, frameIdList, backward) {
         return tabInfo.sendMessage(frameIdList[index], msg)
             .then((result) => {
                 if (result) {
-                    tabInfo.lastSearchInfo = [keyword, index];
-                    return true;
+                    return [true, index];
                 }
                 if (i === length) {
-                    tabInfo.lastSearchInfo = [keyword, 0];
-                    return false;
+                    return [false, 0];
                 }
                 else {
                     return findFrame(i + 1);
@@ -308,28 +306,33 @@ class Command {
     }
     static find(msg, sender, tabInfo) {
         return tabInfo.frameIdList((frameIdList) => {
-            const [keyword, index] = tabInfo.lastSearchInfo;
+            const [keyword, backward, index] = tabInfo.lastSearchInfo;
             const startIndex = (keyword === msg.keyword ? index : 0);
-            return findAllFrame(
+            findAllFrame(
                 tabInfo, msg.keyword, startIndex, frameIdList, msg.backward)
+                .then(([result, lastIndex]) => {
+                    tabInfo.lastSearchInfo =
+                        [msg.keyword, msg.backward, lastIndex];
+                    return result;
+                });
         });
     }
     static findNext(msg, sender, tabInfo) {
-        const [keyword, index] = tabInfo.lastSearchInfo;
+        const [keyword, backward, index] = tabInfo.lastSearchInfo;
         if (keyword === "") {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, false);
+            findAllFrame(tabInfo, keyword, index, frameIdList, backward);
         });
     }
     static findPrevious(msg, sender, tabInfo) {
-        const [keyword, index] = tabInfo.lastSearchInfo;
+        const [keyword, backward, index] = tabInfo.lastSearchInfo;
         if (keyword === "") {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, true);
+            findAllFrame(tabInfo, keyword, index, frameIdList, !backward);
         });
     }
 
