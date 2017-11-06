@@ -571,7 +571,7 @@ browser.runtime.onConnect.addListener((port) => {
 
     port.onNotification.addListener(invokeCommand);
     port.onRequest.addListener(invokeCommand);
-    port.onDisconnect.addListener(clearnupFrameInfo.bind(null, tabId, frameId));
+    port.onDisconnect.addListener(cleanupFrameInfo.bind(null, tabId, frameId));
 
     if (!gTabInfoMap.has(tabId)) {
         gTabInfoMap.set(tabId, new TabInfo(tab));
@@ -590,7 +590,7 @@ function invokeCommand(msg, sender) {
     }
     return Command[msg.command](msg, sender, tabInfo);
 }
-function clearnupFrameInfo(tabId, frameId, port, error) {
+function cleanupFrameInfo(tabId, frameId, port, error) {
     console.debug(`Port(${tabId}-${frameId}) is disconnected: ${error}`);
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
