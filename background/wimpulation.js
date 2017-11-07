@@ -107,7 +107,7 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
 });
 class HintCommand {
     static toNormalMode(tabInfo, mode) {
-        changeMode(tabInfo, "NORMAL");
+        changeNormalMode(tabInfo);
     }
     static incrementHintNum(tabInfo, mode) {
         mode.changeHintNum(mode.getNextIndex(), tabInfo);
@@ -150,7 +150,7 @@ class HintMode {
             this._invoke(cmd, tabInfo);
         }
         else if (!consumed) {
-            changeMode(tabInfo, "NORMAL", sender.frameId, [key]);
+            changeNormalMode(tabInfo, sender.frameId, [key]);
         }
     }
     _invoke(cmd, tabInfo) {
@@ -481,7 +481,7 @@ class Command {
     }
 
     static toNormalMode(msg, sender, tabInfo) {
-        changeMode(tabInfo, "NORMAL");
+        changeNormalMode(tabInfo);
     }
     static getConsoleOptions(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);
@@ -490,6 +490,7 @@ class Command {
 
 function changeHintMode(tabInfo, idList, hintMode) {
     if (idList.length === 0) {
+        changeNormalMode(tabInfo);
         return;
     }
     const mode = "HINT";
@@ -504,11 +505,13 @@ function changeHintMode(tabInfo, idList, hintMode) {
     tabInfo.setMode(mode, hintMode);
     tabInfo.forEachPort((port, id) => {
         const labelList = labelMap[id] || [];
-        port.postMessage({ command: "changeMode", mode: mode, data: labelList });
+        port.postMessage(
+            { command: "changeMode", mode: mode, data: labelList });
     });
 }
 
-function changeMode(tabInfo, mode, frameId = undefined, data = undefined) {
+function changeNormalMode(tabInfo, frameId=undefined, data=undefined) {
+    const mode = "NORMAL";
     tabInfo.setMode(mode);
     const msg = { command: "changeMode", mode: mode };
     tabInfo.forEachPort((port, id) => {
@@ -549,7 +552,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     if (!tabInfo) {
         return;
     }
-    changeMode(tabInfo, "NORMAL");
+    changeNormalMode(tabInfo);
 });
 
 browser.runtime.onMessage.addListener(invokeCommand);
