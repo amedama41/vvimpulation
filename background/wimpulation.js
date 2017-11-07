@@ -9,8 +9,17 @@ class TabInfo {
         this._frameIdListCache = [undefined];
         this._lastSearchInfo = ["", false, 0];
     }
+    reset() {
+        this.mode = "NORMAL";
+        this.frameInfoMap.clear();
+        this.modeInfo = undefined;
+        this._frameIdListCache = [undefined];
+    }
     get id() {
         return this.tab.id;
+    }
+    update(tab) {
+        this.tab = tab;
     }
     getMode() {
         return this.mode;
@@ -554,6 +563,9 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     }
     changeNormalMode(tabInfo);
 });
+browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
+    gTabInfoMap.delete(tabId);
+});
 
 browser.runtime.onMessage.addListener(invokeCommand);
 
@@ -580,6 +592,7 @@ browser.runtime.onConnect.addListener((port) => {
         gTabInfoMap.set(tabId, new TabInfo(tab));
     }
     const tabInfo = gTabInfoMap.get(tabId);
+    tabInfo.update(tab);
     tabInfo.setPort(frameId, port);
     port.postMessage({
         command: "registerFrameId", frameId: frameId, mode: tabInfo.getMode()
@@ -604,7 +617,7 @@ function cleanupFrameInfo(tabId, frameId, port, error) {
     }
     tabInfo.deletePort(frameId, port);
     if (frameId === 0) {
-        gTabInfoMap.delete(tabId);
+        tabInfo.reset();
     }
 }
 
