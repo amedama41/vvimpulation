@@ -71,6 +71,9 @@ const COMMAND_DESCRIPTIONS = {
     showVideInfo: {},
 
     /** Commands for current frame **/
+    openLinkInFrame: {},
+    backFrame: {},
+    forwardFrame: {},
     stopLoadFrame: {},
     reloadFrame: {},
     incrementFrameURL: {},

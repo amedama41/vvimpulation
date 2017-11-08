@@ -294,6 +294,19 @@ Loop: ${video.loop}`
     /**
      * Commands for current frame
      **/
+    static openLinkInFrame(count, mode) {
+        const elem = mode.getTarget();
+        const url = getLink(elem);
+        if (url) {
+            location.href = url;
+        }
+    }
+    static backFrame(count, mode) {
+        history.go(-Math.min(Math.max(count, 1), history.length - 1));
+    }
+    static forwardFrame(count, mode) {
+        history.go(Math.min(Math.max(count, 1), history.length - 1));
+    }
     static stopLoadFrame(count, mode) {
         window.stop();
     }
