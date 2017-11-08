@@ -2,6 +2,8 @@
 
 const NORMAL_KEY_MAP = Utils.toPreparedCmdMap({
     ".": "repeatLastCommand",
+    "<Esc>": "toNormalMode",
+    "<C-[>": "toNormalMode",
     "f": "toHintMode",
     "F": "toHintFocusMode",
     "gF": "toHintMediaMode",
@@ -116,6 +118,7 @@ const INSERT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-M>": "pressEnter",
     "<C-C>": "toNormalMode",
     "<C-[>": "toNormalMode",
+    "<Esc>": "toNormalMode",
     "<Tab>": "toInsertModeOnNextInput",
     "<S-Tab>": "toInsertModeOnPreviousInput",
     "<M-A>": "ignore",
@@ -144,6 +147,7 @@ const VISUAL_KEY_MAP = Utils.toPreparedCmdMap({
     "v": "toVisualMode",
     "<C-[>": "toNormalMode",
     "<C-C>": "toNormalMode",
+    "<Esc>": "toNormalMode",
 });
 
 class FrameInfo {
@@ -397,11 +401,6 @@ function keyHandler(keyEvent) {
         return;
     }
     if (gMode.frameInfo.isSuspend()) {
-        return;
-    }
-
-    if (key.endsWith("Esc>")) {
-        gMode.postMessage({ command: "toNormalMode" });
         return;
     }
 

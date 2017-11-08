@@ -85,6 +85,7 @@ const gTabInfoMap = new Map();
 const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-C>": { name: "toNormalMode" },
     "<C-[>": { name: "toNormalMode" },
+    "<Esc>": { name: "toNormalMode" },
     "<C-L>": { name: "refreshHint" },
     "<Tab>": { name: "incrementHintNum" },
     "<S-Tab>": { name: "decrementHintNum" },
