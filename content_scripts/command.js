@@ -137,6 +137,7 @@ const COMMAND_DESCRIPTIONS = {
     smartOpenInTab: {},
     yankCurrentURL: { topFrame: true },
     reloadHintPattern: { background: true },
+    ignore: {},
     repeatLastCommand: {},
 
     /** Commands for mode changing **/
