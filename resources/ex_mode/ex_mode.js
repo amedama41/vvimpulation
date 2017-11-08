@@ -156,13 +156,16 @@ class History {
         this.select(input, 1);
     }
     static load(key) {
-        const param = {};
-        param[key] = [];
+        const param = { [key]: [] };
         return browser.storage.local.get(param);
     }
     static save(key, cmd) {
         History.load(key).then((result) => {
             const history = result[key];
+            if (history.length > 0 && history[0] === cmd) {
+                // Not save the same command as previous.
+                return;
+            }
             history.length = Math.min(history.length + 1, 100);
             history.copyWithin(1, 0, history.length);
             history[0] = cmd;
