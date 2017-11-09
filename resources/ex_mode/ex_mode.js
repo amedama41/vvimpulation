@@ -177,7 +177,7 @@ class History {
 };
 
 function search(keyword, backward, mode) {
-    browser.runtime.sendMessage({
+    mode.sendMessage({
         command: "find", keyword: keyword, backward: backward
     }).then((result) => {
         if (result && !browser.extension.inIncognitoContext) {
@@ -216,7 +216,7 @@ class ConsoleCommand {
             return;
         }
 
-        browser.runtime.sendMessage({ command: "execCommand", cmd: value })
+        mode.sendMessage({ command: "execCommand", cmd: value })
             .then((result) => {
                 if (result === false) {
                     ConsoleCommand.closeConsoleMode(mode);
@@ -313,10 +313,11 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-C>": "closeConsoleMode",
 });
 class ConsoleMode {
-    constructor() {
+    constructor(port, input) {
         this._isOpened = false;
-        this.prompt = ":";
-        this.input = document.getElementById("ex_input");
+        this.port = port;
+        this.input = input;
+        this.prompt = document.getElementById("ex_prompt");
         this.previousValue = undefined;
 
         const container = document.getElementById("ex_candidates");
@@ -326,28 +327,30 @@ class ConsoleMode {
         this.history = undefined;
         this.mapper = undefined;
     }
-    startConsole(options) {
-        this._isOpened = true;
-
-        const prompt = document.getElementById("ex_prompt");
-        prompt.textContent = options.prompt;
-        this.prompt = options.prompt;
-
+    setOptions(options) {
+        this.prompt.textContent = options.prompt;
         this.input.value = options.defaultCommand;
         this.previousValue = this.input.value;
-
-        const isSearch = (this.prompt !== ":");
+        const isSearch = this.isSearch();
         this.history =
             new History(isSearch ? "search_history" : "command_history");
         this.mapper =
             Utils.makeCommandMapper(isSearch ? SEARCH_CMD_MAP : EX_CMD_MAP);
-
+    }
+    startConsole(options) {
+        this._isOpened = true;
         this.input.focus();
     }
     stopConsole() {
         this._isOpened = false;
+        this.input.value = "";
+        const output = document.querySelector("#ex_output");
+        output.value = "";
         this.completer.reset();
-        browser.runtime.sendMessage({ command: "toNormalMode" });
+        this.sendMessage({ command: "toNormalMode" });
+    }
+    sendMessage(msg) {
+        return this.port.sendMessage(msg);
     }
     get isOpened() {
         return this._isOpened;
@@ -365,14 +368,17 @@ class ConsoleMode {
         return this.input;
     }
     isBackward() {
-        return this.prompt === '?';
+        return this.prompt.textContent === '?';
+    }
+    isSearch() {
+        return this.prompt.textContent !== ":";
     }
     hasCandidates() {
         return this.completer.hasCandidates();
     }
     getCandidate() {
         const target = this.getTarget();
-        browser.runtime.sendMessage({
+        this.sendMessage({
             command: "getCandidate",
             value: target.value.substring(0, target.selectionStart)
         }).then((result) => {
@@ -384,7 +390,7 @@ class ConsoleMode {
         });
     }
     updateCandidateList() {
-        if (this.prompt === ":" && this.previousValue !== this.input.value) {
+        if (!this.isSearch() && this.previousValue !== this.input.value) {
             this.completer.update(this.input.value);
         }
     }
@@ -407,9 +413,20 @@ class ConsoleMode {
 }
 
 window.addEventListener("DOMContentLoaded", (e) => {
-    const mode = new ConsoleMode();
+    const port = new Port(browser.runtime.connect({ name: "console" }));
+    const input = document.getElementById("ex_input");
+    const mode = new ConsoleMode(port, input);
 
-    const input = mode.getTarget();
+    port.onRequest.addListener((msg) => {
+        switch (msg.command) {
+            case "setConsoleOptions":
+                mode.setOptions(msg.options);
+                return true;
+            default:
+                console.warn("Unknown command: ", msg.command);
+                return false;
+        }
+    });
     input.addEventListener("keydown", (e) => {
         const key = Utils.getRegulatedKey(e);
         if (!key) {
@@ -433,15 +450,8 @@ window.addEventListener("DOMContentLoaded", (e) => {
         if (mode.isOpened) {
             return;
         }
-        browser.runtime.sendMessage({ command: 'getConsoleOptions' })
-            .then((options) => {
-                mode.startConsole(options);
-            })
-            .catch((error) => {
-                console.error(error.toString());
-                ConsoleCommand.closeConsoleMode(mode);
-            });
-        // input.addEventListener("blur", (e) => closeConsoleMode());
+        mode.startConsole();
     });
+    // input.addEventListener("blur", (e) => closeConsoleMode());
 }, { capture: true, once: true });
 

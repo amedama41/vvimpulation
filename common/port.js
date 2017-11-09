@@ -49,6 +49,12 @@ class Port {
     postMessage(msg) {
         this.port.postMessage({ type: 'notification', msg: msg });
     }
+    get name() {
+        return this.port.name;
+    }
+    get sender() {
+        return this.port.sender;
+    }
 
     /**
      * Private Methods

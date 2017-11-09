@@ -5,6 +5,7 @@ class TabInfo {
         this.tab = tab;
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
+        this.consolePort = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         this._lastSearchInfo = ["", false, 0];
@@ -12,6 +13,7 @@ class TabInfo {
     reset() {
         this.mode = "NORMAL";
         this.frameInfoMap.clear();
+        this.consolePort = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
     }
@@ -77,6 +79,21 @@ class TabInfo {
                 `port ${this.id}-${frameId} is already disconnected`);
         }
         return port.sendMessage(msg);
+    }
+    setConsolePort(port) {
+        this.consolePort = port;
+    }
+    sendConsoleMessage(msg) {
+        if (!this.consolePort) {
+            return Promise.reject(
+                `console port ${this.id} is not connected yet`);
+        }
+        return this.consolePort.sendMessage(msg);
+    }
+    clearConsolePort(port) {
+        if (this.consolePort === port) {
+            this.consolePort = undefined;
+        }
     }
 }
 
@@ -493,8 +510,8 @@ class Command {
     static toNormalMode(msg, sender, tabInfo) {
         changeNormalMode(tabInfo);
     }
-    static getConsoleOptions(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(0, msg);
+    static setConsoleOptions(msg, sender, tabInfo) {
+        return tabInfo.sendConsoleMessage(msg);
     }
 }
 
@@ -571,8 +588,8 @@ browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
 browser.runtime.onMessage.addListener(invokeCommand);
 
 browser.runtime.onConnect.addListener((port) => {
-    const sender = port.sender;
     port = new Port(port);
+    const sender = port.sender;
     const tab = sender.tab;
     if (!tab) {
         console.warn("no tab exist");
@@ -583,8 +600,13 @@ browser.runtime.onConnect.addListener((port) => {
         console.warn("TAB_ID_NONE:", tab.url);
         return;
     }
-    const frameId = sender.frameId;
 
+    if (port.name === "console") {
+        setConsolePort(port, tabId);
+        return;
+    }
+
+    const frameId = sender.frameId;
     port.onNotification.addListener(invokeCommand);
     port.onRequest.addListener(invokeCommand);
     port.onDisconnect.addListener(cleanupFrameInfo.bind(null, tabId, frameId));
@@ -620,5 +642,22 @@ function cleanupFrameInfo(tabId, frameId, port, error) {
     if (frameId === 0) {
         tabInfo.reset();
     }
+}
+function setConsolePort(port, tabId) {
+    const tabInfo = gTabInfoMap.get(tabId);
+    if (!tabInfo) {
+        console.warn(`tabInfo for ${tabId} is not found`);
+        return;
+    }
+    port.onRequest.addListener(invokeCommand);
+    port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
+    tabInfo.setConsolePort(port);
+}
+function cleanupConsolePort(tabId, port, error) {
+    const tabInfo = gTabInfoMap.get(tabId);
+    if (!tabInfo) {
+        return;
+    }
+    tabInfo.clearConsolePort(port);
 }
 

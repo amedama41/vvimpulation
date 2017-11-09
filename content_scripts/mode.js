@@ -18,6 +18,9 @@ class Mode {
         this.reset();
         gMode = Mode.createMode(mode, this._frameInfo, data);
     }
+    isCurrentMode() {
+        return this === gMode;
+    }
     get frameInfo() {
         return this._frameInfo;
     }

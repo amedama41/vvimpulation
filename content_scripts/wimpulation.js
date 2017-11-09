@@ -333,12 +333,6 @@ class MessageCommand {
         const data = msg.data;
         invokeCommand(data.command, data.count, gMode);
     }
-    static getConsoleOptions(msg, sender) {
-        if (!(gMode instanceof ConsoleMode)) {
-            throw new Error('no console mode');
-        }
-        return gMode.getConsoleOptions();
-    }
     static collectFrameId(msg) {
         const frameIdList = Array.from(window.frames)
             .map((frame) => gMode.frameInfo.getChildFrameId(frame))

@@ -1,19 +1,30 @@
 class ConsoleMode extends Mode {
     constructor(frameInfo, options) {
         super(frameInfo);
-        this.options = options;
-        this.lastFocusedElem = document.activeElement;
         this.consoleFrame = document.getElementById("wimpulation-console");
         if (!this.consoleFrame) {
             throw new Error("Console frame is not loaded yet");
         }
+        this.lastFocusedElem = document.activeElement;
 
-        // activeElement may be null (e.g. about:blank).
-        if (this.lastFocusedElem) {
-            this.lastFocusedElem.blur();
-        }
-        this.consoleFrame.classList.add("wimpulation-show-console");
-        this.consoleFrame.focus();
+        this.sendMessage({ command: "setConsoleOptions", options: options })
+            .then((result) => {
+                // Maybe current mode is not already console.
+                if (super.isCurrentMode()) {
+                    // activeElement may be null (e.g. about:blank).
+                    if (this.lastFocusedElem) {
+                        this.lastFocusedElem.blur();
+                    }
+                    this.consoleFrame.classList.add("wimpulation-show-console");
+                    this.consoleFrame.focus();
+                }
+            })
+            .catch((result) => {
+                // Maybe current mode is not already console.
+                if (super.isCurrentMode()) {
+                    super.changeMode("NORMAL");
+                }
+            });
     }
     reset() {
         // Reset focus only when console frame is focused.
@@ -39,9 +50,6 @@ class ConsoleMode extends Mode {
     }
     getTarget() {
         return this.consoleFrame;
-    }
-    getConsoleOptions() {
-        return this.options;
     }
 }
 
