@@ -62,6 +62,9 @@ class Completer {
         if (this.candidates.length !== 0 && this.candidates[0] === value) {
             return;
         }
+        if (this.candidates[this.selectIndex] === value) {
+            return;
+        }
         let [orgValue, candidateStart, type, candidates] = this.candidateInfo;
         this.container.innerHTML = "";
         if (value.startsWith(orgValue)) {
@@ -318,7 +321,6 @@ class ConsoleMode {
         this.port = port;
         this.input = input;
         this.prompt = document.getElementById("ex_prompt");
-        this.previousValue = undefined;
 
         const container = document.getElementById("ex_candidates");
         container.style.maxHeight = (window.innerHeight - 100) + "px";
@@ -330,7 +332,6 @@ class ConsoleMode {
     setOptions(options) {
         this.prompt.textContent = options.prompt;
         this.input.value = options.defaultCommand;
-        this.previousValue = this.input.value;
         const isSearch = this.isSearch();
         this.history =
             new History(isSearch ? "search_history" : "command_history");
@@ -357,7 +358,6 @@ class ConsoleMode {
     }
     handle(key) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
-        this.previousValue = this.input.value;
         const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
         if (!result) {
             this.history.reset();
@@ -390,25 +390,21 @@ class ConsoleMode {
         });
     }
     updateCandidateList() {
-        if (!this.isSearch() && this.previousValue !== this.input.value) {
+        if (!this.isSearch()) {
             this.completer.update(this.input.value);
         }
     }
     selectNextCandidate() {
         this.completer.selectNext(this.getTarget());
-        this.previousValue = this.input.value;
     }
     selectPreviousCandidate() {
         this.completer.selectPrev(this.getTarget());
-        this.previousValue = this.input.value;
     }
     selectNextHistory() {
         this.history.setNext(this.getTarget());
-        this.previousValue = this.input.value;
     }
     selectPreviousHistory() {
         this.history.setPrevious(this.getTarget());
-        this.previousValue = this.input.value;
     }
 }
 
