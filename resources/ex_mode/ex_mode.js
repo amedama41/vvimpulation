@@ -40,6 +40,9 @@ class Completer {
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
     }
+    setMaxHeight(maxHeight) {
+        this.container.style.maxHeight = maxHeight + "px";
+    }
     reset() {
         this.candidates = [];
         this.selectIndex = undefined;
@@ -316,16 +319,12 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-C>": "closeConsoleMode",
 });
 class ConsoleMode {
-    constructor(port, input) {
+    constructor(port, input, container) {
         this._isOpened = false;
         this.port = port;
         this.input = input;
         this.prompt = document.getElementById("ex_prompt");
-
-        const container = document.getElementById("ex_candidates");
-        container.style.maxHeight = (window.innerHeight - 100) + "px";
         this.completer = new Completer(container);
-
         this.history = undefined;
         this.mapper = undefined;
     }
@@ -340,6 +339,7 @@ class ConsoleMode {
     }
     startConsole(options) {
         this._isOpened = true;
+        this.completer.setMaxHeight(window.innerHeight - 100);
         this.input.focus();
     }
     stopConsole() {
@@ -411,7 +411,8 @@ class ConsoleMode {
 window.addEventListener("DOMContentLoaded", (e) => {
     const port = new Port(browser.runtime.connect({ name: "console" }));
     const input = document.getElementById("ex_input");
-    const mode = new ConsoleMode(port, input);
+    const container = document.getElementById("ex_candidates");
+    const mode = new ConsoleMode(port, input, container);
 
     port.onRequest.addListener((msg) => {
         switch (msg.command) {
