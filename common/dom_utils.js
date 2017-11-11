@@ -170,10 +170,12 @@ return (class Edit {
      * functions to manipulation clipboard
      **/
     static getFromClipboard() {
+        const x = window.scrollX;
+        const y = window.scrollY;
         const textarea = document.createElement("textarea");
         textarea.style.position = "absolute";
-        textarea.style.top = window.scrollY + "px";
-        textarea.style.left = window.scrollX + "px";
+        textarea.style.top = y + "px";
+        textarea.style.left = x + "px";
         textarea.contentEditable = true;
         const root = document.documentElement;
         root.appendChild(textarea);
@@ -184,14 +186,17 @@ return (class Edit {
         root.removeChild(textarea);
         if (activeElement) { // activeElement may be null (e.g. about:blank)
             activeElement.focus();
+            window.scrollTo(x, y);
         }
         return value;
     }
     static setToClipboard(value) {
+        const x = window.scrollX;
+        const y = window.scrollY;
         const textarea = document.createElement("textarea");
         textarea.style.position = "absolute";
-        textarea.style.top = window.scrollY + "px";
-        textarea.style.left = window.scrollX + "px";
+        textarea.style.top = y + "px";
+        textarea.style.left = x + "px";
         textarea.value = value;
         const root = document.documentElement;
         root.appendChild(textarea);
@@ -201,6 +206,7 @@ return (class Edit {
         root.removeChild(textarea);
         if (activeElement) { // activeElement may be null (e.g. about:blank)
             activeElement.focus();
+            window.scrollTo(x, y);
         }
     }
 });
