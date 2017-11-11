@@ -375,7 +375,7 @@ class MessageCommand {
             }
         }
         try {
-            return window.find(msg.keyword, false, msg.backward);
+            return window.find(msg.keyword, msg.caseSensitive, msg.backward);
         }
         catch (e) {
             // some window (e.g. about:blank) can throw an exception

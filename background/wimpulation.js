@@ -8,7 +8,7 @@ class TabInfo {
         this.consolePort = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
-        this._lastSearchInfo = ["", false, 0];
+        this._lastSearchInfo = ["", false, false, 0];
     }
     reset() {
         this.mode = "NORMAL";
@@ -296,8 +296,9 @@ function moveTab(tabId, distance, toLeft) {
     }, handleError);
 }
 
-function findAllFrame(tabInfo, keyword, startIndex, frameIdList, backward) {
-    const msg = { command: "find", keyword: keyword, backward: backward };
+function findAllFrame(
+    tabInfo, keyword, startIndex, frameIdList, caseSensitive, backward) {
+    const msg = { command: "find", keyword, caseSensitive, backward };
     const diff = (backward ? -1 : 1);
     const length = frameIdList.length;
     const findFrame = (i) => {
@@ -333,38 +334,44 @@ class Command {
     }
     static find(msg, sender, tabInfo) {
         return tabInfo.frameIdList((frameIdList) => {
-            const [keyword, backward, index] = tabInfo.lastSearchInfo;
+            const [keyword, cs, bw, index] = tabInfo.lastSearchInfo;
+            const caseSensitive = /[A-Z]/.test(msg.keyword);
             const startIndex = (keyword === msg.keyword ? index : 0);
             return findAllFrame(
-                tabInfo, msg.keyword, startIndex, frameIdList, msg.backward)
+                tabInfo, msg.keyword, startIndex, frameIdList,
+                caseSensitive, msg.backward)
                 .then(([result, lastIndex]) => {
                     tabInfo.lastSearchInfo =
-                        [msg.keyword, msg.backward, lastIndex];
+                        [msg.keyword, caseSensitive, msg.backward, lastIndex];
                     return result;
                 });
         });
     }
     static findNext(msg, sender, tabInfo) {
-        const [keyword, backward, index] = tabInfo.lastSearchInfo;
+        const [keyword, caseSensitive, backward, index] =
+            tabInfo.lastSearchInfo;
         if (keyword === "") {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, backward)
+            findAllFrame(
+                tabInfo, keyword, index, frameIdList, caseSensitive, backward)
                 .then(([result, index]) => {
-                    tabInfo.lastSearchInfo[2] = index;
+                    tabInfo.lastSearchInfo[3] = index;
                 });
         });
     }
     static findPrevious(msg, sender, tabInfo) {
-        const [keyword, backward, index] = tabInfo.lastSearchInfo;
+        const [keyword, caseSensitive, backward, index] =
+            tabInfo.lastSearchInfo;
         if (keyword === "") {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, !backward)
+            findAllFrame(
+                tabInfo, keyword, index, frameIdList, caseSensitive, !backward)
                 .then(([result, index]) => {
-                    tabInfo.lastSearchInfo[2] = index;
+                    tabInfo.lastSearchInfo[3] = index;
                 });
         });
     }
