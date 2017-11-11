@@ -35,7 +35,11 @@ class ConsoleMode extends Mode {
                 // Need blur because lastFocusedElem may not be focusable.
                 this.consoleFrame.blur();
                 if (this.lastFocusedElem) {
+                    const x = window.scrollX;
+                    const y = window.scrollY;
                     this.lastFocusedElem.focus();
+                    // Restore position which was changed by focus
+                    window.scrollTo(x, y);
                 }
             }
             catch (e) {
