@@ -54,9 +54,12 @@ class TabInfo {
     }
     deletePort(frameId, port) {
         this._frameIdListCache = undefined;
-        if (this.frameInfoMap.get(frameId) !== port) {
+        const p = this.frameInfoMap.get(frameId);
+        if (p !== port) {
             // This case occurs when port is overwrite by new frame's port.
-            console.warn(`missmatch ${this.id}-${frameId} port`);
+            if (p) {
+                console.warn(`missmatch ${this.id}-${frameId} port`);
+            }
             return false;
         }
         return this.frameInfoMap.delete(frameId);
