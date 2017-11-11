@@ -305,6 +305,8 @@ const EX_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-P>": "selectPreviousHistoryOrCandidate",
     "<C-X><C-D>": "clearAllHistory",
     "<C-C>": "closeConsoleMode",
+    "<Esc>": "closeConsoleMode",
+    "<C-[>": "closeConsoleMode",
 });
 const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<Enter>": "execSearch",
@@ -317,67 +319,80 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-P>": "selectPreviousHistory",
     "<C-X><C-D>": "clearAllHistory",
     "<C-C>": "closeConsoleMode",
+    "<Esc>": "closeConsoleMode",
+    "<C-[>": "closeConsoleMode",
 });
 class ConsoleMode {
-    constructor(port, input, container) {
+    constructor(options, port, input, container) {
         this._isOpened = false;
-        this.port = port;
-        this.input = input;
-        this.prompt = document.getElementById("ex_prompt");
-        this.completer = new Completer(container);
-        this.history = undefined;
-        this.mapper = undefined;
-    }
-    setOptions(options) {
-        this.prompt.textContent = options.prompt;
-        this.input.value = options.defaultCommand;
-        const isSearch = this.isSearch();
-        this.history =
-            new History(isSearch ? "search_history" : "command_history");
-        this.mapper =
-            Utils.makeCommandMapper(isSearch ? SEARCH_CMD_MAP : EX_CMD_MAP);
+        this._port = port;
+        this._input = input;
+        this._input.parentNode.setAttribute("mode", options.mode);
+        this._input.value = options.defaultCommand;
+
+        this.onInit(container);
     }
     startConsole(options) {
         this._isOpened = true;
-        this.completer.setMaxHeight(window.innerHeight - 100);
-        this.input.focus();
+        this.onStart();
+        this._input.focus();
     }
     stopConsole() {
         this._isOpened = false;
-        this.input.value = "";
+        this.onStop();
+        this._input.value = "";
         const output = document.querySelector("#ex_output");
         output.value = "";
-        this.completer.reset();
         this.sendMessage({ command: "toNormalMode" });
     }
     sendMessage(msg) {
-        return this.port.sendMessage(msg);
+        return this._port.sendMessage(msg);
     }
     get isOpened() {
         return this._isOpened;
     }
-    handle(key) {
-        const [consumed, optCmd, cmd] = this.mapper.get(key);
+    handleKeydown(key) {
+        return this.onKeydown(key, this._input);
+    }
+    handleKeyup() {
+        return this.onKeyup(this._input);
+    }
+    getTarget() {
+        return this._input;
+    }
+    isBackward() {
+        return this._input.parentNode.getAttribute("mode") === "backwardSearch";
+    }
+}
+class ExMode extends ConsoleMode {
+    onInit(container) {
+        this._completer = new Completer(container);
+        this._history = new History("command_history");
+        this._mapper = Utils.makeCommandMapper(EX_CMD_MAP);
+    }
+    onStart() {
+        this._completer.setMaxHeight(window.innerHeight - 100);
+    }
+    onStop() {
+        this._completer.reset();
+    }
+    onKeydown(key, input) {
+        const [consumed, optCmd, cmd] = this._mapper.get(key);
         const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
         if (!result) {
-            this.history.reset();
+            this._history.reset();
         }
         return result;
     }
-    getTarget() {
-        return this.input;
+    onKeyup(input) {
+        this._completer.update(input.value);
     }
-    isBackward() {
-        return this.prompt.textContent === '?';
-    }
-    isSearch() {
-        return this.prompt.textContent !== ":";
-    }
+
     hasCandidates() {
-        return this.completer.hasCandidates();
+        return this._completer.hasCandidates();
     }
     getCandidate() {
-        const target = this.getTarget();
+        const target = this._input;
         this.sendMessage({
             command: "getCandidate",
             value: target.value.substring(0, target.selectionStart)
@@ -385,26 +400,61 @@ class ConsoleMode {
             if (!result) {
                 return;
             }
-            this.completer.setCandidates(result);
+            this._completer.setCandidates(result);
             this.selectNextCandidate();
         });
     }
-    updateCandidateList() {
-        if (!this.isSearch()) {
-            this.completer.update(this.input.value);
-        }
-    }
     selectNextCandidate() {
-        this.completer.selectNext(this.getTarget());
+        this._completer.selectNext(this._input);
     }
     selectPreviousCandidate() {
-        this.completer.selectPrev(this.getTarget());
+        this._completer.selectPrev(this._input);
     }
+
     selectNextHistory() {
-        this.history.setNext(this.getTarget());
+        this._history.setNext(this._input);
     }
     selectPreviousHistory() {
-        this.history.setPrevious(this.getTarget());
+        this._history.setPrevious(this._input);
+    }
+}
+class SearchMode extends ConsoleMode {
+    onInit(container) {
+        this._history = new History("search_history");
+        this._mapper = Utils.makeCommandMapper(SEARCH_CMD_MAP);
+    }
+    onStart() {
+    }
+    onStop() {
+    }
+    onKeydown(key, input) {
+        const [consumed, optCmd, cmd] = this._mapper.get(key);
+        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
+        if (!result) {
+            this._history.reset();
+        }
+        return result;
+    }
+    onKeyup(input) {
+    }
+
+    selectNextHistory() {
+        this._history.setNext(this._input);
+    }
+    selectPreviousHistory() {
+        this._history.setPrevious(this._input);
+    }
+}
+
+function createConsoleMode(options, port, input, container) {
+    switch (options.mode) {
+        case "exec":
+            return new ExMode(options, port, input, container);
+        case "forwardSearch":
+        case "backwardSearch":
+            return new SearchMode(options, port, input, container);
+        default:
+            throw new Error("Unknown mode: " + options.mode);
     }
 }
 
@@ -412,12 +462,12 @@ window.addEventListener("DOMContentLoaded", (e) => {
     const port = new Port(browser.runtime.connect({ name: "console" }));
     const input = document.getElementById("ex_input");
     const container = document.getElementById("ex_candidates");
-    const mode = new ConsoleMode(port, input, container);
+    let mode = undefined;
 
     port.onRequest.addListener((msg) => {
         switch (msg.command) {
-            case "setConsoleOptions":
-                mode.setOptions(msg.options);
+            case "setConsoleMode":
+                mode = createConsoleMode(msg.options, port, input, container);
                 return true;
             default:
                 console.warn("Unknown command: ", msg.command);
@@ -431,16 +481,13 @@ window.addEventListener("DOMContentLoaded", (e) => {
         }
 
         // console.debug(e.type, key, e.defaultPrevented);
-        if (key.endsWith("Esc>") || key === "<C-[>") {
-            ConsoleCommand.closeConsoleMode(mode);
-        };
-        if (mode.handle(key)) {
+        if (mode.handleKeydown(key)) {
             e.stopPropagation();
             e.preventDefault();
         }
     });
     input.addEventListener("keyup", (e) => {
-        mode.updateCandidateList();
+        mode.handleKeyup();
     }, true);
 
     window.addEventListener("focus", (e) => {

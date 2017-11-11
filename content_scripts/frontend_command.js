@@ -643,7 +643,7 @@ Loop: ${video.loop}`
     }
     static toExMode(count, mode, defaultCommand="") {
         mode.changeMode(
-            "CONSOLE", { defaultCommand: defaultCommand, prompt: ':' });
+            "CONSOLE", { mode: "exec", defaultCommand: defaultCommand });
     }
     static toExModeOpen(count, mode) {
         return FrontendCommand.toExMode(count, mode, "open ");
@@ -659,10 +659,11 @@ Loop: ${video.loop}`
     }
     static toSearchMode(count, mode, isBackward=false) {
         mode.changeMode(
-            "CONSOLE", { defaultCommand: '', prompt: (isBackward ? '?' : '/') });
+            "CONSOLE", { mode: "forwardSearch", defaultCommand: '' });
     }
     static toBackwardSearchMode(count, mode) {
-        return FrontendCommand.toSearchMode(count, mode, true);
+        mode.changeMode(
+            "CONSOLE", { mode: "backwardSearch", defaultCommand: '' });
     }
 }
 

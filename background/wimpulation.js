@@ -510,7 +510,7 @@ class Command {
     static toNormalMode(msg, sender, tabInfo) {
         changeNormalMode(tabInfo);
     }
-    static setConsoleOptions(msg, sender, tabInfo) {
+    static setConsoleMode(msg, sender, tabInfo) {
         return tabInfo.sendConsoleMessage(msg);
     }
 }

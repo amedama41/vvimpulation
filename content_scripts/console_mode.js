@@ -7,7 +7,7 @@ class ConsoleMode extends Mode {
         }
         this.lastFocusedElem = document.activeElement;
 
-        this.sendMessage({ command: "setConsoleOptions", options: options })
+        this.sendMessage({ command: "setConsoleMode", options: options })
             .then((result) => {
                 // Maybe current mode is not already console.
                 if (super.isCurrentMode()) {

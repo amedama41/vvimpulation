@@ -56,9 +56,18 @@ span.ex_number_info {
     color: yellow;
 }
 
-#ex_prompt {
+#ex_console::before {
     font-size: large;
     font-family: monospace;
+}
+#ex_console[mode="exec"]::before {
+    content: ":";
+}
+#ex_console[mode="forwardSearch"]::before {
+    content: "/";
+}
+#ex_console[mode="backwardSearch"]::before {
+    content: "?";
 }
 
 #ex_input, #ex_output {
