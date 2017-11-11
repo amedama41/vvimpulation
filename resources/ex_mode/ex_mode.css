@@ -6,35 +6,26 @@ body {
     bottom: 0px;
 }
 
-#ex_console {
+body * {
     margin: 0px;
     padding: 0px;
     border: none;
-
     color: white;
     background-color: dimgray;
-}
-
-#ex_candidates {
-    list-style-type: none;
-    margin: 0px;
-    padding: 4px 0px 0px 0px;
-
-    color: white;
-    background-color: dimgray;
-    white-space: nowrap;
-    overflow: auto;
-}
-#ex_candidates > li {
-    padding: 0px;
     font-family: monospace;
     font-size: large;
 }
 
-#ex_candidates > li.ex_select_candidate {
+#ex_candidates {
+    padding: 4px 0px 0px 0px;
+    list-style-type: none;
+    white-space: nowrap;
+    overflow: auto;
+}
+#ex_candidates > li.ex_select_candidate,
+#ex_candidates > li.ex_select_candidate > span {
     background-color: gray;
 }
-
 #ex_candidates > li > span {
     display: inline-block;
     text-overflow: ellipsis;
@@ -56,10 +47,6 @@ span.ex_number_info {
     color: yellow;
 }
 
-#ex_console::before {
-    font-size: large;
-    font-family: monospace;
-}
 #ex_console[mode="exec"]::before {
     content: ":";
 }
@@ -73,13 +60,5 @@ span.ex_number_info {
 #ex_input, #ex_output {
     box-sizing: border-box;
     width: calc(100% - 1em);
-
-    border: none;
-
-    color: white;
-    background-color: dimgray;
-
-    font-size: large;
-    font-family: monospace;
 }
 
