@@ -350,7 +350,10 @@ class Command {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, backward);
+            findAllFrame(tabInfo, keyword, index, frameIdList, backward)
+                .then(([result, index]) => {
+                    tabInfo.lastSearchInfo[2] = index;
+                });
         });
     }
     static findPrevious(msg, sender, tabInfo) {
@@ -359,7 +362,10 @@ class Command {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(tabInfo, keyword, index, frameIdList, !backward);
+            findAllFrame(tabInfo, keyword, index, frameIdList, !backward)
+                .then(([result, index]) => {
+                    tabInfo.lastSearchInfo[2] = index;
+                });
         });
     }
 
