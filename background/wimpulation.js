@@ -335,7 +335,7 @@ class Command {
         return tabInfo.frameIdList((frameIdList) => {
             const [keyword, backward, index] = tabInfo.lastSearchInfo;
             const startIndex = (keyword === msg.keyword ? index : 0);
-            findAllFrame(
+            return findAllFrame(
                 tabInfo, msg.keyword, startIndex, frameIdList, msg.backward)
                 .then(([result, lastIndex]) => {
                     tabInfo.lastSearchInfo =
