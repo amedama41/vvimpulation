@@ -709,14 +709,23 @@ function getLink(elem) {
 
 function smartOpenImpl(count, mode, openLinkMsg) {
     const elem = mode.getTarget();
-    if (elem.onclick) {
-        return FrontendCommand.mouseclick(count, mode);
-    }
     const link = getLink(elem);
     if (link) {
-        openLinkMsg.url = link;
-        mode.postMessage(openLinkMsg);
-        return;
+        try {
+            const url = new URL(link);
+            const loc = location;
+            // In the case the only hash is difference, use mouseclick emulation
+            // because the target is likely to have some event listners.
+            if (url.host !== loc.host || url.pathname !== loc.pathname
+                || url.search !== loc.search) {
+                openLinkMsg.url = link;
+                mode.postMessage(openLinkMsg);
+                return;
+            }
+        }
+        catch (e) {
+            // ignore
+        }
     }
     if (elem instanceof HTMLSelectElement ||
         elem instanceof HTMLInputElement ||
