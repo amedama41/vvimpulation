@@ -89,6 +89,9 @@ function isOutOfArea(rect, winArea) {
 }
 function getRectsInAncestorVisibleArea(elem, rectList) {
     const root = document.documentElement;
+    if (elem === root) {
+        return rectList;
+    }
     const body = document.body;
     for (let p = elem.parentNode; p !== root && p !== body; p = p.parentNode) {
         const style = window.getComputedStyle(p, null);
