@@ -716,8 +716,9 @@ function smartOpenImpl(count, mode, openLinkMsg) {
             const loc = location;
             // In the case the only hash is difference, use mouseclick emulation
             // because the target is likely to have some event listners.
-            if (url.host !== loc.host || url.pathname !== loc.pathname
-                || url.search !== loc.search) {
+            if ((url.host !== loc.host || url.pathname !== loc.pathname
+                || url.search !== loc.search)
+                && url.protocol !== "javascript:") {
                 openLinkMsg.url = link;
                 mode.postMessage(openLinkMsg);
                 return;
