@@ -2,9 +2,8 @@
  * Classes derived from this class must implements init and selectionModify
  * methods.
  */
-class VisualModeBase extends Mode {
+class VisualModeBase {
     constructor(frameInfo, keyMap, data) {
-        super(frameInfo);
         const selection  = window.getSelection();
         if (selection.rangeCount === 0) {
             throw new Error("No selection");
@@ -13,7 +12,10 @@ class VisualModeBase extends Mode {
         this.init(this.selection);
         this.mapper = Utils.makeCommandMapper(keyMap);
     }
-    reset() {
+    getTarget() {
+        return selection.anchorNode;
+    }
+    onReset() {
         if (this.selection) {
             try {
                 this.destroy(this.selection);
@@ -23,27 +25,24 @@ class VisualModeBase extends Mode {
             }
         }
     }
-    getTarget() {
-        return selection.anchorNode;
-    }
-    handle(key) {
+    onKeyEvent(key, frameInfo) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            this._invoke(optCmd);
+            this._invoke(optCmd, frameInfo);
         }
         if (cmd) {
-            return this._invoke(cmd);
+            return this._invoke(cmd, frameInfo);
         }
         return true;
     }
-    _invoke(cmd) {
+    _invoke(cmd, frameInfo) {
         if (cmd.startsWith("move ")) {
             const [prefix, direction, granularity] = cmd.split(" ");
             this.selectionModify(this.selection, direction, granularity);
             return true;
         }
         else {
-            return !invokeCommand(cmd, 0, this);
+            return !invokeCommand(cmd, 0, frameInfo);
         }
     }
 }

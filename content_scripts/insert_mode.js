@@ -1,6 +1,5 @@
-class InsertMode extends Mode {
+class InsertMode {
     constructor(frameInfo, keyMap, data) {
-        super(frameInfo);
         this.mapper = Utils.makeCommandMapper(keyMap);
         this.lastFocusedElem = data.lastFocusedElem;
         this.target = data.editableElement;
@@ -11,24 +10,36 @@ class InsertMode extends Mode {
         }
         this.target.classList.add("wimpulation-input");
         this.inInvoking = false;
-        this.blurHandler = (e) => {
+        frameInfo.setEventListener(this.target, "blur", (e, frameInfo) => {
             if (this.inInvoking) {
                 return;
             }
-            FrontendCommand.toNormalMode(0, this);
-        };
-        this.target.addEventListener("blur", this.blurHandler, true);
+            FrontendCommand.toNormalMode(0, frameInfo);
+        }, true);
     }
     getTarget() {
         return this.target;
     }
-    handle(key) {
+    onReset() {
+        try {
+            this.target.classList.remove("wimpulation-input");
+            if (document.activeElement === this.target) {
+                if (document.hasFocus && this.lastFocusedElem) {
+                    this.lastFocusedElem.focus();
+                }
+            }
+        }
+        catch (e) {
+            console.warn("Some error occured:", Utils.errorString(e));
+        }
+    }
+    onKeyEvent(key, frameInfo) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
-            this._invoke(optCmd);
+            this._invoke(optCmd, frameInfo);
         }
         if (cmd) {
-            return this._invoke(cmd);
+            return this._invoke(cmd, frameInfo);
         }
         if (consumed) {
             return true;
@@ -42,24 +53,10 @@ class InsertMode extends Mode {
         }
         return true;
     }
-    reset() {
-        try {
-            this.target.removeEventListener("blur", this.blurHandler, true);
-            this.target.classList.remove("wimpulation-input");
-            if (document.activeElement === this.target) {
-                if (document.hasFocus && this.lastFocusedElem) {
-                    this.lastFocusedElem.focus();
-                }
-            }
-        }
-        catch (e) {
-            console.warn("Some error occured:", Utils.errorString(e));
-        }
-    }
-    _invoke(cmd) {
+    _invoke(cmd, frameInfo) {
         this.inInvoking = true;
         try {
-            return !invokeCommand(cmd, 0, this);
+            return !invokeCommand(cmd, 0, frameInfo);
         }
         finally {
             this.inInvoking = false;

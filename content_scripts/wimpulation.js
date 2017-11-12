@@ -150,124 +150,15 @@ const VISUAL_KEY_MAP = Utils.toPreparedCmdMap({
     "<Esc>": "toNormalMode",
 });
 
-class FrameInfo {
-    constructor(selfFrameId, port) {
-        this.suspend = false;
-        this.selfFrameId = selfFrameId;
-        this.port = port;
-        this.childFrameIdMap = new Map();
-        this.registerIntervalId = 0;
-        window.addEventListener("message", (msgEvent) => {
-            this._handleFrameMessage(msgEvent);
-        }, true);
-        window.addEventListener("unload", (event) => {
-            this._unregisterToParent();
-        }, { capture: true, once: true });
-        this._startRegisterToParent();
-    }
-    isSuspend() {
-        return this.suspend;
-    }
-    toggleSuspend() {
-        this.suspend = !this.suspend;
-    }
-    getSelfFrameId() {
-        return this.selfFrameId;
-    }
-    isTopFrame() {
-        return this.selfFrameId === 0;
-    }
-    isRegistered(childWindow) {
-        return this.childFrameIdMap.has(childWindow);
-    }
-    getChildFrameId(childWindow) {
-        return this.childFrameIdMap.get(childWindow);
-    }
-    postMessage(msg) {
-        this.port.postMessage(msg);
-    }
-    sendMessage(msg) {
-        return this.port.sendMessage(msg);
-    }
+let gFrameInfo = null;
 
-    _startRegisterToParent() {
-        const parentWin = window.parent;
-        if (parentWin === window) {
-            return;
-        }
-        this.registerIntervalId = window.setInterval(() => {
-            parentWin.postMessage(
-                { type: "registerChild", frameId: this.selfFrameId }, "*");
-        }, 100);
-    }
-    _unregisterToParent() {
-        const parentWin = window.parent;
-        if (parentWin === window) {
-            return;
-        }
-        parentWin.postMessage({ type: "unregisterChild" }, "*");
-    }
-    _handleFrameMessage(msgEvent) {
-        const source = msgEvent.source;
-        const data = msgEvent.data;
-        if (!data.type) {
-            return;
-        }
-        switch (data.type) {
-            case "registerChild":
-                this._registerChild(source, data);
-                break;
-            case "completeRegisterChild":
-                this._stopRegisterToParent(source);
-                break;
-            case "unregisterChild":
-                this._unregisterChild(source);
-                break;
-            default:
-                break;
-        }
-    }
-    _registerChild(sourceWindow, data) {
-        if (!FrameInfo._isChildFrame(sourceWindow)
-            || !data.frameId || !Number.isInteger(data.frameId)) {
-            return;
-        }
-        const frameId = data.frameId;
-        this.childFrameIdMap.set(sourceWindow, frameId);
-        sourceWindow.postMessage({ type: "completeRegisterChild" }, "*");
-    }
-    _unregisterChild(sourceWindow) {
-        this.childFrameIdMap.delete(sourceWindow);
-    }
-    _stopRegisterToParent(sourceWindow) {
-        if (sourceWindow !== window.parent) {
-            return;
-        }
-        if (this.registerIntervalId !== 0) {
-            window.clearInterval(this.registerIntervalId);
-            this.registerIntervalId = 0;
-        }
-    }
-    static _isChildFrame(targetWindow) {
-        const frames = window.frames;
-        const frameLen = frames.length;
-        for (let i = 0; i < frameLen; ++i) {
-            if (frames[i] === targetWindow) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
-class NormalMode extends Mode {
+class NormalMode {
     constructor(frameInfo, keyMap, keyList=undefined) {
-        super(frameInfo);
         this.count = "0";
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
-                keyList.forEach((key) => this.handle(key));
+                keyList.forEach((key) => this.onKeyEvent(key, frameInfo));
             }, 0);
         }
     }
@@ -275,18 +166,21 @@ class NormalMode extends Mode {
         // activeElement may be null (e.g. about:blank)
         return document.activeElement || document.documentElement;
     }
-    handle(key) {
+    onReset() {
+        this._resetState();
+    }
+    onKeyEvent(key, frameInfo) {
         const [consumed, optCmd, cmd] = this.mapper.get(key);
         if (optCmd) {
             if (optCmd.length !== 0) {
-                this._invoke(optCmd);
+                this._invoke(optCmd, frameInfo);
             }
             else {
                 this._resetState();
             }
         }
         if (cmd) {
-            return this._invoke(cmd);
+            return this._invoke(cmd, frameInfo);
         }
         if (consumed) {
             return true;
@@ -300,14 +194,11 @@ class NormalMode extends Mode {
         this._resetState();
         return false;
     }
-    reset() {
-        this._resetState();
-    }
 
-    _invoke(cmdName) {
+    _invoke(cmdName, frameInfo) {
         const count = parseInt(this.count, 10);
         this._resetState();
-        return !invokeCommand(cmdName, count, this);
+        return !invokeCommand(cmdName, count, frameInfo);
     }
     _resetState() {
         this.count = "0";
@@ -320,30 +211,29 @@ class MessageCommand {
             top: 0, left: 0,
             bottom: window.innerHeight, rigth: window.innerWidth
         };
-        return makeHints(msg.pattern, msg.type, winArea, gMode.frameInfo);
+        return makeHints(msg.pattern, msg.type, winArea, gFrameInfo);
     }
     static forwardHintCommand(msg) {
-        if (!(gMode instanceof HintMode)) {
+        if (!gFrameInfo.isCurrentModeClass(HintMode)) {
             return Promise.reject('no hint mode');
         }
-        const data = msg.data;
-        return gMode.dispatch(data);
+        return gFrameInfo.handleMessage(msg.data);
     }
     static forwardCommand(msg, sneder) {
         const data = msg.data;
-        invokeCommand(data.command, data.count, gMode);
+        invokeCommand(data.command, data.count, gFrameInfo);
     }
     static collectFrameId(msg) {
         const frameIdList = Array.from(window.frames)
-            .map((frame) => gMode.frameInfo.getChildFrameId(frame))
+            .map((frame) => gFrameInfo.getChildFrameId(frame))
             .filter((frameId) => frameId !== undefined);
         return Promise.all(
-            frameIdList.map((frameId) => gMode.sendMessage({
+            frameIdList.map((frameId) => gFrameInfo.sendMessage({
                 command: "collectFrameId", frameId: frameId
             }))
         ).then((idListList) => idListList.reduce(
             (list, idList) => list.concat(idList),
-            [ gMode.frameInfo.getSelfFrameId() ]));
+            [ gFrameInfo.getSelfFrameId() ]));
     }
     static focusFrame(msg) {
         if (document.body instanceof HTMLFrameSetElement &&
@@ -384,26 +274,6 @@ class MessageCommand {
     }
 };
 
-function keyHandler(keyEvent) {
-    const key = Utils.getRegulatedKey(keyEvent);
-    if (!key) {
-        return;
-    }
-
-    if (key === '<C-Z>') {
-        gMode.frameInfo.toggleSuspend();
-        return;
-    }
-    if (gMode.frameInfo.isSuspend()) {
-        return;
-    }
-
-    if (gMode.handle(key)) {
-        keyEvent.preventDefault();
-        keyEvent.stopPropagation();
-    }
-}
-
 function init() {
     const reconnectTimeout = 500;
     connectToBackGround(reconnectTimeout);
@@ -413,13 +283,12 @@ function connectToBackGround(reconnectTimeout) {
     const port = new Port(browser.runtime.connect({ name: "wimpulation" }));
     const handleNotification = (msg) => {
         if (msg.command === "registerFrameId") {
-            gMode = Mode.createMode(msg.mode, new FrameInfo(msg.frameId, port));
-            window.addEventListener("keydown", keyHandler, true);
+            gFrameInfo = new FrameInfo(msg.frameId, port, msg.mode);
+            window.addEventListener(
+                "keydown", (e) => gFrameInfo.handleKeydown(e), true);
             window.addEventListener("unload", (evt) => {
-                console.debug(
-                    `${gMode.frameInfo.getSelfFrameId()}: port disconnect`);
-                port.disconnect();
-                gMode.reset();
+                console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
+                gFrameInfo.reset();
             }, { capture: true, once : true });
 
             if (msg.frameId === 0) {
@@ -427,7 +296,7 @@ function connectToBackGround(reconnectTimeout) {
             }
         }
         else if (msg.command === "changeMode") {
-            gMode.changeModeNow(msg.mode, msg.data);
+            gFrameInfo.changeModeNow(msg.mode, msg.data);
         }
     };
     const handleRequest = (msg, sender) => {
@@ -442,16 +311,16 @@ function connectToBackGround(reconnectTimeout) {
     port.onNotification.addListener(handleNotification);
     port.onRequest.addListener(handleRequest);
     port.onDisconnect.addListener((port, error) => {
-        console.debug("Port disconnected:", error && error.toString());
-        if (gMode === undefined) {
+        console.log("Port disconnected:", error && error.toString());
+        if (gFrameInfo) {
+            gFrameInfo.reset();
+        }
+        else {
             // reconnect because background may not listen yet
             window.setTimeout(
                 connectToBackGround.bind(
                     null, Math.min(2 * reconnectTimeout, 10000)),
                 reconnectTimeout);
-        }
-        else {
-            gMode.reset();
         }
         // avoid circular reference
         port.onRequest.removeListener(handleRequest);

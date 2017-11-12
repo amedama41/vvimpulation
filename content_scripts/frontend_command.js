@@ -806,7 +806,7 @@ function invokeCommand(cmdName, count, mode) {
         mode.postMessage({ command: cmdName, count: count });
         isIgnore = false;
     }
-    else if (cmdDesc.topFrame && !mode.frameInfo.isTopFrame()) {
+    else if (cmdDesc.topFrame && !mode.isTopFrame()) {
         mode.postMessage({
             command: 'forwardCommand', frameId: 0,
             data: { command: cmdName, count: count }

@@ -1,8 +1,7 @@
 var gHintElementList = [];
 
-class HintMode extends Mode {
+class HintMode {
     constructor(frameInfo, labelList) {
-        super(frameInfo);
         this.hints = gHintElementList;
         gHintElementList = [];
         this.focusIndex = undefined;
@@ -19,19 +18,33 @@ class HintMode extends Mode {
         target.appendChild(container);
         this.indexMap = indexMap;
     }
-    handle(key) {
-        super.postMessage({ command: "forwardHintKeyEvent", key: key });
-        return true;
+    getTarget() {
+        const [span, elem] = this.hints[this.focusIndex];
+        return elem;
     }
-    reset() {
+    onReset() {
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
             container.parentNode.removeChild(container);
         }
     }
-    getTarget() {
-        const [span, elem] = this.hints[this.focusIndex];
-        return elem;
+    onKeyEvent(key, frameInfo) {
+        frameInfo.postMessage({ command: "forwardHintKeyEvent", key: key });
+        return true;
+    }
+    onMessageEvent(msg, frameInfo) {
+        switch (msg.command) {
+            case 'focusHintLink':
+                return this.focusHintLink(msg);
+            case 'blurHintLink':
+                return this.blurHintLink();
+            default:
+                if (this.focusIndex === undefined) {
+                    return;
+                }
+                const count = msg.count || 0;
+                return invokeCommand(msg.command, count, frameInfo);
+        }
     }
 
     focusHintLink(msg) {
@@ -60,20 +73,6 @@ class HintMode extends Mode {
         const [span, elem] = this.hints[this.focusIndex];
         span.id = "";
         this.focusIndex = undefined;
-    }
-    dispatch(msg) {
-        switch (msg.command) {
-            case 'focusHintLink':
-                return this.focusHintLink(msg);
-            case 'blurHintLink':
-                return this.blurHintLink();
-            default:
-                if (this.focusIndex === undefined) {
-                    return;
-                }
-                const count = msg.count || 0;
-                return invokeCommand(msg.command, count, this);
-        }
     }
 }
 
@@ -200,8 +199,11 @@ function makeHints(pattern, type, winArea, frameInfo) {
             hints.push([span, elem]);
             idOrPromiseList.push(selfFrameId);
         }
-        if (isFrame && frameInfo.isRegistered(elem.contentWindow)) {
+        if (isFrame) {
             const frameId = frameInfo.getChildFrameId(elem.contentWindow);
+            if (frameId === undefined) {
+                continue;
+            }
             const frameArea = {
                 top: Math.max(winArea.top - rect.top, 0),
                 left: Math.max(winArea.left - rect.left, 0),
