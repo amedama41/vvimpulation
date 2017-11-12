@@ -2,112 +2,112 @@ class FrontendCommand {
     /**
      * Commands for scrolling
      */
-    static scrollTop(count, mode) {
+    static scrollTop(count, frameInfo) {
         window.scrollTo(window.scrollX, 0);
     }
-    static scrollBottom(count, mode) {
+    static scrollBottom(count, frameInfo) {
         window.scrollTo(window.scrollX, window.scrollMaxY);
     }
-    static scrollUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static scrollUp(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 20);
             return;
         }
         window.scrollByLines(Math.max(count, 4) * -1);
     }
-    static scrollDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static scrollDown(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 20);
             return;
         }
         window.scrollByLines(Math.max(count, 4) * 1);
     }
-    static scrollLineUp(count, mode) {
+    static scrollLineUp(count, frameInfo) {
         window.scrollByLines(Math.max(count, 1) * -1);
     }
-    static scrollLineDown(count, mode) {
+    static scrollLineDown(count, frameInfo) {
         window.scrollByLines(Math.max(count, 1) * 1);
     }
-    static moveHalfPageUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static moveHalfPageUp(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
         window.scrollBy(0, Math.max(count, 1) * -window.innerHeight / 2);
     }
-    static moveHalfPageDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static moveHalfPageDown(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
         window.scrollBy(0, Math.max(count, 1) * window.innerHeight / 2);
     }
-    static movePageUp(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static movePageUp(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.scrollTop !== 0) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight;
             return;
         }
         window.scrollByPages(Math.max(count, 1) * -1);
     }
-    static movePageDown(count, mode) {
-        const elem = Scroll.getVerticalScrollableElem(mode.getTarget());
+    static movePageDown(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
         if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight;
             return;
         }
         window.scrollByPages(Math.max(count, 1) * 1);
     }
-    static scrollLeft(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
+    static scrollLeft(count, frameInfo) {
+        const elem = Scroll.getHorizontalScrollableElem(frameInfo.getTarget());
         if (elem && elem.scrollLeft !== 0) {
             elem.scrollLeft -= Math.max(count, 20);
             return;
         }
         window.scrollBy(-20, 0);
     }
-    static scrollRight(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
+    static scrollRight(count, frameInfo) {
+        const elem = Scroll.getHorizontalScrollableElem(frameInfo.getTarget());
         if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
             elem.scrollLeft += Math.max(count, 20);
             return;
         }
         window.scrollBy(20, 0);
     }
-    static scrollHome(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
+    static scrollHome(count, frameInfo) {
+        const elem = Scroll.getHorizontalScrollableElem(frameInfo.getTarget());
         if (elem && elem.scrollLeft !== 0) {
             elem.scrollLeft = 0;
             return;
         }
         window.scrollTo(0, window.scrollY);
     }
-    static scrollEnd(count, mode) {
-        const elem = Scroll.getHorizontalScrollableElem(mode.getTarget());
+    static scrollEnd(count, frameInfo) {
+        const elem = Scroll.getHorizontalScrollableElem(frameInfo.getTarget());
         if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
             elem.scrollLeft = elem.scrollWidth;
             return;
         }
         window.scrollTo(window.scrollMaxX, window.scrollY);
     }
-    static scrollPercent(count, mode) {
+    static scrollPercent(count, frameInfo) {
         if (count === 0) {
             return;
         }
         window.scrollTo(window.scrollX, window.scrollMaxY * count / 100);
     }
-    static scrollMiddle(count, mode) {
-        return FrontendCommand.scrollPercent(50, mode);
+    static scrollMiddle(count, frameInfo) {
+        return FrontendCommand.scrollPercent(50, frameInfo);
     }
 
     /**
      * Commands for focus manipulation
      */
-    static focusTopFrame(count, mode) {
+    static focusTopFrame(count, frameInfo) {
         const a = document.createElement("a");
         a.style.position = "absolute";
         a.style.top = window.scrollY + "px";
@@ -119,8 +119,8 @@ class FrontendCommand {
         a.blur();
         target.removeChild(a);
     }
-    static focusin(count, mode) {
-        const elem = mode.getTarget();
+    static focusin(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         try {
             elem.focus();
         }
@@ -129,8 +129,8 @@ class FrontendCommand {
                 `Element ${elem} is likely dead:`, Utils.errorString(e));
         }
     }
-    static focusout(count, mode) {
-        const elem = mode.getTarget();
+    static focusout(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         try {
             elem.blur();
         }
@@ -143,7 +143,7 @@ class FrontendCommand {
     /**
      * Commands for search
      **/
-    static findNextPage(count, mode) {
+    static findNextPage(count, frameInfo) {
         const NEXT_KEYWORDS = [
             "次のページ", "次へ", "次ページ", "NEXT", ">>", "»"
         ];
@@ -152,7 +152,7 @@ class FrontendCommand {
             if (window.find(key, false, true, true, true)) break;
         }
     }
-    static findPreviousPage(count, mode) {
+    static findPreviousPage(count, frameInfo) {
         const PREVIOUS_KEYWORDS = [
             "前のページ", "前へ", "前ページ", "PREV", "<<", "«"
         ];
@@ -165,18 +165,18 @@ class FrontendCommand {
     /**
      * Commands for page load manipulation
      */
-    static stopLoad(count, mode) {
+    static stopLoad(count, frameInfo) {
         window.stop();
     }
 
     /**
      * Commands for page history
      */
-    static back(count, mode) {
+    static back(count, frameInfo) {
         // TODO
         history.go(-Math.min(Math.max(count, 1), history.length - 1));
     }
-    static forward(count, mode) {
+    static forward(count, frameInfo) {
         // TODO
         history.go(Math.min(Math.max(count, 1), history.length - 1));
     }
@@ -184,13 +184,13 @@ class FrontendCommand {
     /**
      * Commands for URL edit
      */
-    static incrementURL(count, mode) {
+    static incrementURL(count, frameInfo) {
         incrementURL(location, Math.max(count, 1));
     }
-    static decrementURL(count, mode) {
+    static decrementURL(count, frameInfo) {
         incrementURL(location, -Math.max(count, 1));
     }
-    static goToParent(count, mode) {
+    static goToParent(count, frameInfo) {
         const path = location.pathname;
         if (path === "/") {
             return;
@@ -199,14 +199,14 @@ class FrontendCommand {
         pathList.length -= Math.max(1, Math.min(count, pathList.length));
         location.href = location.origin + pathList.join("/");
     }
-    static goToRoot(count, mode) {
+    static goToRoot(count, frameInfo) {
         location.href = location.origin;
     }
 
     /**
      * Commands for video manipulation
      */
-    static playOrPause(count, mode) {
+    static playOrPause(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -218,21 +218,21 @@ class FrontendCommand {
             video.pause();
         }
     }
-    static volumeUp(count, mode) {
+    static volumeUp(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.volume = Math.min(video.volume + Math.max(1, count) / 100, 1.0);
     }
-    static volumeDown(count, mode) {
+    static volumeDown(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.volume = Math.max(video.volume - Math.max(1, count) / 100, 0.0);
     }
-    static seekForward(count, mode) {
+    static seekForward(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -242,7 +242,7 @@ class FrontendCommand {
         }
         video.currentTime = Math.min(video.currentTime + count, video.duration);
     }
-    static seekBack(count, mode) {
+    static seekBack(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -252,21 +252,21 @@ class FrontendCommand {
         }
         video.currentTime = Math.max(video.currentTime - count, 0);
     }
-    static switchLoop(count, mode) {
+    static switchLoop(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.loop = !video.loop;
     }
-    static reloadVideo(count, mode) {
+    static reloadVideo(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
         }
         video.load();
     }
-    static showVideInfo(count, mode) {
+    static showVideInfo(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
@@ -294,73 +294,73 @@ Loop: ${video.loop}`
     /**
      * Commands for current frame
      **/
-    static openLinkInFrame(count, mode) {
-        const elem = mode.getTarget();
+    static openLinkInFrame(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
             location.href = url;
         }
     }
-    static backFrame(count, mode) {
+    static backFrame(count, frameInfo) {
         history.go(-Math.min(Math.max(count, 1), history.length - 1));
     }
-    static forwardFrame(count, mode) {
+    static forwardFrame(count, frameInfo) {
         history.go(Math.min(Math.max(count, 1), history.length - 1));
     }
-    static stopLoadFrame(count, mode) {
+    static stopLoadFrame(count, frameInfo) {
         window.stop();
     }
-    static reloadFrame(count, mode) {
+    static reloadFrame(count, frameInfo) {
         location.reload();
     }
-    static incrementFrameURL(count, mode) {
+    static incrementFrameURL(count, frameInfo) {
         incrementURL(location, Math.max(count, 1));
     }
-    static decrementFrameURL(count, mode) {
+    static decrementFrameURL(count, frameInfo) {
         incrementURL(location, -Math.max(count, 1));
     }
-    static yankFrameURL(count, mode) {
+    static yankFrameURL(count, frameInfo) {
         DomUtils.setToClipboard(location.href);
     }
-    static showFrameURL(count, mode) {
+    static showFrameURL(count, frameInfo) {
         alert("Title: " + document.title + "\n" + "URL: " + location.href);
     }
 
     /**
      * Commands for link manipulation
      **/
-    static openLink(count, mode) {
-        const elem = mode.getTarget();
+    static openLink(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
-            mode.postMessage({ command: 'openLink', url: url });
+            frameInfo.postMessage({ command: 'openLink', url: url });
         }
     }
-    static openLinkInTab(count, mode) {
-        const elem = mode.getTarget();
+    static openLinkInTab(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
             const active = (count === 0);
-            mode.postMessage(
+            frameInfo.postMessage(
                 { command: 'openLinkInTab', url: url, active: active });
         }
     }
-    static yankLink(count, mode) {
-        const elem = mode.getTarget();
+    static yankLink(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
             DomUtils.setToClipboard(url);
         }
     }
-    static downloadLink(count, mode) {
-        const elem = mode.getTarget();
+    static downloadLink(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
-            mode.postMessage({ command: 'downloadLink', url: url });
+            frameInfo.postMessage({ command: 'downloadLink', url: url });
         }
     }
-    static pressEnter(count, mode) {
-        const elem = mode.getTarget();
+    static pressEnter(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateEnter(elem, "keypress", ctrl, alt, shift, meta);
     }
@@ -368,18 +368,18 @@ Loop: ${video.loop}`
     /**
      * Commands for mouse emulation
      **/
-    static mouseclick(count, mode) {
-        const elem = mode.getTarget();
+    static mouseclick(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateClick(elem, ctrl, alt, shift, meta);
     }
-    static mousedown(count, mode) {
-        const elem = mode.getTarget();
+    static mousedown(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
     }
-    static mousein(count, mode) {
-        const elem = mode.getTarget();
+    static mousein(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
@@ -387,8 +387,8 @@ Loop: ${video.loop}`
             elem, "mouseover", 0, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
     }
-    static mouseout(count, mode) {
-        const elem = mode.getTarget();
+    static mouseout(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
@@ -400,8 +400,8 @@ Loop: ${video.loop}`
     /**
      * Commands for select element manipulation
      **/
-    static selectNextOption(count, mode) {
-        const select = mode.getTarget();
+    static selectNextOption(count, frameInfo) {
+        const select = frameInfo.getTarget();
         if (!(select instanceof HTMLSelectElement)) {
             return;
         }
@@ -409,8 +409,8 @@ Loop: ${video.loop}`
         const index = (select.selectedIndex + count) % select.length;
         select.selectedIndex = index;
     }
-    static selectPreviousOption(count, mode) {
-        const select = mode.getTarget();
+    static selectPreviousOption(count, frameInfo) {
+        const select = frameInfo.getTarget();
         if (!(select instanceof HTMLSelectElement)) {
             return;
         }
@@ -419,8 +419,8 @@ Loop: ${video.loop}`
         const index = (select.selectedIndex - count + length) % length;
         select.selectedIndex = index;
     }
-    static toggleSelectOption(count, mode) {
-        const select = mode.getTarget();
+    static toggleSelectOption(count, frameInfo) {
+        const select = frameInfo.getTarget();
         if (!(select instanceof HTMLSelectElement)) {
             return;
         }
@@ -435,49 +435,49 @@ Loop: ${video.loop}`
     /**
      * Commands for text edit
      **/
-    static deleteCharBackward(count, mode) {
-        _editElement(mode, (elem) => DomUtils.deleteCharBackward(elem));
+    static deleteCharBackward(count, frameInfo) {
+        _editElement(frameInfo, (elem) => DomUtils.deleteCharBackward(elem));
     }
-    static deleteWordBackward(count, mode) {
-        _editElement(mode, (elem) => DomUtils.deleteWordBackward(elem));
+    static deleteWordBackward(count, frameInfo) {
+        _editElement(frameInfo, (elem) => DomUtils.deleteWordBackward(elem));
     }
-    static deleteToBeggingOfLine(count, mode) {
-        _editElement(mode, (elem) => DomUtils.deleteToBeggingOfLine(elem));
+    static deleteToBeggingOfLine(count, frameInfo) {
+        _editElement(frameInfo, (elem) => DomUtils.deleteToBeggingOfLine(elem));
     }
-    static deleteToEndOfLine(count, mode) {
-        _editElement(mode, (elem) => DomUtils.deleteToEndOfLine(elem));
+    static deleteToEndOfLine(count, frameInfo) {
+        _editElement(frameInfo, (elem) => DomUtils.deleteToEndOfLine(elem));
     }
-    static charNext(count, mode) {
-        DomUtils.charNext(mode.getTarget());
+    static charNext(count, frameInfo) {
+        DomUtils.charNext(frameInfo.getTarget());
     }
-    static charPrevious(count, mode) {
-        DomUtils.charPrevious(mode.getTarget());
+    static charPrevious(count, frameInfo) {
+        DomUtils.charPrevious(frameInfo.getTarget());
     }
-    static beginLine(count, mode) {
-        DomUtils.beginLine(mode.getTarget());
+    static beginLine(count, frameInfo) {
+        DomUtils.beginLine(frameInfo.getTarget());
     }
-    static endLine(count, mode) {
-        DomUtils.endLine(mode.getTarget());
+    static endLine(count, frameInfo) {
+        DomUtils.endLine(frameInfo.getTarget());
     }
-    static nextLine(count, mode) {
-        DomUtils.nextLine(mode.getTarget());
+    static nextLine(count, frameInfo) {
+        DomUtils.nextLine(frameInfo.getTarget());
     }
-    static previousLine(count, mode) {
-        DomUtils.previousLine(mode.getTarget());
+    static previousLine(count, frameInfo) {
+        DomUtils.previousLine(frameInfo.getTarget());
     }
-    static undo(count, mode) {
-        const elem = mode.getTarget();
+    static undo(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         if (!elem.undoStack || elem.undoStack.length === 0) {
             return;
         }
         elem.setRangeText(elem.undoStack.pop(), 0, elem.value.length, "end");
     }
-    static yankValue(count, mode) {
-        const elem = mode.getTarget();
+    static yankValue(count, frameInfo) {
+        const elem = frameInfo.getTarget();
         DomUtils.setToClipboard(elem.value);
     }
-    static pasteValue(count, mode) {
-        _editElement(mode, (elem) => {
+    static pasteValue(count, frameInfo) {
+        _editElement(frameInfo, (elem) => {
             // Reserve selection range because getFromClipboard can modify that.
             const start = elem.selectionStart;
             const end = elem.selectionEnd;
@@ -493,28 +493,28 @@ Loop: ${video.loop}`
     /**
      * Commands for selection manipulation
      **/
-    static clearSelection(count, mode) {
+    static clearSelection(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection) {
             return;
         }
         selection.removeAllRanges();
     }
-    static yankSelection(count, mode) {
+    static yankSelection(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection) {
             return;
         }
         DomUtils.setToClipboard(selection.toString());
     }
-    static deleteSelection(count, mode) {
+    static deleteSelection(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection) {
             return;
         }
         selection.deleteFromDocument();
     }
-    static reverseSelectionEndpoints(count, mode) {
+    static reverseSelectionEndpoints(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
             return;
@@ -530,139 +530,141 @@ Loop: ${video.loop}`
     /**
      * Commands for element manipulation
      **/
-    static selectElement(count, mode) {
+    static selectElement(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection) {
             return;
         }
-        const target = mode.getTarget();
+        const target = frameInfo.getTarget();
         const parent = target.parentNode;
         const index = Array.from(parent.childNodes).indexOf(target);
         selection.removeAllRanges();
         selection.setBaseAndExtent(parent, index, parent, index + 1);
     }
-    static yankInnerText(count, mode) {
-        DomUtils.setToClipboard(mode.getTarget().innerText);
+    static yankInnerText(count, frameInfo) {
+        DomUtils.setToClipboard(frameInfo.getTarget().innerText);
     }
-    static yankInnerHTML(count, mode) {
-        DomUtils.setToClipboard(mode.getTarget().innerHTML);
+    static yankInnerHTML(count, frameInfo) {
+        DomUtils.setToClipboard(frameInfo.getTarget().innerHTML);
     }
-    static yankOuterHTML(count, mode) {
-        DomUtils.setToClipboard(mode.getTarget().outerHTML);
+    static yankOuterHTML(count, frameInfo) {
+        DomUtils.setToClipboard(frameInfo.getTarget().outerHTML);
     }
-    static deleteElement(count, mode) {
-        const target = mode.getTarget();
+    static deleteElement(count, frameInfo) {
+        const target = frameInfo.getTarget();
         target.parentNode.removeChild(target);
     }
 
     /**
      * Commands for various applications
      **/
-    static smartOpen(count, mode) {
-        smartOpenImpl(count, mode, { command: 'openLink' });
+    static smartOpen(count, frameInfo) {
+        smartOpenImpl(count, frameInfo, { command: 'openLink' });
     }
-    static smartOpenInTab(count, mode) {
+    static smartOpenInTab(count, frameInfo) {
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         smartOpenImpl(
-            count, mode, { command: 'openLinkInTab', active: !shift });
+            count, frameInfo, { command: 'openLinkInTab', active: !shift });
     }
-    static yankCurrentURL(count, mode) {
+    static yankCurrentURL(count, frameInfo) {
         DomUtils.setToClipboard(location.href);
     }
     static ignore() {
         return true;
     }
-    static repeatLastCommand(count, mode) {
-        const [cmdName, lastCount] = mode.lastCommand;
+    static repeatLastCommand(count, frameInfo) {
+        const [cmdName, lastCount] = frameInfo.lastCommand;
         if (cmdName === undefined) {
             return;
         }
-        invokeCommand(cmdName, count !== 0 ? count : lastCount, mode);
+        invokeCommand(cmdName, count !== 0 ? count : lastCount, frameInfo);
     }
 
     /**
      * Commands for mode changing
      */
-    static toNormalMode(count, mode) {
-        mode.changeMode("NORMAL");
+    static toNormalMode(count, frameInfo) {
+        frameInfo.changeMode("NORMAL");
     }
-    static toInsertMode(count, mode) {
-        const target = mode.getTarget();
+    static toInsertMode(count, frameInfo) {
+        const target = frameInfo.getTarget();
         if (!DomUtils.isEditable(target)) {
-            return FrontendCommand.toInsertModeOnFirstElement(count, mode);
+            return FrontendCommand.toInsertModeOnFirstElement(count, frameInfo);
         }
-        mode.changeMode("INSERT", {
+        frameInfo.changeMode("INSERT", {
             lastFocusedElem: undefined,
             editableElement: target
         });
     }
-    static toInsertModeOnFirstElement(count, mode) {
+    static toInsertModeOnFirstElement(count, frameInfo) {
         const inputs = DomUtils.getInputList(document);
         if (inputs.length === 0) {
             return;
         }
         const target = inputs[Math.min(count, inputs.length - 1)];
-        mode.changeMode("INSERT", {
+        frameInfo.changeMode("INSERT", {
             lastFocusedElem: document.activeElement,
             editableElement: target
         });
     }
-    static toInsertModeOnLastElement(count, mode) {
-        return FrontendCommand.toInsertModeOnFirstElement(100000, mode);
+    static toInsertModeOnLastElement(count, frameInfo) {
+        return FrontendCommand.toInsertModeOnFirstElement(100000, frameInfo);
     }
-    static toInsertModeOnPreviousInput(count, mode) {
+    static toInsertModeOnPreviousInput(count, frameInfo) {
         const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getTarget());
+        const index = inputs.indexOf(frameInfo.getTarget());
         if (index === -1) return;
-        mode.changeMode("INSERT", {
+        frameInfo.changeMode("INSERT", {
             editableElement: inputs[(index - 1 + inputs.length) % inputs.length]
         });
     }
-    static toInsertModeOnNextInput(count, mode) {
+    static toInsertModeOnNextInput(count, frameInfo) {
         const inputs = DomUtils.getInputList(document);
-        const index = inputs.indexOf(mode.getTarget());
+        const index = inputs.indexOf(frameInfo.getTarget());
         if (index === -1) return;
-        mode.changeMode("INSERT", {
+        frameInfo.changeMode("INSERT", {
             editableElement: inputs[(index + 1) % inputs.length]
         });
     }
-    static toHintMode(count, mode) {
-        mode.postMessage({ command: "toHintMode", type: "link" });
+    static toHintMode(count, frameInfo) {
+        frameInfo.postMessage({ command: "toHintMode", type: "link" });
     }
-    static toHintFocusMode(count, mode) {
-        mode.postMessage({ command: "toHintMode", type: "focus" });
+    static toHintFocusMode(count, frameInfo) {
+        frameInfo.postMessage({ command: "toHintMode", type: "focus" });
     }
-    static toHintMediaMode(count, mode) {
-        mode.postMessage({ command: "toHintMode", type: "media" });
+    static toHintMediaMode(count, frameInfo) {
+        frameInfo.postMessage({ command: "toHintMode", type: "media" });
     }
-    static toVisualMode(count, mode) {
-        mode.changeMode("VISUAL");
+    static toVisualMode(count, frameInfo) {
+        frameInfo.changeMode("VISUAL");
     }
-    static toCaretMode(selection, mode) {
-        mode.changeMode("CARET");
+    static toCaretMode(selection, frameInfo) {
+        frameInfo.changeMode("CARET");
     }
-    static toExMode(count, mode, defaultCommand="") {
-        mode.changeMode(
+    static toExMode(count, frameInfo, defaultCommand="") {
+        frameInfo.changeMode(
             "CONSOLE", { mode: "exec", defaultCommand: defaultCommand });
     }
-    static toExModeOpen(count, mode) {
-        return FrontendCommand.toExMode(count, mode, "open ");
+    static toExModeOpen(count, frameInfo) {
+        return FrontendCommand.toExMode(count, frameInfo, "open ");
     }
-    static toExModeOpenCurrentURL(count, mode) {
-        return FrontendCommand.toExMode(count, mode, "open " + location.href);
+    static toExModeOpenCurrentURL(count, frameInfo) {
+        return FrontendCommand.toExMode(
+            count, frameInfo, "open " + location.href);
     }
-    static toExModeTabOpen(count, mode) {
-        return FrontendCommand.toExMode(count, mode, "tabopen ");
+    static toExModeTabOpen(count, frameInfo) {
+        return FrontendCommand.toExMode(count, frameInfo, "tabopen ");
     }
-    static toExModeTabOpenCurrentURL(count, mode) {
-        return FrontendCommand.toExMode(count, mode, "tabopen " + location.href);
+    static toExModeTabOpenCurrentURL(count, frameInfo) {
+        return FrontendCommand.toExMode(
+            count, frameInfo, "tabopen " + location.href);
     }
-    static toSearchMode(count, mode, isBackward=false) {
-        mode.changeMode(
+    static toSearchMode(count, frameInfo, isBackward=false) {
+        frameInfo.changeMode(
             "CONSOLE", { mode: "forwardSearch", defaultCommand: '' });
     }
-    static toBackwardSearchMode(count, mode) {
-        mode.changeMode(
+    static toBackwardSearchMode(count, frameInfo) {
+        frameInfo.changeMode(
             "CONSOLE", { mode: "backwardSearch", defaultCommand: '' });
     }
 }
@@ -707,8 +709,8 @@ function getLink(elem) {
     return undefined;
 }
 
-function smartOpenImpl(count, mode, openLinkMsg) {
-    const elem = mode.getTarget();
+function smartOpenImpl(count, frameInfo, openLinkMsg) {
+    const elem = frameInfo.getTarget();
     const link = getLink(elem);
     if (link) {
         try {
@@ -720,7 +722,7 @@ function smartOpenImpl(count, mode, openLinkMsg) {
                 || url.search !== loc.search)
                 && url.protocol !== "javascript:") {
                 openLinkMsg.url = link;
-                mode.postMessage(openLinkMsg);
+                frameInfo.postMessage(openLinkMsg);
                 return;
             }
         }
@@ -733,9 +735,9 @@ function smartOpenImpl(count, mode, openLinkMsg) {
         elem instanceof HTMLTextAreaElement) {
         elem.dispatchEvent(
             new Event("change", { bubbles: true, cancelable: false }));
-        FrontendCommand.pressEnter(count, mode);
+        FrontendCommand.pressEnter(count, frameInfo);
     }
-    return FrontendCommand.mouseclick(count, mode);
+    return FrontendCommand.mouseclick(count, frameInfo);
 }
 
 function emulateClick(target, ctrl, alt, shift, meta) {
@@ -788,8 +790,8 @@ function emulateEnter(target, type, ctrl, alt, shift, meta) {
     target.dispatchEvent(keyEvent);
 }
 
-function _editElement(mode, editFunc) {
-    const elem = mode.getTarget();
+function _editElement(frameInfo, editFunc) {
+    const elem = frameInfo.getTarget();
     const prevValue = elem.value;
     if (editFunc(elem)) {
         if (!elem.undoStack) {
@@ -799,30 +801,30 @@ function _editElement(mode, editFunc) {
     }
 }
 
-function invokeCommand(cmdName, count, mode) {
+function invokeCommand(cmdName, count, frameInfo) {
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
     let isIgnore;
     if (cmdDesc.background) {
-        mode.postMessage({ command: cmdName, count: count });
+        frameInfo.postMessage({ command: cmdName, count: count });
         isIgnore = false;
     }
-    else if (cmdDesc.topFrame && !mode.isTopFrame()) {
-        mode.postMessage({
+    else if (cmdDesc.topFrame && !frameInfo.isTopFrame()) {
+        frameInfo.postMessage({
             command: 'forwardCommand', frameId: 0,
             data: { command: cmdName, count: count }
         });
         isIgnore = false;
     }
     else {
-        isIgnore = FrontendCommand[cmdName](count, mode);
+        isIgnore = FrontendCommand[cmdName](count, frameInfo);
     }
     if (cmdName !== "repeatLastCommand") {
-        mode.lastCommand[0] = cmdName
-        mode.lastCommand[1] = count;
+        frameInfo.lastCommand[0] = cmdName
+        frameInfo.lastCommand[1] = count;
     }
     else {
         if (count !== 0) {
-            mode.lastCommand[1] = count;
+            frameInfo.lastCommand[1] = count;
         }
     }
     return isIgnore;
