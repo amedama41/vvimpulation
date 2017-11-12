@@ -189,22 +189,26 @@ function search(keyword, backward, mode) {
         if (result && !browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
         }
-        ConsoleCommand.closeConsoleMode(mode);
+        if (result) {
+            mode.stopConsole(true);
+        }
+        else {
+            mode.stopConsole(false, "Pattern not found: " + keyword);
+        }
     }).catch((error) => {
-        console.error(error.toString());
-        ConsoleCommand.closeConsoleMode(mode);
+        mode.stopConsole(false, error);
     });
 }
 
 class ConsoleCommand {
     static closeConsoleMode(mode) {
-        mode.stopConsole();
+        mode.stopConsole(false);
     }
 
     static execSearch(mode) {
         const value = mode.getTarget().value;
         if (value === "") {
-            ConsoleCommand.closeConsoleMode(mode);
+            mode.stopConsole(false);
             return;
         }
         search(value, mode.isBackward(), mode);
@@ -213,7 +217,7 @@ class ConsoleCommand {
     static execCommand(mode) {
         const value = mode.getTarget().value;
         if (value === "") {
-            ConsoleCommand.closeConsoleMode(mode);
+            mode.stopConsole(false);
             return;
         }
         const prefix = value.charAt(0);
@@ -224,24 +228,18 @@ class ConsoleCommand {
 
         mode.sendMessage({ command: "execCommand", cmd: value })
             .then((result) => {
-                if (result === false) {
-                    ConsoleCommand.closeConsoleMode(mode);
-                    return;
-                }
-                if (!browser.extension.inIncognitoContext) { // TODO
+                if (result && !browser.extension.inIncognitoContext) { // TODO
                     History.save("command_history", value);
                 }
-                if (result === true) {
-                    ConsoleCommand.closeConsoleMode(mode);
+                if (typeof(result) === "boolean") {
+                    mode.stopConsole(true);
                     return;
                 }
-                const output = document.querySelector("#ex_output");
-                output.value =
-                    (Array.isArray(result) ? result.join("\n") : result);
+                mode.stopConsole(
+                    true, (Array.isArray(result) ? result.join("\n") : result));
             })
             .catch((error) => {
-                const output = document.querySelector("#ex_output");
-                output.value = error;
+                mode.stopConsole(false, error);
             });
     }
 
@@ -278,7 +276,7 @@ class ConsoleCommand {
 
     static deleteCharBackward(mode) {
         if (!DomUtils.deleteCharBackward(mode.getTarget())) {
-            ConsoleCommand.closeConsoleMode(mode);
+            mode.stopConsole(false);
         }
     }
     static deleteWordBackward(mode) {
@@ -337,13 +335,11 @@ class ConsoleMode {
         this.onStart();
         this._input.focus();
     }
-    stopConsole() {
+    stopConsole(result, reason=null) {
         this._isOpened = false;
         this.onStop();
         this._input.value = "";
-        const output = document.querySelector("#ex_output");
-        output.value = "";
-        this.sendMessage({ command: "toNormalMode" });
+        this.sendMessage({ command: "hideConsole", result, reason });
     }
     sendMessage(msg) {
         return this._port.sendMessage(msg);
@@ -461,6 +457,7 @@ function createConsoleMode(options, port, input, container) {
 window.addEventListener("DOMContentLoaded", (e) => {
     const port = new Port(browser.runtime.connect({ name: "console" }));
     const input = document.getElementById("ex_input");
+    const output = document.getElementById("ex_message");
     const container = document.getElementById("ex_candidates");
     let mode = undefined;
 
@@ -468,6 +465,10 @@ window.addEventListener("DOMContentLoaded", (e) => {
         switch (msg.command) {
             case "setConsoleMode":
                 mode = createConsoleMode(msg.options, port, input, container);
+                return true;
+            case "setMessage":
+                output.innerText = msg.message;
+                output.parentNode.setAttribute("mode", "showMessage");
                 return true;
             default:
                 console.warn("Unknown command: ", msg.command);

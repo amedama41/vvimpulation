@@ -57,8 +57,20 @@ span.ex_number_info {
     content: "?";
 }
 
-#ex_input, #ex_output {
+#ex_input {
     box-sizing: border-box;
     width: calc(100% - 1em);
+}
+
+#ex_message {
+    box-sizing: border-box;
+    width: 100%;
+    display: none;
+}
+#ex_console[mode="showMessage"] > #ex_input {
+    display: none;
+}
+#ex_console[mode="showMessage"] > #ex_message {
+    display: block;
 }
 

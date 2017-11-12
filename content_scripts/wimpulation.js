@@ -219,6 +219,9 @@ class MessageCommand {
         }
         return gFrameInfo.handleMessage(msg.data);
     }
+    static hideConsole(msg) {
+        return gFrameInfo.handleMessage(msg);
+    }
     static forwardCommand(msg, sneder) {
         const data = msg.data;
         invokeCommand(data.command, data.count, gFrameInfo);

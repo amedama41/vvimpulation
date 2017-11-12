@@ -526,8 +526,12 @@ class Command {
     static toNormalMode(msg, sender, tabInfo) {
         changeNormalMode(tabInfo);
     }
-    static setConsoleMode(msg, sender, tabInfo) {
-        return tabInfo.sendConsoleMessage(msg);
+
+    static sendConsoleMessage(msg, sender, tabInfo) {
+        return tabInfo.sendConsoleMessage(msg.data);
+    }
+    static hideConsole(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(0, msg);
     }
 }
 
