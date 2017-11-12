@@ -5,6 +5,11 @@
         "media": "img, canvas, video, object, embed"
     },
     "local": {
+        "www.google.co.jp": {
+            "link": [
+                ["#cdrlnk", "Link to specify period"]
+            ]
+        },
         "github.com": {
             "link": [
                 ["#user-links svg.octicon-plus, #user-links img.avatar", "Header dropdown list icons"],
