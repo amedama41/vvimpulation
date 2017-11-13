@@ -293,10 +293,6 @@ function connectToBackGround(reconnectTimeout) {
                 console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
                 gFrameInfo.reset();
             }, { capture: true, once : true });
-
-            if (msg.frameId === 0) {
-                createConsoleFrame();
-            }
         }
         else if (msg.command === "changeMode") {
             gFrameInfo.changeModeNow(msg.mode, msg.data);
@@ -329,34 +325,6 @@ function connectToBackGround(reconnectTimeout) {
         port.onRequest.removeListener(handleRequest);
         port.onNotification.removeListener(handleNotification);
     });
-}
-
-function createConsoleFrame() {
-    const create = () => {
-        // for reinstall
-        const oldContainer =
-            document.getElementById("wimpulation-console-container");
-        if (oldContainer) {
-            document.documentElement.removeChild(oldContainer);
-        }
-
-        const container = document.createElement("div");
-        container.id = "wimpulation-console-container";
-        const consoleFrame = document.createElement("iframe");
-        consoleFrame.id = "wimpulation-console";
-        consoleFrame.src =
-            browser.runtime.getURL("resources/ex_mode/ex_mode.html");
-        container.appendChild(consoleFrame);
-        document.documentElement.appendChild(container);
-    };
-
-    if (document.readyState === "loading") {
-        window.addEventListener(
-            "DOMContentLoaded", create, { capture: true, once: true });
-    }
-    else {
-        create();
-    }
 }
 
 console.log(location.href.substr(0, 64), document.readyState);

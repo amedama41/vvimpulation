@@ -97,6 +97,11 @@ class FrameInfo {
         this._lastCommand = [undefined, undefined];
         this._modeEventListenerList = [];
         this._mode = this._createMode(modeName);
+        this._consoleFrame = undefined;
+        this._consoleTimerId = 0;
+        if (this.isTopFrame()) {
+            this._createConsoleFrame();
+        }
     }
     reset() {
         this._resetMode();
@@ -163,18 +168,63 @@ class FrameInfo {
     }
 
     // Method for mode classes.
-    isCurrentMode(mode) {
-        return this._mode === mode;
-    }
     setEventListener(target, eventType, handler, options) {
         const adapterHandler = (e) => handler(e, this);
         target.addEventListener(eventType, adapterHandler, options);
         this._modeEventListenerList.push(
             [target, eventType, adapterHandler, options]);
     }
-    sendConsoleMessage(msg) {
-        return this._port.sendMessage(
-            { command: "sendConsoleMessage", data: msg });
+    get consoleFrame() {
+        return this._consoleFrame;
+    }
+    showConsole(requestMode, mode, defaultCommand) {
+        if (!this._consoleFrame) {
+            return Promise.reject("console frame is not loaded yet");
+        }
+        const options = { mode, defaultCommand };
+        return this._sendConsoleMessage({ command: "setConsoleMode", options })
+            .then((result) => {
+                if (this._mode !== requestMode) { // Maybe mode is changed.
+                    return false;
+                }
+                if (this._consoleTimerId !== 0) {
+                    clearTimeout(this._consoleTimerId);
+                    this._consoleTimerId = 0;
+                }
+                this._consoleFrame.classList.add("wimpulation-show-console");
+                this._consoleFrame.focus();
+                return true;
+            })
+            .catch((error) => {
+                if (this._mode !== requestMode) { // Maybe mode is changed.
+                    return false;
+                }
+                return Promise.reject(error);
+            });
+    }
+    showMessage(message) {
+        const CLASS_NAME = "wimpulation-show-console";
+        this._sendConsoleMessage({ command: "setMessage", message })
+            .then((result) => {
+                if (this._consoleTimerId !== 0) {
+                    clearTimeout(this._consoleTimerId);
+                }
+                this._consoleFrame.classList.add(CLASS_NAME);
+                this._consoleTimerId = setTimeout(() => {
+                    if (this._consoleTimerId !== 0) {
+                        this._consoleFrame.classList.remove(CLASS_NAME);
+                        this._consoleTimerId = 0;
+                    }
+                }, 3000);
+            });
+    }
+    hideConsole() {
+        this._consoleFrame.blur();
+        // If showing message, showMessage has a responsibility to close.
+        if (this._consoleTimerId !== 0) {
+            return;
+        }
+        this._consoleFrame.classList.remove("wimpulation-show-console");
     }
 
     _createMode(mode, data=undefined) {
@@ -208,7 +258,41 @@ class FrameInfo {
             target.removeEventListener(eventType, handler, options);
         }
         this._modeEventListenerList = [];
-        this._mode.onReset();
+        this._mode.onReset(this);
+    }
+    _createConsoleFrame() {
+        const create = () => {
+            // for reinstall
+            const oldContainer =
+                document.getElementById("wimpulation-console-container");
+            if (oldContainer) {
+                document.documentElement.removeChild(oldContainer);
+            }
+
+            const container = document.createElement("div");
+            container.id = "wimpulation-console-container";
+            const consoleFrame = document.createElement("iframe");
+            consoleFrame.id = "wimpulation-console";
+            consoleFrame.src =
+                browser.runtime.getURL("resources/ex_mode/ex_mode.html");
+            consoleFrame.onload = () => {
+                this._consoleFrame = consoleFrame;
+            };
+            container.appendChild(consoleFrame);
+            document.documentElement.appendChild(container);
+        };
+
+        if (document.readyState === "loading") {
+            window.addEventListener(
+                "DOMContentLoaded", create, { capture: true, once: true });
+        }
+        else {
+            create();
+        }
+    }
+    _sendConsoleMessage(msg) {
+        return this._port.sendMessage(
+            { command: "sendConsoleMessage", data: msg });
     }
 }
 

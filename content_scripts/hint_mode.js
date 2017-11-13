@@ -85,26 +85,12 @@ class HintMode {
         this.focusIndex = undefined;
     }
     _startFilter(msg, frameInfo) {
-        const consoleFrame = document.getElementById("wimpulation-console");
-        if (!consoleFrame) {
-            return;
-        }
-        const options = { mode: "hintFilter", defaultCommand: msg.filter };
-        frameInfo.sendConsoleMessage({ command: "setConsoleMode", options })
-            .then((result) => {
-                // Maybe current mode is not already console.
-                if (frameInfo.isCurrentMode(this)) {
-                    consoleFrame.classList.add("wimpulation-show-console");
-                    consoleFrame.focus();
-                }
-            });
+        frameInfo.showConsole(this, "hintFilter", msg.filter);
     }
     _stopFilter(msg, frameInfo) {
         frameInfo.sendMessage(
             { command: "stopFilter", result: msg.result, filter: msg.reason });
-        const consoleFrame = document.getElementById("wimpulation-console");
-        consoleFrame.blur();
-        consoleFrame.classList.remove("wimpulation-show-console");
+        frameInfo.hideConsole();
     }
     _applyFilter(msg) {
         const className = "wimpulation-filtered-hint";
