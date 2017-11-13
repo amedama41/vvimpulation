@@ -21,18 +21,8 @@ class ConsoleMode {
         // If search succeeds or user click elements outside of console,
         // frame is not focused.
         if (isConsoleFocued) {
-            try {
-                if (this.lastFocusedElem) {
-                    const x = window.scrollX;
-                    const y = window.scrollY;
-                    this.lastFocusedElem.focus();
-                    // Restore position which was changed by focus
-                    window.scrollTo(x, y);
-                }
-            }
-            catch (e) {
-                console.warn(
-                    "lastFocusedElem is likely dead:", Utils.errorString(e));
+            if (this.lastFocusedElem) {
+                DomUtils.fixedFocus(this.lastFocusedElem);
             }
         }
     }

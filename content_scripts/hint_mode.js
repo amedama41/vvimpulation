@@ -67,12 +67,7 @@ class HintMode {
         const [span, elem] = this.hints[localIndex];
         span.id = "wimpulation-hint-active";
         if (msg.defaultFocus) {
-            try {
-                elem.focus();
-            }
-            catch (e) {
-                console.warn(`Element ${localIndex} is likely dead:`, e);
-            }
+            DomUtils.fixedFocus(elem);
         }
         this.focusIndex = localIndex;
     }

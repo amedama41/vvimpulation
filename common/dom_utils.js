@@ -209,6 +209,18 @@ return (class Edit {
             window.scrollTo(x, y);
         }
     }
+    static fixedFocus(elem) {
+        const x = window.scrollX;
+        const y = window.scrollY;
+        try {
+            elem.focus();
+            // Restore position which was changed by focus
+            window.scrollTo(x, y);
+        }
+        catch (e) {
+            console.warn("elem is likely dead:", Utils.errorString(e));
+        }
+    }
 });
 
 function indexOfAfterPreviousNewline(value, from) {
