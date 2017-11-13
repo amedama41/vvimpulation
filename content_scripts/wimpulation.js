@@ -12,6 +12,7 @@ const NORMAL_KEY_MAP = Utils.toPreparedCmdMap({
     "A": "toInsertModeOnLastElement",
     "v": "toVisualMode",
     ":": "toExMode",
+    "g<": "showLastMessage",
     "o": "smartOpen",
     "O": "smartOpenInTab",
     "<C-G>": "toExModeOpenCurrentURL",

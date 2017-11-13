@@ -588,6 +588,9 @@ Loop: ${video.loop}`
         }
         invokeCommand(cmdName, count !== 0 ? count : lastCount, frameInfo);
     }
+    static showLastMessage(count, frameInfo) {
+        frameInfo.showLastMessage();
+    }
 
     /**
      * Commands for mode changing

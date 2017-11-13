@@ -139,6 +139,7 @@ const COMMAND_DESCRIPTIONS = {
     reloadHintPattern: { background: true },
     ignore: {},
     repeatLastCommand: {},
+    showLastMessage: { topFrame: true },
 
     /** Commands for mode changing **/
     toNormalMode: { background: true },

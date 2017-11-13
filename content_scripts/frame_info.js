@@ -99,6 +99,7 @@ class FrameInfo {
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
+        this._lastMessage = "";
         if (this.isTopFrame()) {
             this._createConsoleFrame();
         }
@@ -211,6 +212,7 @@ class FrameInfo {
             return;
         }
         const CLASS_NAME = "wimpulation-show-console";
+        this._lastMessage = message;
         this._sendConsoleMessage({ command: "setMessage", message })
             .then((result) => {
                 if (this._consoleTimerId !== 0) {
@@ -224,6 +226,11 @@ class FrameInfo {
                     }
                 }, 3000);
             });
+    }
+    showLastMessage() {
+        if (this._lastMessage !== "") {
+            this.showMessage(this._lastMessage);
+        }
     }
     hideConsole() {
         this._consoleFrame.blur();
