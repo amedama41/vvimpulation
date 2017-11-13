@@ -203,6 +203,13 @@ class FrameInfo {
             });
     }
     showMessage(message) {
+        if (!this.isTopFrame()) {
+            this._port.postMessage({ command: "showMessage", message });
+            return;
+        }
+        if (!this._consoleFrame) {
+            return;
+        }
         const CLASS_NAME = "wimpulation-show-console";
         this._sendConsoleMessage({ command: "setMessage", message })
             .then((result) => {

@@ -288,7 +288,7 @@ CurrentTime: ${video.currentTime}
 Volume: ${video.volume}
 Loop: ${video.loop}`
         );
-        alert(msg);
+        frameInfo.showMessage(msg);
     }
 
     /**
@@ -321,9 +321,11 @@ Loop: ${video.loop}`
     }
     static yankFrameURL(count, frameInfo) {
         DomUtils.setToClipboard(location.href);
+        frameInfo.showMessage("Yank current frame URL");
     }
     static showFrameURL(count, frameInfo) {
-        alert("Title: " + document.title + "\n" + "URL: " + location.href);
+        frameInfo.showMessage(
+            "Title: " + document.title + "\n" + "URL: " + location.href);
     }
 
     /**
@@ -350,6 +352,7 @@ Loop: ${video.loop}`
         const url = getLink(elem);
         if (url) {
             DomUtils.setToClipboard(url);
+            frameInfo.showMessage("Yank current target link");
         }
     }
     static downloadLink(count, frameInfo) {
@@ -475,6 +478,7 @@ Loop: ${video.loop}`
     static yankValue(count, frameInfo) {
         const elem = frameInfo.getTarget();
         DomUtils.setToClipboard(elem.value);
+        frameInfo.showMessage("Yank current target value");
     }
     static pasteValue(count, frameInfo) {
         _editElement(frameInfo, (elem) => {
@@ -506,6 +510,7 @@ Loop: ${video.loop}`
             return;
         }
         DomUtils.setToClipboard(selection.toString());
+        frameInfo.showMessage("Yank current selection text");
     }
     static deleteSelection(count, frameInfo) {
         const selection = window.getSelection();
@@ -543,12 +548,15 @@ Loop: ${video.loop}`
     }
     static yankInnerText(count, frameInfo) {
         DomUtils.setToClipboard(frameInfo.getTarget().innerText);
+        frameInfo.showMessage("Yank current target innerText");
     }
     static yankInnerHTML(count, frameInfo) {
         DomUtils.setToClipboard(frameInfo.getTarget().innerHTML);
+        frameInfo.showMessage("Yank current target innerHTML");
     }
     static yankOuterHTML(count, frameInfo) {
         DomUtils.setToClipboard(frameInfo.getTarget().outerHTML);
+        frameInfo.showMessage("Yank current target outerHTML");
     }
     static deleteElement(count, frameInfo) {
         const target = frameInfo.getTarget();
@@ -568,6 +576,7 @@ Loop: ${video.loop}`
     }
     static yankCurrentURL(count, frameInfo) {
         DomUtils.setToClipboard(location.href);
+        frameInfo.showMessage("Yank current page URL");
     }
     static ignore() {
         return true;

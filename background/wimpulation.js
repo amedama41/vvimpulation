@@ -576,6 +576,9 @@ class Command {
     static forwardCommand(msg, sender, tabInfo) {
         tabInfo.sendMessage(msg.frameId, msg);
     }
+    static showMessage(msg, sender, tabInfo) {
+        tabInfo.sendMessage(0, msg);
+    }
 
     static execCommand(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {

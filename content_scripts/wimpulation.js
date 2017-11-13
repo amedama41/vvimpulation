@@ -275,6 +275,9 @@ class MessageCommand {
             return false;
         }
     }
+    static showMessage(msg) {
+        gFrameInfo.showMessage(msg.message);
+    }
 };
 
 function init() {
