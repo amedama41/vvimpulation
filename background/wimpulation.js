@@ -136,33 +136,6 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "v": { name: "selectElement", frontend: true },
     "de": { name: "deleteElement", frontend: true },
 });
-class HintCommand {
-    static toNormalMode(tabInfo, mode) {
-        changeNormalMode(tabInfo);
-    }
-    static incrementHintNum(tabInfo, mode) {
-        mode.changeHintNum(mode.getNextIndex(), tabInfo);
-    }
-    static decrementHintNum(tabInfo, mode) {
-        mode.changeHintNum(mode.getPreviousIndex(), tabInfo);
-    }
-    static refreshHint(tabInfo, mode) {
-        const type = mode.getType();
-        tabInfo.sendMessage(0, {
-            command: "collectHint",
-            type: type,
-            pattern: HintMode._makePattern(type, tabInfo.tab.url),
-        }).then(
-            (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, mode),
-            handleError);
-    }
-    static startFilter(tabInfo, mode) {
-        mode.startFilter(tabInfo);
-    }
-    static toggleDefaultFocus(tabInfo, mode) {
-        mode.toggleDefaultFocus();
-    }
-}
 class HintMode {
     constructor(type) {
         this.type = type;
@@ -189,9 +162,12 @@ class HintMode {
             changeNormalMode(tabInfo, sender.frameId, [key]);
         }
     }
-    startFilter(tabInfo) {
-        HintMode._forwardHintCommand(
-            tabInfo, 0, { command: "startFilter", filter: this.filter });
+    setIdList(idList) {
+        this.idList = idList;
+        this.filterIndexMap = this.idList.map((id, index) => index);
+        this.filter = "";
+        this.currentIndex = 0;
+        this.mapper.reset();
     }
     applyFilter(filter, sender, tabInfo) {
         const msg = { command: "applyFilter", filter };
@@ -210,6 +186,37 @@ class HintMode {
             this.applyFilter(this.filter, sender, tabInfo);
         }
     }
+
+    toNormalMode(tabInfo) {
+        changeNormalMode(tabInfo);
+    }
+    incrementHintNum(tabInfo) {
+        const nextIndex = (this.currentIndex + 1) % this.filterIndexMap.length;
+        this._changeHintNum(nextIndex, tabInfo);
+    }
+    decrementHintNum(tabInfo) {
+        const length = this.filterIndexMap.length;
+        const prevIndex = (this.currentIndex - 1 + length) % length;
+        this._changeHintNum(prevIndex, tabInfo);
+    }
+    refreshHint(tabInfo) {
+        const type = this.type;
+        tabInfo.sendMessage(0, {
+            command: "collectHint",
+            type: type,
+            pattern: HintMode._makePattern(type, tabInfo.tab.url),
+        }).then(
+            (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, this),
+            handleError);
+    }
+    startFilter(tabInfo) {
+        HintMode._forwardHintCommand(
+            tabInfo, 0, { command: "startFilter", filter: this.filter });
+    }
+    toggleDefaultFocus() {
+        this.defaultFocus = !this.defaultFocus;
+    }
+
     _fixFilter(tabInfo) {
         const promiseList = [];
         const msg = { command: "getFilterResult" };
@@ -242,7 +249,7 @@ class HintMode {
                 tabInfo, currentFrameId, { command: cmd.name, count: count });
         }
         else {
-            HintCommand[cmd.name](tabInfo, this);
+            this[cmd.name](tabInfo);
         }
     }
     _handleDigit(num, tabInfo) {
@@ -253,30 +260,9 @@ class HintMode {
         }
         const nextIndex = (index ? parseInt(index, 10) : length - 1);
 
-        this.changeHintNum(nextIndex, tabInfo);
+        this._changeHintNum(nextIndex, tabInfo);
     }
-
-    getType() {
-        return this.type;
-    }
-    getPreviousIndex() {
-        const length = this.filterIndexMap.length;
-        return (this.currentIndex - 1 + length) % length;
-    }
-    getNextIndex() {
-        return (this.currentIndex + 1) % this.filterIndexMap.length;
-    }
-    toggleDefaultFocus() {
-        this.defaultFocus = !this.defaultFocus;
-    }
-    setIdList(idList) {
-        this.idList = idList;
-        this.filterIndexMap = this.idList.map((id, index) => index);
-        this.filter = "";
-        this.currentIndex = 0;
-        this.mapper.reset();
-    }
-    changeHintNum(nextDisplayedIndex, tabInfo) {
+    _changeHintNum(nextDisplayedIndex, tabInfo) {
         const prevId = this.idList[this.filterIndexMap[this.currentIndex]];
         const nextIndex = this.filterIndexMap[nextDisplayedIndex];
         const nextId = this.idList[nextIndex];
@@ -613,6 +599,9 @@ class Command {
         return tabInfo.sendMessage(0, msg);
     }
     static applyFilter(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
         tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
     }
 }
