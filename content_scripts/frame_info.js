@@ -172,6 +172,10 @@ class FrameInfo {
         this._modeEventListenerList.push(
             [target, eventType, adapterHandler, options]);
     }
+    sendConsoleMessage(msg) {
+        return this._port.sendMessage(
+            { command: "sendConsoleMessage", data: msg });
+    }
 
     _createMode(mode, data=undefined) {
         try {

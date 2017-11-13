@@ -111,6 +111,7 @@ const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "<S-Tab>": { name: "decrementHintNum" },
     ";": { name: "incrementHintNum" },
     ",": { name: "decrementHintNum" },
+    "/": { name: "startFilter" },
     "ff": { name: "toggleDefaultFocus" },
     "fi": { name: "focusin", frontend: true },
     "fo": { name: "focusout", frontend: true },
@@ -155,6 +156,9 @@ class HintCommand {
             (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, mode),
             handleError);
     }
+    static startFilter(tabInfo, mode) {
+        mode.startFilter(tabInfo);
+    }
     static toggleDefaultFocus(tabInfo, mode) {
         mode.toggleDefaultFocus();
     }
@@ -162,8 +166,10 @@ class HintCommand {
 class HintMode {
     constructor(type) {
         this.type = type;
-        this.idList = [];
-        this.currentIndex = 0;
+        this.filter = "";
+        this.filterIndexMap = []; // displayed index => global index
+        this.idList = []; // global index => frame id
+        this.currentIndex = 0; // current displayed index
         this.defaultFocus = true;
         this.mapper = Utils.makeCommandMapper(HINT_KEY_MAP);
     }
@@ -183,9 +189,52 @@ class HintMode {
             changeNormalMode(tabInfo, sender.frameId, [key]);
         }
     }
+    startFilter(tabInfo) {
+        HintMode._forwardHintCommand(
+            tabInfo, 0, { command: "startFilter", filter: this.filter });
+    }
+    applyFilter(filter, sender, tabInfo) {
+        const msg = { command: "applyFilter", filter };
+        tabInfo.forEachPort((port, id) => {
+            HintMode._forward(port, msg);
+        });
+    }
+    stopFilter(result, filter, sender, tabInfo) {
+        if (result) {
+            if (!filter !== this.filter) {
+                this.filter = filter;
+                this._fixFilter(tabInfo);
+            }
+        }
+        else {
+            this.applyFilter(this.filter, sender, tabInfo);
+        }
+    }
+    _fixFilter(tabInfo) {
+        const promiseList = [];
+        const msg = { command: "getFilterResult" };
+        tabInfo.forEachPort((port, id) => {
+            promiseList.push(HintMode._forward(port, msg));
+        });
+        Promise.all(promiseList).then((resultList) => {
+            const filterResult = resultList.reduce((filterResult, result) => {
+                Array.prototype.push.apply(filterResult, result);
+                return filterResult;
+            }).sort((lhs, rhs) => lhs[0] - rhs[0]);
+            const [indexMap, labelMap] =
+                HintMode._createFilterMaps(filterResult, this.idList);
+            this.filterIndexMap = indexMap;
+            this.currentIndex = 0;
+            tabInfo.forEachPort((port, id) => {
+                HintMode._forward(
+                    port, { command: "setHintLabel", labelList: labelMap[id] });
+            });
+        });
+    }
     _invoke(cmd, tabInfo) {
         if (cmd.frontend) {
-            const currentFrameId = this.idList[this.currentIndex];
+            const currentFrameId =
+                this.idList[this.filterIndexMap[this.currentIndex]];
             const modifiers = cmd.modifiers || {};
             const count = Utils.modifiersToCount(
                 modifiers.ctrl, modifiers.shift, modifiers.alt, modifiers.meta);
@@ -197,7 +246,7 @@ class HintMode {
         }
     }
     _handleDigit(num, tabInfo) {
-        const length = this.idList.length;
+        const length = this.filterIndexMap.length;
         let index = this.currentIndex.toString() + num;
         while (index && parseInt(index, 10) >= length) {
             index = index.substring(1);
@@ -211,22 +260,25 @@ class HintMode {
         return this.type;
     }
     getPreviousIndex() {
-        const length = this.idList.length;
+        const length = this.filterIndexMap.length;
         return (this.currentIndex - 1 + length) % length;
     }
     getNextIndex() {
-        return (this.currentIndex + 1) % this.idList.length;
+        return (this.currentIndex + 1) % this.filterIndexMap.length;
     }
     toggleDefaultFocus() {
         this.defaultFocus = !this.defaultFocus;
     }
     setIdList(idList) {
         this.idList = idList;
+        this.filterIndexMap = this.idList.map((id, index) => index);
+        this.filter = "";
         this.currentIndex = 0;
         this.mapper.reset();
     }
-    changeHintNum(nextIndex, tabInfo) {
-        const prevId = this.idList[this.currentIndex];
+    changeHintNum(nextDisplayedIndex, tabInfo) {
+        const prevId = this.idList[this.filterIndexMap[this.currentIndex]];
+        const nextIndex = this.filterIndexMap[nextDisplayedIndex];
         const nextId = this.idList[nextIndex];
         if (prevId !== nextId) {
             HintMode._forwardHintCommand(
@@ -236,7 +288,10 @@ class HintMode {
             command: "focusHintLink",
             index: nextIndex, defaultFocus: this.defaultFocus
         });
-        this.currentIndex = nextIndex;
+        this.currentIndex = nextDisplayedIndex;
+    }
+    static _forward(port, data) {
+        return port.sendMessage({ command: "forwardHintCommand", data });
     }
     static _forwardHintCommand(tabInfo, frameId, msg) {
         return tabInfo.sendMessage(
@@ -255,6 +310,24 @@ class HintMode {
         else {
             return globalPattern;
         }
+    }
+    static _createFilterMaps(filterResult, idList) {
+        const filterIndexMap = [];
+        const labelMap = {};
+        filterResult.forEach(([index, filter]) => {
+            const frameId = idList[index];
+            if (!labelMap[frameId]) {
+                labelMap[frameId] = [];
+            }
+            if (filter) {
+                labelMap[frameId].push(filterIndexMap.length);
+                filterIndexMap.push(index);
+            }
+            else {
+                labelMap[frameId].push("-");
+            }
+        });
+        return [filterIndexMap, labelMap];
     }
 }
 
@@ -503,6 +576,12 @@ class Command {
         }
         return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
     }
+    static stopFilter(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        tabInfo.modeInfo.stopFilter(msg.result, msg.filter, sender, tabInfo);
+    }
 
     static collectFrameId(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, msg);
@@ -532,6 +611,9 @@ class Command {
     }
     static hideConsole(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);
+    }
+    static applyFilter(msg, sender, tabInfo) {
+        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
     }
 }
 

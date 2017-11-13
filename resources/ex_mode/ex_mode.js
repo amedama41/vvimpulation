@@ -205,6 +205,11 @@ class ConsoleCommand {
         mode.stopConsole(false);
     }
 
+    static fixFilter(mode) {
+        const filter = mode.getTarget().value;
+        mode.stopConsole(true, filter);
+    }
+
     static execSearch(mode) {
         const value = mode.getTarget().value;
         if (value === "") {
@@ -441,6 +446,39 @@ class SearchMode extends ConsoleMode {
         this._history.setPrevious(this._input);
     }
 }
+const HINT_FILTER_CMD_MAP = Utils.toPreparedCmdMap({
+    "<Esc>": "closeConsoleMode",
+    "<C-[>": "closeConsoleMode",
+    "<C-C>": "closeConsoleMode",
+    "<Enter>": "fixFilter",
+    "<C-M>": "fixFilter",
+    "<C-H>": "deleteCharBackward",
+    "<C-W>": "deleteWordBackward",
+    "<C-U>": "deleteToBeggingOfLine",
+    "<C-K>": "deleteToEndOfLine",
+});
+class HintFilterMode extends ConsoleMode {
+    onInit(container) {
+        this._mapper = Utils.makeCommandMapper(HINT_FILTER_CMD_MAP);
+        this._prevFilter = null;
+    }
+    onStart() {
+    }
+    onStop() {
+    }
+    onKeydown(key, input) {
+        this._prevFilter = input.value;
+        const [consumed, optCmd, cmd] = this._mapper.get(key);
+        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
+        return result;
+    }
+    onKeyup(input) {
+        const filter = input.value;
+        if (filter !== this._prevFilter) {
+            super.sendMessage({ command: 'applyFilter', filter });
+        }
+    }
+}
 
 function createConsoleMode(options, port, input, container) {
     switch (options.mode) {
@@ -449,6 +487,8 @@ function createConsoleMode(options, port, input, container) {
         case "forwardSearch":
         case "backwardSearch":
             return new SearchMode(options, port, input, container);
+        case "hintFilter":
+            return new HintFilterMode(options, port, input, container);
         default:
             throw new Error("Unknown mode: " + options.mode);
     }

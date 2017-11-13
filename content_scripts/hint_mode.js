@@ -38,6 +38,16 @@ class HintMode {
                 return this.focusHintLink(msg);
             case 'blurHintLink':
                 return this.blurHintLink();
+            case 'startFilter':
+                return this._startFilter(msg, frameInfo);
+            case 'applyFilter':
+                return this._applyFilter(msg);
+            case 'hideConsole':
+                return this._stopFilter(msg, frameInfo);
+            case 'getFilterResult':
+                return this._getFilterResult(msg, frameInfo);
+            case "setHintLabel":
+                return this._setHintLabel(msg, frameInfo);
             default:
                 if (this.focusIndex === undefined) {
                     return;
@@ -73,6 +83,59 @@ class HintMode {
         const [span, elem] = this.hints[this.focusIndex];
         span.id = "";
         this.focusIndex = undefined;
+    }
+    _startFilter(msg, frameInfo) {
+        const consoleFrame = document.getElementById("wimpulation-console");
+        if (!consoleFrame) {
+            return;
+        }
+        const options = { mode: "hintFilter", defaultCommand: msg.filter };
+        frameInfo.sendConsoleMessage({ command: "setConsoleMode", options })
+            .then((result) => {
+                // Maybe current mode is not already console.
+                if (frameInfo.isCurrentMode(this)) {
+                    consoleFrame.classList.add("wimpulation-show-console");
+                    consoleFrame.focus();
+                }
+            });
+    }
+    _stopFilter(msg, frameInfo) {
+        frameInfo.sendMessage(
+            { command: "stopFilter", result: msg.result, filter: msg.reason });
+        const consoleFrame = document.getElementById("wimpulation-console");
+        consoleFrame.blur();
+        consoleFrame.classList.remove("wimpulation-show-console");
+    }
+    _applyFilter(msg) {
+        const className = "wimpulation-filtered-hint";
+        const filter = msg.filter;
+        this.hints.forEach(([span, elem]) => {
+            // SVGElement does not have innerText
+            const text = elem.innerText || elem.textContent;
+            if (text.includes(filter)) {
+                span.classList.remove(className);
+            }
+            else {
+                span.classList.add(className);
+            }
+        });
+    }
+    _getFilterResult(msg, frameInfo) {
+        const className = "wimpulation-filtered-hint";
+        const result = Object.keys(this.indexMap).map((index) => {
+            // Object.keys returns an array of string
+            index = parseInt(index, 10);
+            const [span, elem] = this.hints[this.indexMap[index]];
+            return [index, !span.classList.contains(className)];
+        });
+        return result;
+    }
+    _setHintLabel(msg, frameInfo) {
+        const labelList = msg.labelList;
+        this.hints.forEach(([span, elem], index) => {
+            span.textContent = labelList[index];
+        });
+        this.blurHintLink();
     }
 }
 

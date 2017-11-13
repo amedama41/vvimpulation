@@ -6,8 +6,8 @@ class ConsoleMode {
         }
         this.lastFocusedElem = document.activeElement;
 
-        ConsoleMode._sendConsoleMessage(
-            frameInfo, { command: "setConsoleMode", options: options })
+        frameInfo.sendConsoleMessage(
+            { command: "setConsoleMode", options: options })
             .then((result) => {
                 // Maybe current mode is not already console.
                 if (frameInfo.isCurrentMode(this)) {
@@ -70,17 +70,13 @@ class ConsoleMode {
     }
     _showMessage(message, frameInfo) {
         const CLASS_NAME = "wimpulation-show-console";
-        ConsoleMode._sendConsoleMessage(
-            frameInfo, { command: "setMessage", message })
+        frameInfo.sendConsoleMessage({ command: "setMessage", message })
             .then((result) => {
                 this.consoleFrame.classList.add(CLASS_NAME);
                 setTimeout(() => {
                     this.consoleFrame.classList.remove(CLASS_NAME);
                 }, 3000);
             });
-    }
-    static _sendConsoleMessage(frameInfo, data) {
-        return frameInfo.sendMessage({ command: "sendConsoleMessage", data });
     }
 }
 

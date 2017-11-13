@@ -39,6 +39,9 @@
     color: red !important;
     z-index: 2147483647 !important;
 }
+#wimpulation-hint-container > span.wimpulation-filtered-hint {
+    display: none;
+}
 
 #wimpulation-console {
     background-color: transparent !important;

@@ -56,6 +56,9 @@ span.ex_number_info {
 #ex_console[mode="backwardSearch"]::before {
     content: "?";
 }
+#ex_console[mode="hintFilter"]::before {
+    content: "/";
+}
 
 #ex_input {
     box-sizing: border-box;
