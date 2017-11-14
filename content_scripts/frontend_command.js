@@ -103,6 +103,20 @@ class FrontendCommand {
     static scrollMiddle(count, frameInfo) {
         return FrontendCommand.scrollPercent(50, frameInfo);
     }
+    static moveTargetAtTop(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        elem.scrollIntoView(true);
+    }
+    static moveTargetAtCenter(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const rect = elem.getBoundingClientRect();
+        // (bottom + top) / 2 - height / 2
+        window.scrollBy(0, (rect.bottom + rect.top - window.innerHeight) / 2);
+    }
+    static moveTargetAtBottom(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        elem.scrollIntoView(false);
+    }
 
     /**
      * Commands for focus manipulation

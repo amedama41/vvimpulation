@@ -17,6 +17,9 @@ const COMMAND_DESCRIPTIONS = {
     scrollEnd: {},
     scrollPercent: {},
     scrollMiddle: {},
+    moveTargetAtTop: {},
+    moveTargetAtCenter: {},
+    moveTargetAtBottom: {},
 
     /** Commands for search **/
     findNext: { background: true },
