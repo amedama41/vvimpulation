@@ -95,7 +95,7 @@ class Completer {
     selectNext(input) {
         this._selectCandidate(input, 1);
     }
-    selectPrev(input) {
+    selectPrevious(input) {
         this._selectCandidate(input, -1);
     }
     _selectCandidate(input, diff) {
@@ -129,6 +129,7 @@ class Completer {
 
 class History {
     constructor(key) {
+        this.key = key;
         this.history = undefined;
         this.index = 0;
         this.candidateHistory = undefined;
@@ -136,9 +137,27 @@ class History {
             this.history = result[key];
         });
     }
-    reset() {
+    reset(value) {
+        if (this.candidateHistory === undefined) {
+            return;
+        }
+        if (value === this.candidateHistory[this.index]) {
+            return;
+        }
         this.candidateHistory = undefined;
         this.index = 0;
+    }
+    remove(value) {
+        this.history = this.history.filter((item) => item !== value);
+        browser.storage.local.set({ [this.key]: this.history });
+        this.index = 0;
+        this.candidateHistory = undefined;
+    }
+    removeAll() {
+        browser.storage.local.remove(this.key);
+        this.history = [];
+        this.index = 0;
+        this.candidateHistory = undefined;
     }
     select(input, diff) {
         if (this.candidateHistory === undefined) {
@@ -249,34 +268,63 @@ class ConsoleCommand {
     }
 
     static selectNextHistory(mode) {
-        mode.selectNextHistory();
+        const history = mode.history;
+        if (history) {
+            history.setNext(mode.getTarget());
+        }
     }
-
     static selectPreviousHistory(mode) {
-        mode.selectPreviousHistory();
+        const history = mode.history;
+        if (history) {
+            history.setPrevious(mode.getTarget());
+        }
+    }
+    static removeFromHistory(mode) {
+        const history = mode.history;
+        if (history) {
+            history.remove(mode.getTarget().value);
+        }
+    }
+    static removeAllHistory(mode) {
+        const history = mode.history;
+        if (history) {
+            history.removeAll();
+        }
     }
 
     static getCandidate(mode) {
-        mode.getCandidate();
+        const completer = mode.completer;
+        if (completer) {
+            const target = mode.getTarget();
+            mode.sendMessage({
+                command: "getCandidate",
+                value: target.value.substring(0, target.selectionStart)
+            }).then((result) => {
+                if (!result) {
+                    return;
+                }
+                completer.setCandidates(result);
+                completer.selectNext(target);
+            });
+        }
     }
     static selectNextHistoryOrCandidate(mode) {
-        if (mode.hasCandidates()) {
-            mode.selectNextCandidate();
+        const completer = mode.completer;
+        if (completer && completer.hasCandidates()) {
+            completer.selectNext(mode.getTarget());
         }
         else {
             ConsoleCommand.selectNextHistory(mode);
         }
     }
     static selectPreviousHistoryOrCandidate(mode) {
-        if (mode.hasCandidates()) {
-            mode.selectPreviousCandidate();
+        const completer = mode.completer;
+        if (completer && completer.hasCandidates()) {
+            completer.selectPrevious(mode.getTarget());
         }
         else {
             ConsoleCommand.selectPreviousHistory(mode);
         }
-    }
-    static clearAllHistory() {
-        browser.storage.local.remove("command_history");
     }
 
     static deleteCharBackward(mode) {
@@ -306,7 +354,8 @@ const EX_CMD_MAP = Utils.toPreparedCmdMap({
     "<Tab>": "getCandidate",
     "<C-N>": "selectNextHistoryOrCandidate",
     "<C-P>": "selectPreviousHistoryOrCandidate",
-    "<C-X><C-D>": "clearAllHistory",
+    "<C-X><C-D>": "removeAllHistory",
+    "<C-X><C-R>": "removeFromHistory",
     "<C-C>": "closeConsoleMode",
     "<Esc>": "closeConsoleMode",
     "<C-[>": "closeConsoleMode",
@@ -320,7 +369,8 @@ const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-K>": "deleteToEndOfLine",
     "<C-N>": "selectNextHistory",
     "<C-P>": "selectPreviousHistory",
-    "<C-X><C-D>": "clearAllHistory",
+    "<C-X><C-D>": "removeAllHistory",
+    "<C-X><C-R>": "removeFromHistory",
     "<C-C>": "closeConsoleMode",
     "<Esc>": "closeConsoleMode",
     "<C-[>": "closeConsoleMode",
@@ -379,44 +429,18 @@ class ExMode extends ConsoleMode {
     }
     onKeydown(key, input) {
         const [consumed, optCmd, cmd] = this._mapper.get(key);
-        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
-        if (!result) {
-            this._history.reset();
-        }
-        return result;
+        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
+        this._history.reset(input.value);
         this._completer.update(input.value);
     }
 
-    hasCandidates() {
-        return this._completer.hasCandidates();
+    get history() {
+        return this._history;
     }
-    getCandidate() {
-        const target = this._input;
-        this.sendMessage({
-            command: "getCandidate",
-            value: target.value.substring(0, target.selectionStart)
-        }).then((result) => {
-            if (!result) {
-                return;
-            }
-            this._completer.setCandidates(result);
-            this.selectNextCandidate();
-        });
-    }
-    selectNextCandidate() {
-        this._completer.selectNext(this._input);
-    }
-    selectPreviousCandidate() {
-        this._completer.selectPrev(this._input);
-    }
-
-    selectNextHistory() {
-        this._history.setNext(this._input);
-    }
-    selectPreviousHistory() {
-        this._history.setPrevious(this._input);
+    get completer() {
+        return this._completer;
     }
 }
 class SearchMode extends ConsoleMode {
@@ -430,20 +454,13 @@ class SearchMode extends ConsoleMode {
     }
     onKeydown(key, input) {
         const [consumed, optCmd, cmd] = this._mapper.get(key);
-        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
-        if (!result) {
-            this._history.reset();
-        }
-        return result;
+        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
+        this._history.reset(input.value);
     }
-
-    selectNextHistory() {
-        this._history.setNext(this._input);
-    }
-    selectPreviousHistory() {
-        this._history.setPrevious(this._input);
+    get history() {
+        return this._history;
     }
 }
 const HINT_FILTER_CMD_MAP = Utils.toPreparedCmdMap({
