@@ -257,19 +257,7 @@ class MessageCommand {
             const selection = window.getSelection();
             // getSelection for a window with display none style can return null
             if (selection) {
-                const body = document.body || document.documentElement;
-                if (msg.backward) {
-                    const walker =
-                        document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
-                    const text = walker.lastChild();
-                    if (text) {
-                        const length = text.length;
-                        selection.setBaseAndExtent(text, length, text, length);
-                    }
-                }
-                else {
-                    selection.setBaseAndExtent(body, 0, body, 0);
-                }
+                selection.removeAllRanges();
             }
         }
         try {
