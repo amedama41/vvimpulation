@@ -122,7 +122,17 @@ class Completer {
         if (this.selectIndex !== 0) {
             const li = this.container.children[this.selectIndex - 1];
             li.classList.add(SELECT_CLASS);
-            li.scrollIntoView(diff === -1);
+            Completer._scrollIntoView(li, this.container, diff);
+        }
+    }
+    static _scrollIntoView(item, container, diff) {
+        const itemRect = item.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        if (itemRect.top < containerRect.top) {
+            container.scrollBy(0, itemRect.top - containerRect.top);
+        }
+        if (itemRect.bottom > containerRect.bottom) {
+            container.scrollBy(0, itemRect.bottom - containerRect.bottom);
         }
     }
 }
