@@ -1,3 +1,5 @@
+'use strict';
+
 class ConsoleMode {
     constructor(frameInfo, options) {
         this.consoleFrame = frameInfo.consoleFrame;

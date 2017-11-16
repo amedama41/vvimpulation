@@ -1,3 +1,5 @@
+'use strict';
+
 function createCandidateList(candidates, type) {
     const margin = document.createTextNode(" ");
     if (type === 0) {

@@ -1,3 +1,5 @@
+'use strict';
+
 class ExCommand {
     constructor(name, proc, completion = undefined) {
         this.name = name;

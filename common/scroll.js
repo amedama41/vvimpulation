@@ -1,3 +1,5 @@
+'use strict';
+
 const Scroll = (function() {
 return (class Scroll {
     static isScrollableType(elem) {

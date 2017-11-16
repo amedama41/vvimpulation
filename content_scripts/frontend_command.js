@@ -1,3 +1,5 @@
+'use strict';
+
 class FrontendCommand {
     /**
      * Commands for scrolling

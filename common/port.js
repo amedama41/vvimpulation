@@ -1,3 +1,5 @@
+'use strict';
+
 class PortEventTarget {
     constructor() {
         this.handlers = [];

@@ -1,3 +1,5 @@
+'use strict';
+
 const Utils = (function() {
 
 class CommandMapper {

@@ -1,3 +1,5 @@
+'use strict';
+
 const DomUtils = (function() {
 
 return (class Edit {

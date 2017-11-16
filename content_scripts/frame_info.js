@@ -1,3 +1,5 @@
+'use strict';
+
 class FrameIdInfo {
     constructor(selfFrameId) {
         this._selfFrameId = selfFrameId;

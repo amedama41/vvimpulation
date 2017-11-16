@@ -1,3 +1,5 @@
+'use strict';
+
 const COMMAND_DESCRIPTIONS = {
 
     /** Commands for page scrolling **/

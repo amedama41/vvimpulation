@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Classes derived from this class must implements init and selectionModify
  * methods.

@@ -1,3 +1,5 @@
+'use strict';
+
 class InsertMode {
     constructor(frameInfo, keyMap, data) {
         this.mapper = Utils.makeCommandMapper(keyMap);

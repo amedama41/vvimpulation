@@ -1,3 +1,5 @@
+'use strict';
+
 var gHintElementList = [];
 
 class HintMode {
