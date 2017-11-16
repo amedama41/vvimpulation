@@ -96,7 +96,6 @@ class FrameInfo {
         this._suspend = false;
         this._frameIdInfo = new FrameIdInfo(selfFrameId);
         this._port = port;
-        this._lastCommand = [undefined, undefined];
         this._modeEventListenerList = [];
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
@@ -165,9 +164,6 @@ class FrameInfo {
     }
     getTarget() {
         return this._mode.getTarget();
-    }
-    get lastCommand() {
-        return this._lastCommand;
     }
 
     // Method for mode classes.

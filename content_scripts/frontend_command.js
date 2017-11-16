@@ -606,11 +606,14 @@ Loop: ${video.loop}`
         return true;
     }
     static repeatLastCommand(count, frameInfo) {
-        const [cmdName, lastCount] = frameInfo.lastCommand;
-        if (cmdName === undefined) {
-            return;
-        }
-        invokeCommand(cmdName, count !== 0 ? count : lastCount, frameInfo);
+        frameInfo.sendMessage({ command: "getLastCommand" })
+            .then(([cmdName, lastCount]) => {
+                if (cmdName === undefined) {
+                    return;
+                }
+                invokeCommand(
+                    cmdName, count !== 0 ? count : lastCount, frameInfo);
+            });
     }
     static showLastMessage(count, frameInfo) {
         frameInfo.showLastMessage();
@@ -854,15 +857,7 @@ function invokeCommand(cmdName, count, frameInfo) {
     else {
         isIgnore = FrontendCommand[cmdName](count, frameInfo);
     }
-    if (cmdName !== "repeatLastCommand") {
-        frameInfo.lastCommand[0] = cmdName
-        frameInfo.lastCommand[1] = count;
-    }
-    else {
-        if (count !== 0) {
-            frameInfo.lastCommand[1] = count;
-        }
-    }
+    frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
     return isIgnore;
 }
 

@@ -101,6 +101,7 @@ class TabInfo {
 }
 
 const gTabInfoMap = new Map();
+const gLastCommand = [undefined, 0];
 
 const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-C>": { name: "toNormalMode" },
@@ -581,6 +582,15 @@ class Command {
     }
     static showMessage(msg, sender, tabInfo) {
         tabInfo.sendMessage(0, msg);
+    }
+    static setLastCommand(msg, sender, tabInfo) {
+        if (msg.cmdName !== "repeatLastCommand") {
+            gLastCommand[0] = msg.cmdName;
+        }
+        gLastCommand[1] = msg.count;
+    }
+    static getLastCommand(msg, sender, tabInfo) {
+        return gLastCommand;
     }
 
     static execCommand(msg, sender, tabInfo) {
