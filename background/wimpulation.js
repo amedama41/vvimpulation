@@ -523,14 +523,17 @@ class Command {
     static openLinkInTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             const active = (IS_TAB_DEFAULT_INACTIVE ? !msg.active : msg.active);
-            // TODO openerTabId
-            browser.tabs.create(
-                { url: msg.url, index: tab.index + 1, active: active });
+            return browser.tabs.create({
+                url: msg.url, openerTabId: tab.id,
+                index: tab.index + 1, active: active
+            });
         }, handleError);
     }
     static downloadLink(msg, sender, tabInfo) {
-        browser.downloads.download({
-            url: msg.url, /* TODO incognito: tab.incognito,*/ saveAs: true
+        browser.tabs.get(sender.tab.id).then((tab) => {
+            return browser.downloads.download({
+                url: msg.url, incognito: tab.incognito, saveAs: true
+            });
         }, handleError);
     }
 
