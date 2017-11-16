@@ -92,10 +92,11 @@ class HintMode {
     _applyFilter(msg) {
         const className = "wimpulation-filtered-hint";
         const filter = msg.filter;
+        const caseSensitive = /[A-Z]/.test(filter);
         this.hints.forEach(([span, elem]) => {
             // SVGElement does not have innerText
             const text = elem.innerText || elem.textContent;
-            if (text.includes(filter)) {
+            if ((caseSensitive ? text : text.toLowerCase()).includes(filter)) {
                 span.classList.remove(className);
             }
             else {
