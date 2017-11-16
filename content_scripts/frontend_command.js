@@ -336,8 +336,9 @@ Loop: ${video.loop}`
         incrementURL(location, -Math.max(count, 1));
     }
     static yankFrameURL(count, frameInfo) {
-        DomUtils.setToClipboard(location.href);
-        frameInfo.showMessage("Yank current frame URL");
+        if (DomUtils.setToClipboard(location.href)) {
+            frameInfo.showMessage("Yank current frame URL");
+        }
     }
     static showFrameURL(count, frameInfo) {
         frameInfo.showMessage(
@@ -367,8 +368,9 @@ Loop: ${video.loop}`
         const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
-            DomUtils.setToClipboard(url);
-            frameInfo.showMessage("Yank current target link");
+            if (DomUtils.setToClipboard(url)) {
+                frameInfo.showMessage("Yank current target link");
+            }
         }
     }
     static downloadLink(count, frameInfo) {
@@ -493,8 +495,9 @@ Loop: ${video.loop}`
     }
     static yankValue(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        DomUtils.setToClipboard(elem.value);
-        frameInfo.showMessage("Yank current target value");
+        if (DomUtils.setToClipboard(elem.value)) {
+            frameInfo.showMessage("Yank current target value");
+        }
     }
     static pasteValue(count, frameInfo) {
         _editElement(frameInfo, (elem) => {
@@ -525,8 +528,9 @@ Loop: ${video.loop}`
         if (!selection) {
             return;
         }
-        DomUtils.setToClipboard(selection.toString());
-        frameInfo.showMessage("Yank current selection text");
+        if (DomUtils.setToClipboard(selection.toString())) {
+            frameInfo.showMessage("Yank current selection text");
+        }
     }
     static deleteSelection(count, frameInfo) {
         const selection = window.getSelection();
@@ -563,16 +567,19 @@ Loop: ${video.loop}`
         selection.setBaseAndExtent(parent, index, parent, index + 1);
     }
     static yankInnerText(count, frameInfo) {
-        DomUtils.setToClipboard(frameInfo.getTarget().innerText);
-        frameInfo.showMessage("Yank current target innerText");
+        if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
+            frameInfo.showMessage("Yank current target innerText");
+        }
     }
     static yankInnerHTML(count, frameInfo) {
-        DomUtils.setToClipboard(frameInfo.getTarget().innerHTML);
-        frameInfo.showMessage("Yank current target innerHTML");
+        if (DomUtils.setToClipboard(frameInfo.getTarget().innerHTML)) {
+            frameInfo.showMessage("Yank current target innerHTML");
+        }
     }
     static yankOuterHTML(count, frameInfo) {
-        DomUtils.setToClipboard(frameInfo.getTarget().outerHTML);
-        frameInfo.showMessage("Yank current target outerHTML");
+        if (DomUtils.setToClipboard(frameInfo.getTarget().outerHTML)) {
+            frameInfo.showMessage("Yank current target outerHTML");
+        }
     }
     static deleteElement(count, frameInfo) {
         const target = frameInfo.getTarget();
@@ -591,8 +598,9 @@ Loop: ${video.loop}`
             count, frameInfo, { command: 'openLinkInTab', active: !shift });
     }
     static yankCurrentURL(count, frameInfo) {
-        DomUtils.setToClipboard(location.href);
-        frameInfo.showMessage("Yank current page URL");
+        if (DomUtils.setToClipboard(location.href)) {
+            frameInfo.showMessage("Yank current page URL");
+        }
     }
     static ignore() {
         return true;

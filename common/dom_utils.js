@@ -193,6 +193,9 @@ return (class Edit {
         return value;
     }
     static setToClipboard(value) {
+        if (value === "") {
+            return false; // execCommand is unable to copy zero length string
+        }
         const x = window.scrollX;
         const y = window.scrollY;
         const textarea = document.createElement("textarea");
@@ -210,6 +213,7 @@ return (class Edit {
             activeElement.focus();
             window.scrollTo(x, y);
         }
+        return true;
     }
     static fixedFocus(elem) {
         const x = window.scrollX;
