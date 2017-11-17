@@ -631,7 +631,7 @@ Loop: ${video.loop}`
             return FrontendCommand.toInsertModeOnFirstElement(count, frameInfo);
         }
         frameInfo.changeMode("INSERT", {
-            lastFocusedElem: undefined,
+            lastFocusedElem: document.activeElement,
             editableElement: target
         });
     }
