@@ -26,6 +26,7 @@ class InsertMode {
         try {
             this.target.classList.remove("wimpulation-input");
             if (document.activeElement === this.target) {
+                this.target.blur(); // Prevent IME from stealing key events.
                 if (document.hasFocus && this.lastFocusedElem) {
                     this.lastFocusedElem.focus();
                 }
