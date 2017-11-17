@@ -16,7 +16,7 @@ class InsertMode {
             if (this.inInvoking) {
                 return;
             }
-            FrontendCommand.toNormalMode(0, frameInfo);
+            frameInfo.changeMode("NORMAL");
         }, true);
     }
     getTarget() {
