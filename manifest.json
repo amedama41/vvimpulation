@@ -19,6 +19,7 @@
         "scripts": [
             "common/utils.js",
             "common/port.js",
+            "background/default_options.js",
             "background/command.js",
             "background/wimpulation.js"
         ]
@@ -47,6 +48,12 @@
             "run_at": "document_start"
         }
     ],
+
+    "options_ui": {
+        "page": "options/options.html",
+        "browser_style": false,
+        "open_in_tab": true
+    },
 
     "web_accessible_resources": [
         "resources/ex_mode/ex_mode.html",

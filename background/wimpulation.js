@@ -1,5 +1,11 @@
 "use strict";
 
+browser.runtime.onInstalled.addListener((details) => {
+    if (details.reason === "install") {
+        browser.storage.local.set({ "options": DEFAULT_OPTIONS });
+    }
+});
+
 class TabInfo {
     constructor(tab) {
         this.tab = tab;
@@ -100,8 +106,15 @@ class TabInfo {
     }
 }
 
+function postAllFrame(msg) {
+    for (const [tabId, tabInfo] of gTabInfoMap) {
+        tabInfo.forEachPort((port, frameId) => port.postMessage(msg));
+    }
+}
+
 const gTabInfoMap = new Map();
 const gLastCommand = [undefined, 0];
+const gOptions = { keyMapping: undefined, hintPattern: undefined };
 
 const HINT_KEY_MAP = Utils.toPreparedCmdMap({
     "<C-C>": { name: "toNormalMode" },
@@ -285,12 +298,13 @@ class HintMode {
             frameId, { command: "forwardHintCommand", data: msg });
     }
     static _makePattern(type, url) {
-        const globalPattern = gHintPatternMap["global"][type];
+        const hintPattern = gOptions.hintPattern;
+        const globalPattern = hintPattern["global"][type];
         if (url === "") {
             return globalPattern;
         }
         url = new URL(url);
-        const localPatternMap = gHintPatternMap["local"][url.host];
+        const localPatternMap = hintPattern["local"][url.host];
         if (localPatternMap && localPatternMap[type]) {
             return globalPattern + ", " + localPatternMap[type];
         }
@@ -658,28 +672,17 @@ function changeNormalMode(tabInfo, frameId=undefined, data=undefined) {
     });
 }
 
-let gHintPatternMap = undefined;
-function loadHintPattern() {
+function normalizeHintPattern(hintPattern) {
     function normalizePatternMap(patternMap) {
         Object.keys(patternMap).forEach((type) => {
             patternMap[type] =
                 patternMap[type].map(([pat, desc]) => pat).join(",");
         });
     }
-    const url = browser.runtime.getURL("resources/hint_pattern.json");
-    const headers = new Headers(
-        { "Content-Type": "application/x-suggestions+json" });
-    fetch(url, { header: headers })
-        .then((response) => response.json())
-        .then((json) => {
-            const local = json.local;
-            Object.keys(local).forEach(
-                (host) => normalizePatternMap(local[host]));
-            gHintPatternMap = json;
-        })
-        .catch(handleError);
+    const local = hintPattern.local;
+    Object.keys(local).forEach((host) => normalizePatternMap(local[host]));
+    return hintPattern;
 }
-loadHintPattern();
 
 browser.tabs.onActivated.addListener((activeInfo) => {
     const tabInfo = gTabInfoMap.get(activeInfo.tabId);
@@ -694,40 +697,63 @@ browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 browser.runtime.onMessage.addListener(invokeCommand);
 
-browser.runtime.onConnect.addListener((port) => {
-    port = new Port(port);
-    const sender = port.sender;
-    const tab = sender.tab;
-    if (!tab) {
-        console.warn("no tab exist");
-        return;
-    }
-    const tabId = tab.id;
-    if (tabId === browser.tabs.TAB_ID_NONE) {
-        console.warn("TAB_ID_NONE:", tab.url);
-        return;
-    }
+browser.storage.local.get({
+    options: DEFAULT_OPTIONS
+}).then(({ options }) => {
+    gOptions.keyMapping = options["keyMapping"];
+    gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
 
-    if (port.name === "console") {
-        setConsolePort(port, tabId);
-        return;
-    }
-
-    const frameId = sender.frameId;
-    port.onNotification.addListener(invokeCommand);
-    port.onRequest.addListener(invokeCommand);
-    port.onDisconnect.addListener(cleanupFrameInfo.bind(null, tabId, frameId));
-
-    if (!gTabInfoMap.has(tabId)) {
-        gTabInfoMap.set(tabId, new TabInfo(tab));
-    }
-    const tabInfo = gTabInfoMap.get(tabId);
-    tabInfo.update(tab);
-    tabInfo.setPort(frameId, port);
-    port.postMessage({
-        command: "registerFrameId", frameId: frameId, mode: tabInfo.getMode()
+    browser.storage.onChanged.addListener((changes, areaName) => {
+        if (!changes["options"]) {
+            return;
+        }
+        const options = changes["options"].newValue;
+        gOptions.keyMapping = options["keyMapping"];
+        gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
+        postAllFrame({
+            command: "updateKeyMapping", keyMapping: gOptions.keyMapping
+        });
     });
-});
+
+    browser.runtime.onConnect.addListener((port) => {
+        port = new Port(port);
+        const sender = port.sender;
+        const tab = sender.tab;
+        if (!tab) {
+            console.warn("no tab exist");
+            return;
+        }
+        const tabId = tab.id;
+        if (tabId === browser.tabs.TAB_ID_NONE) {
+            console.warn("TAB_ID_NONE:", tab.url);
+            return;
+        }
+
+        if (port.name === "console") {
+            setConsolePort(port, tabId);
+            return;
+        }
+
+        const frameId = sender.frameId;
+        port.onNotification.addListener(invokeCommand);
+        port.onRequest.addListener(invokeCommand);
+        port.onDisconnect.addListener(
+            cleanupFrameInfo.bind(null, tabId, frameId));
+
+        if (!gTabInfoMap.has(tabId)) {
+            gTabInfoMap.set(tabId, new TabInfo(tab));
+        }
+        const tabInfo = gTabInfoMap.get(tabId);
+        tabInfo.update(tab);
+        tabInfo.setPort(frameId, port);
+        port.postMessage({
+            command: "initFrame",
+            frameId: frameId,
+            keyMapping: gOptions.keyMapping,
+            mode: tabInfo.getMode(),
+        });
+    });
+}).catch(handleError);
 function invokeCommand(msg, sender) {
     const tabInfo = gTabInfoMap.get(sender.tab.id);
     if (!tabInfo) {

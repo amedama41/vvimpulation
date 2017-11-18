@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <title>VVimpulation Options</title>
+    <meta charset="utf8">
+    <script src="../common/utils.js"></script>
+    <script src="../common/dom_utils.js"></script>
+    <script src="../common/scroll.js"></script>
+    <script src="../common/port.js"></script>
+    <script src="../content_scripts/command.js"></script>
+    <script src="../content_scripts/frontend_command.js"></script>
+    <script src="../content_scripts/frame_info.js"></script>
+    <script src="../content_scripts/insert_mode.js"></script>
+    <script src="../content_scripts/hint_mode.js"></script>
+    <script src="../content_scripts/visual_mode.js"></script>
+    <script src="../content_scripts/console_mode.js"></script>
+    <script src="../content_scripts/wimpulation.js"></script>
+    <link rel="stylesheet" type="text/css" href="../content_scripts/wimpulation.css">
+    <script src="options.js"></script>
+    <link rel="stylesheet" type="text/css" href="options.css">
+  </head>
+  <body>
+    <h1>VVimpulation Options</h1>
+
+    <div>
+      <h2>key mapping</h2>
+      <ul id="key-mapping-tabs" class="tab">
+        <li class="selectTab" mode="normal"><a href="#">Normal</a></li>
+        <li mode="insert"><a href="#">Insert</a></li>
+        <li mode="visual"><a href="#">Visual</a></li>
+      </ul>
+      <textarea id="key-mapping-textarea"></textarea>
+      <div id="key-mapping-error" class="error-message"></div>
+    </div>
+
+    <div>
+      <h2>hint pattern</h2>
+      <div>
+        <div>
+          <h3>pattern for all URLs</h3>
+          <div>
+            <div>link:</div>
+            <textarea id="hint-pattern-link" class="hint-pattern-global-selector"></textarea>
+          </div>
+          <div>
+            <div>focus:</div>
+            <textarea id="hint-pattern-focus" class="hint-pattern-global-selector"></textarea>
+          </div>
+          <div>
+            <div>media:</div>
+            <textarea id="hint-pattern-media" class="hint-pattern-global-selector"></textarea>
+          </div>
+          <div id="hint-pattern-global-error" class="error-message"></div>
+        </div>
+
+        <div>
+          <h3>pattern for host</h3>
+          <div>
+            <select id="hint-pattern-host-list">
+            </select>
+            <input id="hint-pattern-host-input" type="text" value="" placeholder="example.com">
+            <input id="hint-pattern-add-host" type="button" value="Add host">
+            <input id="hint-pattern-remove-host" type="button" value="Remove host">
+          </div>
+          <div id="hint-pattern-local">
+            <ul id="hint-pattern-tabs" class="tab">
+              <li kind="link" class="selectTab"><a href="#">link</a></li>
+              <li kind="focus"><a href="#">focus</a></li>
+              <li kind="media"><a href="#">media</a></li>
+            </ul>
+            <div id="hint-pattern-list-header">
+              <span class="hint-pattern-local-selector">Selector</span><!--
+           --><span class="hint-pattern-local-description">Description</span>
+            </div>
+            <div id="hint-pattern-list">
+            </div>
+            <div id="hint-pattern-list-manipulation">
+              <input id="add-selector-button" type="button" value="Add">
+            </div>
+            <div id="hint-pattern-local-error" class="error-message"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="options-bar">
+      <input id="import-file" type="file"><input id="import-button" type="button" value="Import">
+      <input id="export-button" type="button" value="Export">
+      <input id="save-button" type="button" value="Save">
+      <span id="option-bar-error" class="error-message"></span>
+    </div>
+  </body>
+</html>
+

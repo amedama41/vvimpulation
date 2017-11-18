@@ -92,11 +92,14 @@ class FrameIdInfo {
 }
 
 class FrameInfo {
-    constructor(selfFrameId, port, modeName) {
+    constructor(selfFrameId, port, modeName, keyMapping) {
         this._suspend = false;
         this._frameIdInfo = new FrameIdInfo(selfFrameId);
         this._port = port;
         this._modeEventListenerList = [];
+        this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
+        this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
+        this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
@@ -133,6 +136,11 @@ class FrameInfo {
     }
     isCurrentModeClass(modeClass) {
         return this._mode instanceof modeClass;
+    }
+    setKeyMapping(keyMapping) {
+        this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
+        this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
+        this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
     }
 
     // Method related to frame id.
@@ -243,25 +251,25 @@ class FrameInfo {
         try {
             switch (mode) {
                 case "NORMAL":
-                    return new NormalMode(this, NORMAL_KEY_MAP, data);
+                    return new NormalMode(this, this._normalKeyMap, data);
                 case "INSERT":
-                    return new InsertMode(this, INSERT_KEY_MAP, data);
+                    return new InsertMode(this, this._insertKeyMap, data);
                 case "HINT":
                     return new HintMode(this, data);
                 case "VISUAL":
-                    return new VisualMode(this, VISUAL_KEY_MAP, data);
+                    return new VisualMode(this, this._visualKeyMap, data);
                 case "CARET":
-                    return new CaretMode(this, VISUAL_KEY_MAP, data);
+                    return new CaretMode(this, this._visualKeyMap, data);
                 case "CONSOLE":
                     return new ConsoleMode(this, data);
                 default:
                     console.assert(false, "never reach here");
-                    return new NormalMode(this, NORMAL_KEY_MAP);
+                    return new NormalMode(this, this._normalKeyMap);
             }
         }
         catch (e) {
             console.warn("change mode error:", Utils.errorString(e));
-            return new NormalMode(this, NORMAL_KEY_MAP);
+            return new NormalMode(this, this._normalKeyMap);
         }
     }
     _resetMode() {

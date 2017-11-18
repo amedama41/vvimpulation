@@ -1,0 +1,70 @@
+section {
+    border-bottom: 1px solid;
+}
+.error-message {
+    color: red;
+}
+
+ul.tab {
+    padding: 0px;
+    margin: 0px;
+}
+ul.tab li {
+    float: left;
+    list-style-type: none;
+    border: 1px #ddd solid;
+    border-top: none;
+    border-bottom: 2px #ddd solid;
+}
+ul.tab li.selectTab {
+    border-bottom: 2px white solid;
+    font-weight: bold;
+}
+ul.tab li a {
+    color: black;
+    padding: 3px 10px 5px;
+    text-decoration: none;
+}
+ul.tab:after {
+    content: "";
+    display: block;
+    overflow: hidden;
+    clear: both;
+}
+
+#key-mapping-textarea {
+    width: 100%;
+    height: 400px;
+}
+
+.hint-pattern-global-selector {
+    box-sizing: border-box;
+    width: 100%;
+    height: 4em;
+}
+#hint-pattern-local {
+    margin: 8px 0px;
+}
+#hint-pattern-list-header > span {
+    display: inline-block;
+}
+.hint-pattern-local-selector {
+    width: 40%;
+}
+.hint-pattern-local-description {
+    width: 50%;
+}
+#hint-pattern-list-manipulation {
+    margin-top: 4px;
+}
+body {
+    margin-bottom: 42px;
+}
+#options-bar {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    background: lightgray;
+    width: 100%;
+}
+
