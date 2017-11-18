@@ -67,7 +67,6 @@ const DEFAULT_OPTIONS = {
             "<C-X>": "decrementURL",
             "gu": "goToParent",
             "gU": "goToRoot",
-            "zf": "reloadHintPattern",
             "zi": "zoomIn",
             "zo": "zoomOut",
             "zr": "zoomReset",

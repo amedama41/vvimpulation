@@ -552,10 +552,6 @@ class Command {
         }, handleError);
     }
 
-    static reloadHintPattern(msg, sender, tabInfo) {
-        loadHintPattern();
-    }
-
     static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
         tabInfo.sendMessage(0, {
