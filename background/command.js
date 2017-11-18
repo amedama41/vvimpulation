@@ -363,4 +363,7 @@ gExCommandMap.makeCommand("undoWindow",
             ];
         });
     });
+gExCommandMap.makeCommand("showOptions", (args, tab) => {
+    browser.runtime.openOptionsPage();
+});
 
