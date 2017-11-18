@@ -772,6 +772,7 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
         elem.dispatchEvent(
             new Event("change", { bubbles: true, cancelable: false }));
         FrontendCommand.pressEnter(count, frameInfo);
+        return;
     }
     return FrontendCommand.mouseclick(count, frameInfo);
 }
