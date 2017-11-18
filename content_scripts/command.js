@@ -142,7 +142,6 @@ const COMMAND_DESCRIPTIONS = {
     smartOpenInTab: {},
     yankCurrentURL: { topFrame: true },
     reloadHintPattern: { background: true },
-    ignore: {},
     repeatLastCommand: {},
     showLastMessage: { topFrame: true },
 

@@ -602,9 +602,6 @@ Loop: ${video.loop}`
             frameInfo.showMessage("Yank current page URL");
         }
     }
-    static ignore() {
-        return true;
-    }
     static repeatLastCommand(count, frameInfo) {
         frameInfo.sendMessage({ command: "getLastCommand" })
             .then(([cmdName, lastCount]) => {

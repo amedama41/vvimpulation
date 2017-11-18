@@ -52,9 +52,8 @@ class InsertMode {
             || key === "<Backspace>" || key === "<Delete>"
             || key === "<Enter>") {
             this.target.undoStack.push(this.target.value);
-            return false;
         }
-        return true;
+        return false;
     }
     _invoke(cmd, frameInfo) {
         this.inInvoking = true;

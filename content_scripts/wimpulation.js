@@ -126,9 +126,6 @@ const INSERT_KEY_MAP = Utils.toPreparedCmdMap({
     "<Esc>": "toNormalMode",
     "<Tab>": "toInsertModeOnNextInput",
     "<S-Tab>": "toInsertModeOnPreviousInput",
-    "<M-A>": "ignore",
-    "<M-V>": "ignore",
-    "<M-X>": "ignore",
 });
 const VISUAL_KEY_MAP = Utils.toPreparedCmdMap({
     "h": "move backward character",
