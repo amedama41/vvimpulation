@@ -81,8 +81,11 @@ return (class Edit {
             Math.min(index + 1, elem.value.length);
     }
     static previousLine(elem) {
-        const index =
-            indexOfAfterPreviousNewline(elem.value, elem.selectionStart);
+        const start = elem.selectionStart;
+        if (start === 0) {
+            return;
+        }
+        const index = indexOfAfterPreviousNewline(elem.value, start - 1);
         elem.selectionStart = elem.selectionEnd = Math.max(index - 1, 0);
     }
 
