@@ -235,48 +235,8 @@ class ConsoleCommand {
     static closeConsoleMode(mode) {
         mode.stopConsole(false);
     }
-
-    static fixFilter(mode) {
-        const filter = mode.getTarget().value;
-        mode.stopConsole(true, filter);
-    }
-
-    static execSearch(mode) {
-        const value = mode.getTarget().value;
-        if (value === "") {
-            mode.stopConsole(false);
-            return;
-        }
-        search(value, mode.isBackward(), mode);
-    }
-
-    static execCommand(mode) {
-        const value = mode.getTarget().value;
-        if (value === "") {
-            mode.stopConsole(false);
-            return;
-        }
-        const prefix = value.charAt(0);
-        if (prefix === "/" || prefix === "?") {
-            search(value.substr(1), prefix === '?', mode);
-            return;
-        }
-
-        mode.sendMessage({ command: "execCommand", cmd: value })
-            .then((result) => {
-                if (result && !browser.extension.inIncognitoContext) { // TODO
-                    History.save("command_history", value);
-                }
-                if (typeof(result) === "boolean") {
-                    mode.stopConsole(true);
-                    return;
-                }
-                mode.stopConsole(
-                    true, (Array.isArray(result) ? result.join("\n") : result));
-            })
-            .catch((error) => {
-                mode.stopConsole(false, error);
-            });
+    static execute(mode) {
+        mode.execute(mode);
     }
 
     static selectNextHistory(mode) {
@@ -355,9 +315,9 @@ class ConsoleCommand {
     }
 }
 
-const EX_CMD_MAP = Utils.toPreparedCmdMap({
-    "<Enter>": "execCommand",
-    "<C-M>": "execCommand",
+const CONSOLE_CMD_MAP = Utils.toPreparedCmdMap({
+    "<Enter>": "execute",
+    "<C-M>": "execute",
     "<C-H>": "deleteCharBackward",
     "<C-W>": "deleteWordBackward",
     "<C-U>": "deleteToBeggingOfLine",
@@ -366,21 +326,6 @@ const EX_CMD_MAP = Utils.toPreparedCmdMap({
     "<Tab>": "getCandidate",
     "<C-N>": "selectNextHistoryOrCandidate",
     "<C-P>": "selectPreviousHistoryOrCandidate",
-    "<C-X><C-D>": "removeAllHistory",
-    "<C-X><C-R>": "removeFromHistory",
-    "<C-C>": "closeConsoleMode",
-    "<Esc>": "closeConsoleMode",
-    "<C-[>": "closeConsoleMode",
-});
-const SEARCH_CMD_MAP = Utils.toPreparedCmdMap({
-    "<Enter>": "execSearch",
-    "<C-M>": "execSearch",
-    "<C-H>": "deleteCharBackward",
-    "<C-W>": "deleteWordBackward",
-    "<C-U>": "deleteToBeggingOfLine",
-    "<C-K>": "deleteToEndOfLine",
-    "<C-N>": "selectNextHistory",
-    "<C-P>": "selectPreviousHistory",
     "<C-X><C-D>": "removeAllHistory",
     "<C-X><C-R>": "removeFromHistory",
     "<C-C>": "closeConsoleMode",
@@ -431,7 +376,7 @@ class ExMode extends ConsoleMode {
     onInit(container) {
         this._completer = new Completer(container);
         this._history = new History("command_history");
-        this._mapper = Utils.makeCommandMapper(EX_CMD_MAP);
+        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
     }
     onStart() {
         this._completer.setMaxHeight(window.innerHeight - 100);
@@ -454,11 +399,39 @@ class ExMode extends ConsoleMode {
     get completer() {
         return this._completer;
     }
+    execute() {
+        const value = this.getTarget().value;
+        if (value === "") {
+            this.stopConsole(false);
+            return;
+        }
+        const prefix = value.charAt(0);
+        if (prefix === "/" || prefix === "?") {
+            search(value.substr(1), prefix === '?', this);
+            return;
+        }
+
+        this.sendMessage({ command: "execCommand", cmd: value })
+            .then((result) => {
+                if (result && !browser.extension.inIncognitoContext) { // TODO
+                    History.save("command_history", value);
+                }
+                if (typeof(result) === "boolean") {
+                    this.stopConsole(true);
+                    return;
+                }
+                this.stopConsole(
+                    true, (Array.isArray(result) ? result.join("\n") : result));
+            })
+            .catch((error) => {
+                this.stopConsole(false, error);
+            });
+    }
 }
 class SearchMode extends ConsoleMode {
     onInit(container) {
         this._history = new History("search_history");
-        this._mapper = Utils.makeCommandMapper(SEARCH_CMD_MAP);
+        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
     }
     onStart() {
     }
@@ -474,21 +447,19 @@ class SearchMode extends ConsoleMode {
     get history() {
         return this._history;
     }
+    execute() {
+        const value = this.getTarget().value;
+        if (value === "") {
+            this.stopConsole(false);
+            return;
+        }
+        search(value, this.isBackward(), this);
+    }
+
 }
-const HINT_FILTER_CMD_MAP = Utils.toPreparedCmdMap({
-    "<Esc>": "closeConsoleMode",
-    "<C-[>": "closeConsoleMode",
-    "<C-C>": "closeConsoleMode",
-    "<Enter>": "fixFilter",
-    "<C-M>": "fixFilter",
-    "<C-H>": "deleteCharBackward",
-    "<C-W>": "deleteWordBackward",
-    "<C-U>": "deleteToBeggingOfLine",
-    "<C-K>": "deleteToEndOfLine",
-});
 class HintFilterMode extends ConsoleMode {
     onInit(container) {
-        this._mapper = Utils.makeCommandMapper(HINT_FILTER_CMD_MAP);
+        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
         this._prevFilter = null;
     }
     onStart() {
@@ -506,6 +477,10 @@ class HintFilterMode extends ConsoleMode {
         if (filter !== this._prevFilter) {
             super.sendMessage({ command: 'applyFilter', filter });
         }
+    }
+    execute() {
+        const filter = this.getTarget().value;
+        this.stopConsole(true, filter);
     }
 }
 
