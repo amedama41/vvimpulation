@@ -58,9 +58,9 @@ class Completer {
         this.candidates = [];
         let [orgValue, candidateStart, type, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
-        this.update(orgValue);
+        this.update(orgValue, false);
     }
-    update(value) {
+    update(value, needFilter) {
         if (!this.candidateInfo) {
             return;
         }
@@ -78,7 +78,8 @@ class Completer {
                 (c) => keywords.every((k) => c.includes(k)) :
                 ([d, i]) => keywords.every((k) =>
                     d.toString().includes(k) || i.includes(k)));
-            const matchCandidates = candidates.filter(filter);
+            const matchCandidates =
+                (needFilter ? candidates.filter(filter) : candidates);
             this.container.appendChild(
                 createCandidateList(matchCandidates, type));
             const prefix = orgValue.substr(0, candidateStart);
@@ -102,7 +103,7 @@ class Completer {
     }
     _selectCandidate(input, diff) {
         if (!this.candidateInfo) {
-            return this.selectIndex;
+            return;
         }
         let [orgValue, candidateStart, type, candidates] = this.candidateInfo;
 
@@ -390,7 +391,7 @@ class ExMode extends ConsoleMode {
     }
     onKeyup(input) {
         this._history.reset(input.value);
-        this._completer.update(input.value);
+        this._completer.update(input.value, true);
     }
 
     get history() {
