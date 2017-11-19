@@ -10,6 +10,7 @@ class Options {
         this.options = null;
         this.keyMapping = new KeyMapping();
         this.hintPattern = new HintPattern();
+        this.searchEngine = new SearchEngine();
         document.getElementById("import-button")
             .addEventListener("click", (e) => { this.importOptions(); });
         document.getElementById("export-button")
@@ -20,6 +21,7 @@ class Options {
     setOptions(options) {
         this.keyMapping.setOptions(options["keyMapping"]);
         this.hintPattern.setOptions(options["hintPattern"]);
+        this.searchEngine.setOptions(options["searchEngine"] || {});
         this.options = options;
     }
     saveOptions() {
@@ -27,6 +29,7 @@ class Options {
             const options = {
                 "keyMapping": this.keyMapping.getOptions(),
                 "hintPattern": this.hintPattern.getOptions(),
+                "searchEngine": this.searchEngine.getOptions(),
             };
             this.options = options;
             browser.storage.local.set({
@@ -171,11 +174,7 @@ class HintPattern {
         });
         const removeHostButton =
             document.getElementById("hint-pattern-remove-host");
-        removeHostButton.addEventListener("click", (e) => {
-            if (confirm(`Want to remove this host(${this.currentHost})?`)) {
-                this.removeHost();
-            }
-        });
+        removeHostButton.addEventListener("click", (e) => this.removeHost());
 
         const tabs =
             Array.from(document.querySelectorAll("#hint-pattern-tabs li"));
@@ -356,10 +355,7 @@ class HintPattern {
         removeButton.addEventListener("click", (e) => {
             const selector = e.target.parentNode.children[0].value;
             const description = e.target.parentNode.children[1].value;
-            if ((selector === "" && description === "") ||
-                confirm(`Want to remove this selector(${selector})?`)) {
-                this.removeSelector(index);
-            }
+            this.removeSelector(index);
         });
 
         row.appendChild(selectorInput);
@@ -387,6 +383,142 @@ class HintPattern {
             }
         });
         error.innerText = errorMessageList.join("\n");
+    }
+}
+
+class SearchEngine {
+    constructor() {
+        this.defaultEngine = null;
+        this.options = [];
+        const addButton = document.getElementById("search-engine-add-button");
+        addButton.addEventListener("click", (e) => {
+            this.addEngine();
+        });
+    }
+    getOptions() {
+        const options = { defaultEngine: null, engines: {} };
+        this.options
+            .map((opt) => opt.map(
+                (v) => (typeof(v) === "boolean" ? v : v.trim())))
+            .forEach(([keyword, url, suggestUrl, type, path, decode], index) => {
+                if (keyword === "" || url === "") {
+                    return;
+                }
+                if (suggestUrl === "" || type === "" || path === "") {
+                    options.engines[keyword] = { searchUrl: url };
+                }
+                else {
+                    options.engines[keyword] = {
+                        searchUrl: url,
+                        suggest: { url: suggestUrl, type, path, decode }
+                    };
+                }
+                if (index === this.defaultEngine) {
+                    options.defaultEngine = keyword;
+                }
+            });
+        return options;
+    }
+    setOptions(searchEngine) {
+        const options = [];
+        Object.keys(searchEngine.engines).forEach((keyword, index) => {
+            const opt = ["", "", "", "", "", false];
+            opt[0] = keyword;
+            const { searchUrl, suggest } = searchEngine.engines[keyword];
+            opt[1] = searchUrl;
+            if (suggest) {
+                opt[2] = suggest.url;
+                opt[3] = suggest.type;
+                opt[4] = suggest.path;
+                opt[5] = suggest.decode;
+            }
+            options.push(opt);
+            if (keyword === searchEngine.defaultEngine) {
+                this.defaultEngine = index;
+            }
+        });
+        this.options = options;
+        this._updateSearchEngineList();
+    }
+    setDefaultEngine(rowIndex) {
+        this.defaultEngine = rowIndex;
+    }
+    setEngineValue(rowIndex, index, value) {
+        this.options[rowIndex][index] = value;
+        this._updateSearchEngineList();
+    }
+    addEngine() {
+        this.options.push(["", "", "", "", "", false]);
+        this._updateSearchEngineList();
+    }
+    removeEngine(rowIndex) {
+        this.options.splice(rowIndex, 1);
+        this._updateSearchEngineList();
+    }
+    _updateSearchEngineList() {
+        const body = document.getElementById("search-engine-list-body");
+        const fragment = document.createDocumentFragment();
+        this.options.forEach((opt, index) => {
+            fragment.appendChild(this._createRow(index, opt));
+        });
+        body.innerHTML = "";
+        body.appendChild(fragment);
+    }
+    _createRow(rowIndex, option) {
+        const classNameList = [
+            "search-engine-keyword", "search-engine-url",
+            "search-engine-suggest-url", "search-engine-suggest-type",
+            "search-engine-suggest-path", "search-engine-suggest-decode",
+        ];
+        const row = document.createElement("div");
+        const defaultButton = document.createElement("input");
+        defaultButton.className = "search-engine-default";
+        defaultButton.type = "radio";
+        defaultButton.name = "defaultSearchEngine";
+        defaultButton.checked = (rowIndex === this.defaultEngine);
+        defaultButton.addEventListener("change", (e) => {
+            this.setDefaultEngine(rowIndex);
+        });
+        row.appendChild(defaultButton);
+
+        option.forEach((v, index) => {
+            const elem = (() => {
+                if (index === 3) {
+                    const select = document.createElement("select");
+                    select.add(new Option("json", "json"));
+                    select.add(new Option("xml", "xml"));
+                    select.value = v;
+                    return select;
+                }
+                else {
+                    const input = document.createElement("input");
+                    if (index === 5) {
+                        input.type = "checkbox";
+                        input.checked = v;
+                    }
+                    else {
+                        input.type = "text";
+                        input.value = v;
+                    }
+                    return input;
+                }
+            })();
+            elem.className = classNameList[index];
+            elem.addEventListener("change", (e) => {
+                this.setEngineValue(
+                    rowIndex, index,
+                    (index === 5 ? e.target.checked : e.target.value));
+            });
+            row.appendChild(elem);
+        });
+
+        const removeButton = document.createElement("input");
+        removeButton.type = "button";
+        removeButton.value = "remove";
+        removeButton.addEventListener(
+            "click", (e) => this.removeEngine(rowIndex));
+        row.appendChild(removeButton);
+        return row;
     }
 }
 

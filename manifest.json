@@ -12,7 +12,7 @@
         "sessions",
         "storage",
         "tabs",
-        "https://suggestqueries.google.com/complete/search"
+        "<all_urls>"
     ],
 
     "background": {

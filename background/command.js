@@ -135,18 +135,16 @@ class SearchCommand {
     constructor(name, useNewTab) {
         this.name = name;
         this.useNewTab = useNewTab;
-        this.cmdMap = new Map([
-            [
-                "google", [
-                    "https://www.google.co.jp/search?q=%s&ie=utf-8&oe=utf-8&hl=ja",
-                    "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl=ja&qu=%s"
-                ]
-            ],
-            [
-                "alc", [ "http://eow.alc.co.jp/search?q=%s" ]
-            ]
-        ]);
-        this.defaultCmd = "google";
+        this.cmdMap = new Map();
+        this.defaultCmd = null;
+    }
+    setEngine(searchEngine) {
+        const engines = searchEngine.engines;
+        this.cmdMap.clear();
+        Object.keys(engines).forEach((keyword) => {
+            this.cmdMap.set(keyword, engines[keyword]);
+        });
+        this.defaultCmd = searchEngine.defaultEngine;
     }
     invoke(args, tab) {
         if (args.length === 0) {
@@ -159,7 +157,7 @@ class SearchCommand {
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        const url = result[1][0].replace("%s", args.join(" "));
+        const url = result[1].searchUrl.replace("%s", args.join(" "));
         if (this.useNewTab) {
             browser.tabs.create(
                 { url: url, index: tab.index + 1, active: true });
@@ -171,44 +169,82 @@ class SearchCommand {
     }
     complete(value, tab) {
         const match = /^(\S*)(\s*)/.exec(value);
-        let urlPattern = undefined;
+        let suggest = undefined;
         let argStart = 0;
         if (match[2].length === 0) {
             const cmds =
                 SearchCommand.getCandidateSubcmds(match[1], this.cmdMap);
             if (cmds.length !== 0) {
-                return [0, 1, cmds.map(([name, urls]) => [name, urls[0]])];
+                return [
+                    0, 1, cmds.map(([name, urls]) => [name, urls.searchUrl])
+                ];
             }
-            const [result, reason] = this.getSubCmd(this.defaultCmd);
-            urlPattern = result[1][1];
-            argStart = 0;
+            if (this.defaultCmd) {
+                const [result, reason] = this.getSubCmd(this.defaultCmd);
+                suggest = result[1].suggest;
+                argStart = 0;
+            }
         }
         else {
             const [result, reason] = this.getSubCmd(match[1]);
             if (!result) { // ambiguous
-                return [0, []];
+                return [0, 0, []];
             }
-            urlPattern = result[1][1];
+            suggest = result[1].suggest;
             // if reason is not null (use default), head of value is not command
             argStart = (reason ? 0 : match[0].length);
         }
 
-        if (!urlPattern) {
-            return [0, []];
+        if (!suggest) {
+            return [0, 0, []];
         }
 
-        const url = urlPattern.replace("%s", value.substr(argStart));
+        const url = suggest.url.replace("%s", value.substr(argStart));
         const headers = new Headers();
-        headers.append("Content-Type", "application/x-suggestions+json");
-        return fetch(url, { method: "GET", mode: "cors", header: headers })
-            .then((response) => response.json())
-            .then((json) => [argStart, 0, json[1]]);
+        switch (suggest.type) {
+            case "json":
+                headers.append(
+                    "Content-Type", "application/x-suggestions+json");
+                break;
+            case "xml":
+                headers.append("Content-Type", "text/xml");
+                break;
+            default:
+                throw new Error("Unknown suggest type: " + suggest.type);
+        }
+        return fetch(url, { method: "GET", header: headers })
+            .then((response) => {
+                switch (suggest.type) {
+                    case "json":
+                        return response.json().then((json) => {
+                            return SearchCommand._getJSONSuggests(
+                                json, suggest.path, suggest.decode);
+                        });
+                    case "xml":
+                        return response.text().then((text) => {
+                            return SearchCommand._getXMLSuggests(
+                                text, suggest.path, suggest.decode);
+                        });
+                }
+            })
+            .then((result) => [argStart, 0, result]);
+    }
+    static _getJSONSuggests(json, path, decode) {
+        // TODO
+        return json[1];
+    }
+    static _getXMLSuggests(text, path, decode) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/xml");
+        const suggests = Array.from(doc.querySelectorAll(path));
+        return suggests.map(
+            (e) => decode ? decodeURIComponent(e.textContent) : e.textContent);
     }
     static getCandidateSubcmds(word, cmdMap) {
         const result = [];
-        for (let [name, urls] of cmdMap) {
+        for (let [name, engine] of cmdMap) {
             if (name.startsWith(word)) {
-                result.push([name, urls]);
+                result.push([name, engine]);
             }
         }
         return result;
@@ -220,7 +256,7 @@ class SearchCommand {
         }
         const candidates =
             SearchCommand.getCandidateSubcmds(cmdName, this.cmdMap);
-        if (candidates.length === 0) {
+        if (candidates.length === 0 && this.defaultCmd) {
             return [
                 [this.defaultCmd, this.cmdMap.get(this.defaultCmd)],
                 "use default command"
@@ -236,8 +272,10 @@ class SearchCommand {
         return this.name;
     }
 }
-gExCommandMap.addCommand(new SearchCommand("search", false));
-gExCommandMap.addCommand(new SearchCommand("tabsearch", true));
+const gSearchCommand = new SearchCommand("search", false);
+const gTabSearchCommand = new SearchCommand("tabsearch", true);
+gExCommandMap.addCommand(gSearchCommand);
+gExCommandMap.addCommand(gTabSearchCommand);
 gExCommandMap.makeCommand("tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");

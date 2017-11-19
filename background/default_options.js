@@ -177,6 +177,24 @@ const DEFAULT_OPTIONS = {
                 ]
             }
         }
+    },
+
+    "searchEngine": {
+        "defaultEngine": "google",
+        "engines": {
+            "google": {
+                "searchUrl": "https://www.google.co.jp/search?q=%s&ie=utf-8&oe=utf-8&hl=ja",
+                "suggest": {
+                    "url": "https://suggestqueries.google.com/complete/search?client=firefox&hl=ja&qu=%s",
+                    "type": "json",
+                    "path": "$[1]",
+                    "decode": false
+                }
+            },
+            "twitter": {
+                "searchUrl": "https://twitter.com/search?q=%s"
+            }
+        }
     }
 };
 

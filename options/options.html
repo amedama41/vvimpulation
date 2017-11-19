@@ -21,7 +21,7 @@
   <body>
     <h1>VVimpulation Options</h1>
 
-    <div>
+    <div class="section">
       <h2>key mapping</h2>
       <ul id="key-mapping-tabs" class="tab">
         <li class="selectTab" mode="normal"><a href="#">Normal</a></li>
@@ -32,7 +32,7 @@
       <div id="key-mapping-error" class="error-message"></div>
     </div>
 
-    <div>
+    <div class="section">
       <h2>hint pattern</h2>
       <div>
         <div>
@@ -78,6 +78,18 @@
             </div>
             <div id="hint-pattern-local-error" class="error-message"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>search engine</h2>
+      <div><input id="search-engine-add-button" type="button" value="Add search engine"></div>
+      <div id="search-engine-list">
+        <div id="search-engine-list-header">
+          <span class="search-engine-default">Default</span><span class="search-engine-keyword">Keyword</span><span class="search-engine-url">URL</span><span class="search-engine-suggest-url">Suggest URL</span><span class="search-engine-suggest-type">Type</span><span class="search-engine-suggest-path">Path</span><span class="search-engine-suggest-decode">Decode</span>
+        </div>
+        <div id="search-engine-list-body">
         </div>
       </div>
     </div>

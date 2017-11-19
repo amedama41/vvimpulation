@@ -1,4 +1,4 @@
-section {
+.section {
     border-bottom: 1px solid;
 }
 .error-message {
@@ -57,6 +57,41 @@ ul.tab:after {
 #hint-pattern-list-manipulation {
     margin-top: 4px;
 }
+#search-engine-list {
+    margin-top: 4px;
+    width: 100%;
+    overflow-x: auto;
+}
+#search-engine-list > div {
+    min-width: 900px;
+}
+#search-engine-list-header > span {
+    display: inline-block;
+    font-size: smaller;
+}
+.search-engine-default {
+    width: 50px;
+    margin: 0px;
+}
+.search-engine-keyword {
+    width: 10%;
+}
+.search-engine-url {
+    width: 20%;
+}
+.search-engine-suggest-url {
+    width: 20%;
+}
+.search-engine-suggest-type {
+    width: 60px;
+}
+.search-engine-suggest-path {
+    width: 20%;
+}
+.search-engine-suggest-decode {
+    width: 40px;
+}
+
 body {
     margin-bottom: 42px;
 }
