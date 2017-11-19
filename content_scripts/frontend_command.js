@@ -5,9 +5,19 @@ class FrontendCommand {
      * Commands for scrolling
      */
     static scrollTop(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
+        if (elem && elem.scrollTop !== 0) {
+            elem.scrollTop = 0;
+            return;
+        }
         window.scrollTo(window.scrollX, 0);
     }
     static scrollBottom(count, frameInfo) {
+        const elem = Scroll.getVerticalScrollableElem(frameInfo.getTarget());
+        if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
+            elem.scrollTop = elem.scrollHeight - elem.clientHeight;
+            return;
+        }
         window.scrollTo(window.scrollX, window.scrollMaxY);
     }
     static scrollUp(count, frameInfo) {
