@@ -445,7 +445,6 @@ class SearchEngine {
     }
     setEngineValue(rowIndex, index, value) {
         this.options[rowIndex][index] = value;
-        this._updateSearchEngineList();
     }
     addEngine() {
         this.options.push(["", "", "", "", "", false]);
