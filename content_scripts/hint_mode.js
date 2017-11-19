@@ -39,7 +39,7 @@ class HintMode {
             case 'focusHintLink':
                 return this.focusHintLink(msg);
             case 'blurHintLink':
-                return this.blurHintLink();
+                return this.blurHintLink(msg);
             case 'startFilter':
                 return this._startFilter(msg, frameInfo);
             case 'applyFilter':
@@ -60,7 +60,7 @@ class HintMode {
     }
 
     focusHintLink(msg) {
-        this.blurHintLink();
+        this._blurImpl(false);
         const localIndex = this.indexMap[msg.index];
         if (localIndex === undefined) {
             console.error(`unknown index (${msg.index})`);
@@ -73,13 +73,19 @@ class HintMode {
         }
         this.focusIndex = localIndex;
     }
-    blurHintLink() {
+    blurHintLink(msg) {
+        this._blurImpl(msg.autoFocus);
+        this.focusIndex = undefined;
+    }
+    _blurImpl(forceBlur) {
         if (this.focusIndex === undefined) {
             return;
         }
         const [span, elem] = this.hints[this.focusIndex];
         span.id = "";
-        this.focusIndex = undefined;
+        if (forceBlur) {
+            elem.blur();
+        }
     }
     _startFilter(msg, frameInfo) {
         frameInfo.showConsole(this, "hintFilter", msg.filter);
@@ -119,7 +125,8 @@ class HintMode {
         this.hints.forEach(([span, elem], index) => {
             span.textContent = labelList[index];
         });
-        this.blurHintLink();
+        this._blurImpl(false);
+        this.focusIndex = undefined;
     }
 }
 
