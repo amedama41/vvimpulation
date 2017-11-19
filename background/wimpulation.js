@@ -114,42 +114,10 @@ function postAllFrame(msg) {
 
 const gTabInfoMap = new Map();
 const gLastCommand = [undefined, 0];
-const gOptions = { keyMapping: undefined, hintPattern: undefined };
+const gOptions = {
+    keyMapping: undefined, hintPattern: undefined, hintKeyMapping: undefined
+};
 
-const HINT_KEY_MAP = Utils.toPreparedCmdMap({
-    "<C-C>": { name: "toNormalMode" },
-    "<C-[>": { name: "toNormalMode" },
-    "<Esc>": { name: "toNormalMode" },
-    "<C-L>": { name: "refreshHint" },
-    "<Tab>": { name: "incrementHintNum" },
-    "<S-Tab>": { name: "decrementHintNum" },
-    ";": { name: "incrementHintNum" },
-    ",": { name: "decrementHintNum" },
-    "/": { name: "startFilter" },
-    "ff": { name: "toggleDefaultFocus" },
-    "fi": { name: "focusin", frontend: true },
-    "fo": { name: "focusout", frontend: true },
-    "c": { name: "mouseclick", frontend: true },
-    "mc": { name: "mouseclick", frontend: true },
-    "mC": { name: "mouseclick", frontend: true, modifiers : { shift: true } },
-    "m<C-C>": { name: "mouseclick", frontend: true, modifiers: { ctrl: true } },
-    "m<M-C>": { name: "mouseclick", frontend: true, modifiers: { meta: true } },
-    "md": { name: "mousedown", frontend: true },
-    "mD": { name: "mousedown", frontend: true, modifiers: { shift: true } },
-    "m<C-D>": { name: "mousedown", frontend: true, modifiers: { ctrl: true } },
-    "mi": { name: "mousein", frontend: true },
-    "mo": { name: "mouseout", frontend: true },
-    "e": { name: "pressEnter", frontend: true },
-    "E": { name: "pressEnter", frontend: true, modifiers: { shift: true } },
-    "<C-E>": { name: "pressEnter", frontend: true, modifiers: { ctrl: true } },
-    "<M-E>": { name: "pressEnter", frontend: true, modifiers: { meta: true } },
-    "o": { name: "smartOpen", frontend: true },
-    "O": { name: "smartOpenInTab", frontend: true },
-    "y": { name: "yankLink", frontend: true },
-    "s": { name: "downloadLink", frontend: true },
-    "v": { name: "selectElement", frontend: true },
-    "de": { name: "deleteElement", frontend: true },
-});
 class HintMode {
     constructor(type) {
         this.type = type;
@@ -157,8 +125,8 @@ class HintMode {
         this.filterIndexMap = []; // displayed index => global index
         this.idList = []; // global index => frame id
         this.currentIndex = 0; // current displayed index
-        this.defaultFocus = true;
-        this.mapper = Utils.makeCommandMapper(HINT_KEY_MAP);
+        this.autoFocus = true;
+        this.mapper = Utils.makeCommandMapper(gOptions.hintKeyMapping);
     }
     handle(key, sender, tabInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
@@ -201,19 +169,16 @@ class HintMode {
         }
     }
 
-    toNormalMode(tabInfo) {
-        changeNormalMode(tabInfo);
-    }
-    incrementHintNum(tabInfo) {
+    nextHint(tabInfo) {
         const nextIndex = (this.currentIndex + 1) % this.filterIndexMap.length;
         this._changeHintNum(nextIndex, tabInfo);
     }
-    decrementHintNum(tabInfo) {
+    previousHint(tabInfo) {
         const length = this.filterIndexMap.length;
         const prevIndex = (this.currentIndex - 1 + length) % length;
         this._changeHintNum(prevIndex, tabInfo);
     }
-    refreshHint(tabInfo) {
+    reconstruct(tabInfo) {
         const type = this.type;
         tabInfo.sendMessage(0, {
             command: "collectHint",
@@ -227,8 +192,8 @@ class HintMode {
         HintMode._forwardHintCommand(
             tabInfo, 0, { command: "startFilter", filter: this.filter });
     }
-    toggleDefaultFocus() {
-        this.defaultFocus = !this.defaultFocus;
+    toggleAutoFocus() {
+        this.autoFocus = !this.autoFocus;
     }
 
     _fixFilter(tabInfo) {
@@ -253,17 +218,16 @@ class HintMode {
         });
     }
     _invoke(cmd, tabInfo) {
-        if (cmd.frontend) {
-            const currentFrameId =
-                this.idList[this.filterIndexMap[this.currentIndex]];
-            const modifiers = cmd.modifiers || {};
-            const count = Utils.modifiersToCount(
-                modifiers.ctrl, modifiers.shift, modifiers.alt, modifiers.meta);
-            HintMode._forwardHintCommand(
-                tabInfo, currentFrameId, { command: cmd.name, count: count });
+        const command = cmd.command;
+        if (command.startsWith("hint.")) {
+            this[command.substr(5)](tabInfo);
         }
         else {
-            this[cmd.name](tabInfo);
+            const currentFrameId =
+                this.idList[this.filterIndexMap[this.currentIndex]];
+            const count = cmd.count || 0;
+            HintMode._forwardHintCommand(
+                tabInfo, currentFrameId, { command, count });
         }
     }
     _handleDigit(num, tabInfo) {
@@ -286,7 +250,7 @@ class HintMode {
         }
         HintMode._forwardHintCommand(tabInfo, nextId, {
             command: "focusHintLink",
-            index: nextIndex, defaultFocus: this.defaultFocus
+            index: nextIndex, autoFocus: this.autoFocus
         });
         this.currentIndex = nextDisplayedIndex;
     }
@@ -698,6 +662,7 @@ browser.storage.local.get({
 }).then(({ options }) => {
     gOptions.keyMapping = options["keyMapping"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
+    gOptions.hintKeyMapping = Utils.toPreparedCmdMap(options.keyMapping.hint);
     gSearchCommand.setEngine(options["searchEngine"]);
     gTabSearchCommand.setEngine(options["searchEngine"]);
 
@@ -708,6 +673,8 @@ browser.storage.local.get({
         const options = changes["options"].newValue;
         gOptions.keyMapping = options["keyMapping"];
         gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
+        gOptions.hintKeyMapping =
+            Utils.toPreparedCmdMap(options.keyMapping.hint);
         postAllFrame({
             command: "updateKeyMapping", keyMapping: gOptions.keyMapping
         });

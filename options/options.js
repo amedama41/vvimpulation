@@ -84,7 +84,8 @@ class Options {
 class KeyMapping {
     constructor() {
         this.options = {
-            "normal": ["", ""], "insert": ["", ""], "visual": ["", ""]
+            "normal": ["", ""], "insert": ["", ""],
+            "visual": ["", ""], "hint": ["", ""],
         };
         this.currentMode = "normal";
 
@@ -118,7 +119,7 @@ class KeyMapping {
     getOptions() {
         try {
             const options = {};
-            for (const mode of ["normal", "insert", "visual"]) {
+            for (const mode of ["normal", "insert", "visual", "hint"]) {
                 options[mode] = JSON.parse(this.options[mode][0]);
             }
             return options;
