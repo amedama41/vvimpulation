@@ -637,10 +637,7 @@ Loop: ${video.loop}`
         if (!DomUtils.isEditable(target)) {
             return FrontendCommand.toInsertModeOnFirstElement(count, frameInfo);
         }
-        frameInfo.changeMode("INSERT", {
-            lastFocusedElem: document.activeElement,
-            editableElement: target
-        });
+        frameInfo.changeMode("INSERT", { editableElement: target });
     }
     static toInsertModeOnFirstElement(count, frameInfo) {
         const inputs = DomUtils.getInputList(document);
@@ -648,10 +645,7 @@ Loop: ${video.loop}`
             return;
         }
         const target = inputs[Math.min(count, inputs.length - 1)];
-        frameInfo.changeMode("INSERT", {
-            lastFocusedElem: document.activeElement,
-            editableElement: target
-        });
+        frameInfo.changeMode("INSERT", { editableElement: target });
     }
     static toInsertModeOnLastElement(count, frameInfo) {
         return FrontendCommand.toInsertModeOnFirstElement(100000, frameInfo);

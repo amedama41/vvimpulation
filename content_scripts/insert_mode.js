@@ -3,7 +3,7 @@
 class InsertMode {
     constructor(frameInfo, keyMap, data) {
         this.mapper = Utils.makeCommandMapper(keyMap);
-        this.lastFocusedElem = data.lastFocusedElem;
+        this.lastFocusedElem = document.activeElement;
         this.target = data.editableElement;
         this.target.undoStack = [];
         this.target.focus();
