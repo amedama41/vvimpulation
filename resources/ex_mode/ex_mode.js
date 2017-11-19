@@ -566,6 +566,10 @@ window.addEventListener("DOMContentLoaded", (e) => {
         }
         mode.startConsole();
     });
-    input.addEventListener("blur", (e) => mode.stopConsole());
+    input.addEventListener("blur", (e) => {
+        if (mode.isOpened) {
+            mode.stopConsole()
+        }
+    });
 }, { capture: true, once: true });
 
