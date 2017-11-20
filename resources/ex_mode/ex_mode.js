@@ -215,20 +215,20 @@ class History {
 };
 
 function search(keyword, backward, mode) {
-    mode.sendMessage({
+    return mode.sendMessage({
         command: "find", keyword: keyword, backward: backward
     }).then((result) => {
         if (result && !browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
         }
         if (result) {
-            mode.stopConsole(true);
+            return [true, null];
         }
         else {
-            mode.stopConsole(false, "Pattern not found: " + keyword);
+            return [false, "Pattern not found: " + keyword];
         }
     }).catch((error) => {
-        mode.stopConsole(false, error);
+        return [false, error];
     });
 }
 
@@ -237,7 +237,7 @@ class ConsoleCommand {
         mode.stopConsole(false);
     }
     static execute(mode) {
-        mode.execute(mode);
+        mode.execute();
     }
 
     static selectNextHistory(mode) {
@@ -336,6 +336,7 @@ const CONSOLE_CMD_MAP = Utils.toPreparedCmdMap({
 class ConsoleMode {
     constructor(options, port, input, container) {
         this._isOpened = false;
+        this._inExec = false;
         this._port = port;
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
@@ -354,11 +355,21 @@ class ConsoleMode {
         this._input.value = "";
         this.sendMessage({ command: "hideConsole", result, reason });
     }
+    execute() {
+        this._inExec = true;
+        this.onExec().then(([result, reason]) => {
+            this._inExec = false;
+            this.stopConsole(result, reason);
+        });
+    }
     sendMessage(msg) {
         return this._port.sendMessage(msg);
     }
     get isOpened() {
         return this._isOpened;
+    }
+    get inExec() {
+        return this._inExec;
     }
     handleKeydown(key) {
         return this.onKeydown(key, this._input);
@@ -400,32 +411,31 @@ class ExMode extends ConsoleMode {
     get completer() {
         return this._completer;
     }
-    execute() {
+    onExec() {
         const value = this.getTarget().value;
         if (value === "") {
-            this.stopConsole(false);
-            return;
+            return Promise.resolve([false, null]);
         }
         const prefix = value.charAt(0);
         if (prefix === "/" || prefix === "?") {
-            search(value.substr(1), prefix === '?', this);
-            return;
+            return search(value.substr(1), prefix === '?', this);
         }
 
-        this.sendMessage({ command: "execCommand", cmd: value })
+        return this.sendMessage({ command: "execCommand", cmd: value })
             .then((result) => {
                 if (result && !browser.extension.inIncognitoContext) { // TODO
                     History.save("command_history", value);
                 }
                 if (typeof(result) === "boolean") {
-                    this.stopConsole(true);
-                    return;
+                    return [true, null];
                 }
-                this.stopConsole(
-                    true, (Array.isArray(result) ? result.join("\n") : result));
+                return [
+                    true,
+                    (Array.isArray(result) ? result.join("\n") : result)
+                ];
             })
             .catch((error) => {
-                this.stopConsole(false, error);
+                return [false, error];
             });
     }
 }
@@ -448,13 +458,12 @@ class SearchMode extends ConsoleMode {
     get history() {
         return this._history;
     }
-    execute() {
+    onExec() {
         const value = this.getTarget().value;
         if (value === "") {
-            this.stopConsole(false);
-            return;
+            return Promise.resolve([false, null]);
         }
-        search(value, this.isBackward(), this);
+        return search(value, this.isBackward(), this);
     }
 
 }
@@ -479,9 +488,9 @@ class HintFilterMode extends ConsoleMode {
             super.sendMessage({ command: 'applyFilter', filter });
         }
     }
-    execute() {
+    onExec() {
         const filter = this.getTarget().value;
-        this.stopConsole(true, filter);
+        return Promise.resolve([true, filter]);
     }
 }
 
@@ -543,7 +552,8 @@ window.addEventListener("DOMContentLoaded", (e) => {
         mode.startConsole();
     });
     input.addEventListener("blur", (e) => {
-        if (mode.isOpened) {
+        // If inExec, stopConsole is called by ConsoleMode.execute
+        if (mode.isOpened && !mode.inExec) {
             mode.stopConsole()
         }
     });
