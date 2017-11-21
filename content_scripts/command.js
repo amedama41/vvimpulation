@@ -143,6 +143,7 @@ const COMMAND_DESCRIPTIONS = {
     yankCurrentURL: { topFrame: true },
     repeatLastCommand: {},
     showLastMessage: { topFrame: true },
+    ignore: {},
 
     /** Commands for mode changing **/
     toNormalMode: { background: true },

@@ -625,6 +625,9 @@ Loop: ${video.loop}`
     static showLastMessage(count, frameInfo) {
         frameInfo.showLastMessage();
     }
+    static ignore(count, frameInfo) {
+        return true;
+    }
 
     /**
      * Commands for mode changing
