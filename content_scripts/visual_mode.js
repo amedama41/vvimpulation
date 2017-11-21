@@ -16,6 +16,7 @@ class VisualModeBase {
                 point.offsetNode, point.offset, point.offsetNode, point.offset);
         }
         this.selection = selection;
+        this.count = "0";
         this.init(this.selection);
         this.mapper = Utils.makeCommandMapper(keyMap);
     }
@@ -37,19 +38,34 @@ class VisualModeBase {
         if (optCmd) {
             this._invoke(optCmd, frameInfo);
         }
+        else if (dropKeyList) {
+            this.count = "0";
+        }
         if (cmd) {
             return this._invoke(cmd, frameInfo);
         }
+        if (consumed) {
+            return true;
+        }
+        if (key.length === 1 && "0" <= key && key <= "9") {
+            this.count += key;
+            return true;
+        }
+        this.count = "0";
         return true;
     }
     _invoke(cmd, frameInfo) {
+        const count = parseInt(this.count, 10);
+        this.count = "0";
         if (cmd.startsWith("move ")) {
             const [prefix, direction, granularity] = cmd.split(" ");
-            this.selectionModify(this.selection, direction, granularity);
+            for (let i = 0; i < Math.max(count, 1); ++i) {
+                this.selectionModify(this.selection, direction, granularity);
+            }
             return true;
         }
         else {
-            return !invokeCommand(cmd, 0, frameInfo);
+            return !invokeCommand(cmd, count, frameInfo);
         }
     }
 }
