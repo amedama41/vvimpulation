@@ -133,7 +133,7 @@ class HintMode {
             this._handleDigit(key, tabInfo);
             return;
         }
-        const [consumed, optCmd, cmd] = this.mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
         if (optCmd) {
             this._invoke(optCmd, tabInfo);
         }

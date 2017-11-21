@@ -20,14 +20,12 @@ class NormalMode {
         this._resetState();
     }
     onKeyEvent(key, frameInfo) {
-        const [consumed, optCmd, cmd] = this.mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
         if (optCmd) {
-            if (optCmd.length !== 0) {
-                this._invoke(optCmd, frameInfo);
-            }
-            else {
-                this._resetState();
-            }
+            this._invoke(optCmd, frameInfo);
+        }
+        else if (dropKeyList) {
+            this._resetState();
         }
         if (cmd) {
             return this._invoke(cmd, frameInfo);

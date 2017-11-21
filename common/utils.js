@@ -5,43 +5,47 @@ const Utils = (function() {
 class CommandMapper {
     constructor(cmdMap) {
         this.cmdMap = cmdMap;
-        this.prevMapAndCmd = undefined;
+        this.state = undefined; // [prevMapAndCmd, consumedKeyList]
     }
     get(key) {
         let optCmd = undefined;
-        if (this.prevMapAndCmd) {
-            const mapAndCmd = this.prevMapAndCmd[0].get(key);
+        let dropKeyList = undefined;
+        if (this.state) {
+            const mapAndCmd = this.state[0][0].get(key);
             if (mapAndCmd) {
                 if (mapAndCmd[0].size !== 0) {
-                    this.prevMapAndCmd = mapAndCmd;
-                    return [true, undefined, undefined];
+                    this.state[0] = mapAndCmd;
+                    this.state[1].push(key);
+                    return [true, undefined, undefined, dropKeyList];
                 }
                 else {
-                    this.prevMapAndCmd = undefined;
-                    return [true, undefined, mapAndCmd[1]];
+                    this.state = undefined;
+                    return [true, undefined, mapAndCmd[1], dropKeyList];
                 }
             }
             else {
-                optCmd = this.prevMapAndCmd[1] || "";
+                optCmd = this.state[0][1];
+                dropKeyList = this.state[1];
+                this.state = undefined;
             }
         }
 
         const mapAndCmd = this.cmdMap.get(key);
         if (mapAndCmd) {
             if (mapAndCmd[0].size !== 0) {
-                this.prevMapAndCmd = mapAndCmd;
-                return [true, optCmd, undefined];
+                this.state = [mapAndCmd, [key]];
+                return [true, optCmd, undefined, dropKeyList];
             }
             else {
-                return [true, optCmd, mapAndCmd[1]];
+                return [true, optCmd, mapAndCmd[1], dropKeyList];
             }
         }
         else {
-            return [false, optCmd, undefined];
+            return [false, optCmd, undefined, dropKeyList];
         }
     }
     reset() {
-        this.prevMapAndCmd = undefined;
+        this.state = undefined;
     }
 }
 

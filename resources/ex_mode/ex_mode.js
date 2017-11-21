@@ -397,7 +397,7 @@ class ExMode extends ConsoleMode {
         this._completer.reset();
     }
     onKeydown(key, input) {
-        const [consumed, optCmd, cmd] = this._mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
         return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
@@ -449,7 +449,7 @@ class SearchMode extends ConsoleMode {
     onStop() {
     }
     onKeydown(key, input) {
-        const [consumed, optCmd, cmd] = this._mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
         return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
@@ -478,7 +478,7 @@ class HintFilterMode extends ConsoleMode {
     }
     onKeydown(key, input) {
         this._prevFilter = input.value;
-        const [consumed, optCmd, cmd] = this._mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
         const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
         return result;
     }

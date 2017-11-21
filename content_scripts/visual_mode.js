@@ -28,7 +28,7 @@ class VisualModeBase {
         }
     }
     onKeyEvent(key, frameInfo) {
-        const [consumed, optCmd, cmd] = this.mapper.get(key);
+        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
         if (optCmd) {
             this._invoke(optCmd, frameInfo);
         }
