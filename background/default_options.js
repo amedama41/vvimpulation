@@ -100,6 +100,13 @@ const DEFAULT_OPTIONS = {
             "<C-W>x": "decrementFrameURL",
             "<C-W>y": "yankFrameURL",
             "<C-W><C-G>": "showFrameURL",
+            "<Tab>": "ignore",
+            "<S-Tab>": "ignore",
+            "<Enter>": "ignore",
+            "<C-Enter>": "ignore",
+            "<S-Enter>": "ignore",
+            "<A-Enter>": "ignore",
+            "<M-Enter>": "ignore",
         },
         "insert": {
             "<C-H>": "deleteCharBackward",

@@ -40,7 +40,7 @@ class NormalMode {
         }
 
         this._resetState();
-        return false;
+        return true;
     }
 
     _invoke(cmdName, frameInfo) {
