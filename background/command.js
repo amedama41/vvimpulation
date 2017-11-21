@@ -276,7 +276,7 @@ const gSearchCommand = new SearchCommand("search", false);
 const gTabSearchCommand = new SearchCommand("tabsearch", true);
 gExCommandMap.addCommand(gSearchCommand);
 gExCommandMap.addCommand(gTabSearchCommand);
-gExCommandMap.makeCommand("tab", (args, tab) => {
+gExCommandMap.makeCommand("buffer", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
