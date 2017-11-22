@@ -309,8 +309,7 @@ class FrameInfo {
             container.id = "wimpulation-console-container";
             const consoleFrame = document.createElement("iframe");
             consoleFrame.id = "wimpulation-console";
-            consoleFrame.src =
-                browser.runtime.getURL("resources/ex_mode/ex_mode.html");
+            consoleFrame.src = browser.runtime.getURL("console/ex_mode.html");
             consoleFrame.onload = () => {
                 this._consoleFrame = consoleFrame;
             };
