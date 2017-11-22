@@ -765,8 +765,6 @@ browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
     }
 });
 
-browser.runtime.onMessage.addListener(invokeCommand);
-
 browser.storage.local.get({
     options: DEFAULT_OPTIONS
 }).then(({ options }) => {
