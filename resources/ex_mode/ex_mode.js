@@ -341,8 +341,9 @@ class ConsoleMode {
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultCommand;
+        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
 
-        this.onInit(container);
+        this.onInit(container, options);
     }
     startConsole(options) {
         this._isOpened = true;
@@ -372,7 +373,8 @@ class ConsoleMode {
         return this._inExec;
     }
     handleKeydown(key) {
-        return this.onKeydown(key, this._input);
+        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
+        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     handleKeyup() {
         return this.onKeyup(this._input);
@@ -385,20 +387,15 @@ class ConsoleMode {
     }
 }
 class ExMode extends ConsoleMode {
-    onInit(container) {
+    onInit(container, options) {
         this._completer = new Completer(container);
         this._history = new History("command_history");
-        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
     }
     onStart() {
         this._completer.setMaxHeight(window.innerHeight - 100);
     }
     onStop() {
         this._completer.reset();
-    }
-    onKeydown(key, input) {
-        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
-        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
         this._history.reset(input.value);
@@ -440,17 +437,12 @@ class ExMode extends ConsoleMode {
     }
 }
 class SearchMode extends ConsoleMode {
-    onInit(container) {
+    onInit(container, options) {
         this._history = new History("search_history");
-        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
     }
     onStart() {
     }
     onStop() {
-    }
-    onKeydown(key, input) {
-        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
-        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     onKeyup(input) {
         this._history.reset(input.value);
@@ -468,24 +460,18 @@ class SearchMode extends ConsoleMode {
 
 }
 class HintFilterMode extends ConsoleMode {
-    onInit(container) {
-        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
-        this._prevFilter = null;
+    onInit(container, options) {
+        this._prevFilter = options.defaultCommand;
     }
     onStart() {
     }
     onStop() {
     }
-    onKeydown(key, input) {
-        this._prevFilter = input.value;
-        const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
-        const result = (cmd ? !ConsoleCommand[cmd](this) : consumed);
-        return result;
-    }
     onKeyup(input) {
         const filter = input.value;
         if (filter !== this._prevFilter) {
             super.sendMessage({ command: 'applyFilter', filter });
+            this._prevFilter = filter;
         }
     }
     onExec() {
