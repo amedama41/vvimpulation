@@ -8,7 +8,7 @@ class NormalMode {
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
-                keyList.forEach((key) => this.onKeyEvent(key, frameInfo));
+                keyList.forEach((key) => frameInfo.handleKey(key));
             }, 0);
         }
     }
@@ -16,40 +16,27 @@ class NormalMode {
         // activeElement may be null (e.g. about:blank)
         return document.activeElement || document.documentElement;
     }
+    consume(key, frameInfo) {
+        return this.mapper.get(key);
+    }
     onReset() {
-        this._resetState();
     }
-    onKeyEvent(key, frameInfo) {
-        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
-        if (optCmd) {
-            this._invoke(optCmd, frameInfo);
-        }
-        else if (dropKeyList) {
-            this._resetState();
-        }
-        if (cmd) {
-            return this._invoke(cmd, frameInfo);
-        }
-        if (consumed) {
-            return true;
-        }
-
-        if (key.length === 1 && "0" <= key && key <= "9") {
-            this.count += key;
-            return true;
-        }
-
-        this._resetState();
-        return true;
-    }
-
-    _invoke(cmdName, frameInfo) {
+    onInvoking(cmdName, frameInfo) {
         const count = parseInt(this.count, 10);
-        this._resetState();
+        this.count = "0";
         return !invokeCommand(cmdName, count, frameInfo);
     }
-    _resetState() {
+    onDropKeys(dropKeys) {
         this.count = "0";
+    }
+    onNonConsumed(key) {
+        if (key.length === 1 && "0" <= key && key <= "9") {
+            this.count += key;
+        }
+        else {
+            this.count = "0";
+        }
+        return true;
     }
 }
 

@@ -23,6 +23,9 @@ class VisualModeBase {
     getTarget() {
         return selection.anchorNode;
     }
+    consume(key, frameInfo) {
+        return this.mapper.get(key);
+    }
     onReset() {
         if (this.selection) {
             try {
@@ -33,28 +36,7 @@ class VisualModeBase {
             }
         }
     }
-    onKeyEvent(key, frameInfo) {
-        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
-        if (optCmd) {
-            this._invoke(optCmd, frameInfo);
-        }
-        else if (dropKeyList) {
-            this.count = "0";
-        }
-        if (cmd) {
-            return this._invoke(cmd, frameInfo);
-        }
-        if (consumed) {
-            return true;
-        }
-        if (key.length === 1 && "0" <= key && key <= "9") {
-            this.count += key;
-            return true;
-        }
-        this.count = "0";
-        return true;
-    }
-    _invoke(cmd, frameInfo) {
+    onInvoking(cmd, frameInfo) {
         const count = parseInt(this.count, 10);
         this.count = "0";
         if (cmd.startsWith("move ")) {
@@ -67,6 +49,18 @@ class VisualModeBase {
         else {
             return !invokeCommand(cmd, count, frameInfo);
         }
+    }
+    onDropKeys(dropKeys) {
+        this.count = "0";
+    }
+    onNonConsumed(key) {
+        if (key.length === 1 && "0" <= key && key <= "9") {
+            this.count += key;
+        }
+        else {
+            this.count = "0";
+        }
+        return true;
     }
 }
 

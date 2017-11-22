@@ -16,6 +16,9 @@ class ConsoleMode {
     getTarget() {
         return this.consoleFrame;
     }
+    consume(key, frameInfo) {
+        return [false, undefined, undefined, undefined];
+    }
     onReset(frameInfo) {
         const isConsoleFocued = (document.activeElement === this.consoleFrame);
         frameInfo.hideConsole();
@@ -28,7 +31,12 @@ class ConsoleMode {
             }
         }
     }
-    onKeyEvent(key, frameInfo) {
+    onInvoking(cmd, frameInfo) {
+        return true;
+    }
+    onDropKeys(dropKeys) {
+    }
+    onNonConsumed(key) {
         return true;
     }
     onMessageEvent(msg, frameInfo) {

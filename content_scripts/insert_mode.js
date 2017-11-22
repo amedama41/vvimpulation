@@ -22,6 +22,9 @@ class InsertMode {
     getTarget() {
         return this.target;
     }
+    consume(key, frameInfo) {
+        return this.mapper.get(key);
+    }
     onReset() {
         try {
             this.target.classList.remove("wimpulation-input");
@@ -36,26 +39,7 @@ class InsertMode {
             console.warn("Some error occured:", Utils.errorString(e));
         }
     }
-    onKeyEvent(key, frameInfo) {
-        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
-        if (optCmd) {
-            this._invoke(optCmd, frameInfo);
-        }
-        if (cmd) {
-            return this._invoke(cmd, frameInfo);
-        }
-        if (consumed) {
-            return true;
-        }
-        if (key.length === 1
-            || key === "<Space>" || key === "<S-Space>"
-            || key === "<Backspace>" || key === "<Delete>"
-            || key === "<Enter>") {
-            this.target.undoStack.push(this.target.value);
-        }
-        return false;
-    }
-    _invoke(cmd, frameInfo) {
+    onInvoking(cmd, frameInfo) {
         this.inInvoking = true;
         try {
             return !invokeCommand(cmd, 0, frameInfo);
@@ -63,6 +47,17 @@ class InsertMode {
         finally {
             this.inInvoking = false;
         }
+    }
+    onDropKeys(dropKeys) {
+    }
+    onNonConsumed(key) {
+        if (key.length === 1
+            || key === "<Space>" || key === "<S-Space>"
+            || key === "<Backspace>" || key === "<Delete>"
+            || key === "<Enter>") {
+            this.target.undoStack.push(this.target.value);
+        }
+        return false;
     }
 }
 

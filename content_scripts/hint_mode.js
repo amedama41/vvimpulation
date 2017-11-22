@@ -24,14 +24,22 @@ class HintMode {
         const [span, elem] = this.hints[this.focusIndex];
         return elem;
     }
+    consume(key, frameInfo) {
+        frameInfo.postMessage({ command: "forwardHintKeyEvent", key });
+        return [true, undefined, undefined, undefined];
+    }
     onReset() {
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
             container.parentNode.removeChild(container);
         }
     }
-    onKeyEvent(key, frameInfo) {
-        frameInfo.postMessage({ command: "forwardHintKeyEvent", key: key });
+    onInvoking(cmd, frameInfo) {
+        return true;
+    }
+    onDropKeys(dropKeys) {
+    }
+    onNonConsumed(key) {
         return true;
     }
     onMessageEvent(msg, frameInfo) {

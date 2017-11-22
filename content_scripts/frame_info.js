@@ -126,10 +126,26 @@ class FrameInfo {
             return;
         }
 
-        if (this._mode.onKeyEvent(key, this)) {
+        if (this.handleKey(key)) {
             keyEvent.preventDefault();
             keyEvent.stopPropagation();
         }
+    }
+    handleKey(key) {
+        const [consumed, optCmd, cmd, dropKeys] = this._mode.consume(key, this);
+        if (optCmd) {
+            this._mode.onInvoking(optCmd, this);
+        }
+        else if (dropKeys) {
+            this._mode.onDropKeys(dropKeys);
+        }
+        if (cmd) {
+            return this._mode.onInvoking(cmd, this);
+        }
+        if (consumed) {
+            return true;
+        }
+        return this._mode.onNonConsumed(key);
     }
     handleMessage(msg) {
         return this._mode.onMessageEvent(msg, this);
