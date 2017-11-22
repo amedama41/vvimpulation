@@ -2,9 +2,14 @@
 
 let gFrameInfo = null;
 
+const NORMAL_MODE_START_MACRO = 0;
+const NORMAL_MODE_RECORD_MACRO = 1;
+
 class NormalMode {
     constructor(frameInfo, keyMap, keyList=undefined) {
         this.count = "0";
+        this.macroState = undefined;
+        this.isPlayMacro = false;
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
@@ -17,9 +22,49 @@ class NormalMode {
         return document.activeElement || document.documentElement;
     }
     consume(key, frameInfo) {
-        return this.mapper.get(key);
+        if (this.macroState === NORMAL_MODE_START_MACRO) {
+            if (/^[0-9a-zA-Z]$/.test(key)) {
+                this.macroState = NORMAL_MODE_RECORD_MACRO;
+                frameInfo.postMessage({ command: "startMacro", key });
+            }
+            else {
+                this.macroState = undefined;
+            }
+            return [true, undefined, undefined, undefined];
+        }
+        if (this.isPlayMacro) {
+            this.isPlayMacro = false;
+            if (/^[0-9a-zA-Z@]$/.test(key)) {
+                frameInfo.postMessage({ command: "playMacro", key });
+            }
+            return [true, undefined, undefined, undefined];
+        }
+        const [consumed, optCmd, cmd, dropKeys] = this.mapper.get(key);
+        if (!consumed) {
+            if (key === "q") {
+                if (this.macroState === undefined) {
+                    this.macroState = NORMAL_MODE_START_MACRO;
+                }
+                if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
+                    this.macroState = undefined;
+                    frameInfo.postMessage({ command: "stopMacro" });
+                }
+                return [true, optCmd, cmd, dropKeys];
+            }
+            if (key === "@") {
+                this.isPlayMacro = true;
+                return [true, optCmd, cmd, dropKeys];
+            }
+        }
+        if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
+            frameInfo.postMessage({ command: "recordMacro", key });
+        }
+        return [consumed, optCmd, cmd, dropKeys];
     }
-    onReset() {
+    onReset(frameInfo) {
+        if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
+            frameInfo.postMessage({ command: "stopMacro" });
+        }
     }
     onInvoking(cmdName, frameInfo) {
         const count = parseInt(this.count, 10);
@@ -38,9 +83,31 @@ class NormalMode {
         }
         return true;
     }
+    onMessageEvent(msg, frameInfo) {
+        switch (msg.command) {
+            case "startMacro":
+                this.macroState = NORMAL_MODE_RECORD_MACRO;
+                break;
+            case "stopMacro":
+                this.macroState = undefined;
+                break;
+            case "playMacro":
+                frameInfo.handleKey(msg.key);
+                break;
+            default:
+                console.warn("Unknown command:", msg.command);
+                break;
+        }
+    }
 }
 
 class MessageCommand {
+    static normalModeCommand(msg) {
+        if (!gFrameInfo.isCurrentModeClass(NormalMode)) {
+            return Promise.reject('no normal mode');
+        }
+        return gFrameInfo.handleMessage(msg.data);
+    }
     static collectHint(msg) {
         const winArea = msg.area || {
             top: 0, left: 0,

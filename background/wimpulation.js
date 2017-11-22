@@ -595,7 +595,113 @@ class Command {
         }
         tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
     }
+
+    static startMacro(msg, sender, tabInfo) {
+        gMacro.start(msg.key, tabInfo);
+    }
+    static recordMacro(msg, sender, tabInfo) {
+        gMacro.record(msg.key);
+    }
+    static stopMacro(msg, sender, tabInfo) {
+        gMacro.stop(true);
+    }
+    static playMacro(msg, sender, tabInfo) {
+        gMacro.play(msg.key, sender.frameId, tabInfo);
+    }
 }
+class MacroManager {
+    constructor() {
+        this.registerMap = new Map();
+        this.recordRegister = undefined;
+        this.recordKeyList = undefined;
+        this.recordTabInfo = undefined;
+        this.playKeyList = undefined;
+        this.previousPlayRegister = undefined;
+    }
+    start(register, tabInfo) {
+        if (this.recordRegister) {
+            this.stop(true);
+        }
+        if (/[A-Z]/.test(register)) {
+            register = register.toLowerCase();
+            this.recordKeyList = this.registerMap.get(register) || [];
+        }
+        else {
+            this.recordKeyList = [];
+        }
+        this.recordRegister = register;
+        this.recordTabInfo = tabInfo;
+        this.recordTabInfo.forEachPort((port, id) => {
+            port.sendMessage({
+                command: "normalModeCommand", data: { command: "startMacro" }
+            });
+        });
+    }
+    stop(sendStopMessage) {
+        if (!this.recordRegister) {
+            return;
+        }
+        this.registerMap.set(this.recordRegister, this.recordKeyList);
+        if (sendStopMessage) {
+            this.recordTabInfo.forEachPort((port, id) => {
+                port.sendMessage({
+                    command: "normalModeCommand", data: { command: "stopMacro" }
+                });
+            });
+        }
+        this.recordRegister = undefined;
+        this.recordKeyList = undefined;
+        this.recordTabInfo = undefined;
+    }
+    record(key) {
+        if (this.recordKeyList) {
+            this.recordKeyList.push(key);
+        }
+        else {
+            console.warn("Not start macro");
+        }
+    }
+    play(register, frameId, tabInfo) {
+        if (this.playKeyList) {
+            return; // Prevent recursive macro playing.
+        }
+        if (register === "@") {
+            if (!this.previousPlayRegister) {
+                return;
+            }
+            register = this.previousPlayRegister;
+        }
+        else {
+            if (/[A-Z]/.test(register)) {
+                register = register.toLowerCase();
+            }
+            this.previousPlayRegister = register;
+        }
+        this.playKeyList = this.registerMap.get(register);
+        if (!this.playKeyList) {
+            return;
+        }
+        const sendKey = (index) => {
+            if (index == this.playKeyList.length) {
+                this.playKeyList = undefined;
+                return;
+            }
+            tabInfo.sendMessage(frameId, {
+                command: "normalModeCommand",
+                data: { command: "playMacro", key: this.playKeyList[index] }
+            }).then(() => {
+                sendKey(index + 1);
+            }).catch(() => {
+                this.playKeyList = undefined;
+            });
+        };
+        sendKey(0);
+    }
+    isRecord(tabId) {
+        return (this.recordTabInfo && this.recordTabInfo.id === tabId);
+    }
+}
+const gMacro = new MacroManager();
 
 function changeHintMode(tabInfo, idList, hintMode) {
     if (idList.length === 0) {
@@ -654,6 +760,9 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 });
 browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
     gTabInfoMap.delete(tabId);
+    if (gMacro.isRecord(tabId)) {
+        gMacro.stop(false);
+    }
 });
 
 browser.runtime.onMessage.addListener(invokeCommand);
@@ -732,6 +841,9 @@ function invokeCommand(msg, sender) {
 }
 function cleanupFrameInfo(tabId, frameId, port, error) {
     console.debug(`Port(${tabId}-${frameId}) is disconnected: ${error}`);
+    if (gMacro.isRecord(tabId)) {
+        gMacro.stop(false);
+    }
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         if (frameId === 0) {
