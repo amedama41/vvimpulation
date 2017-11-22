@@ -401,7 +401,8 @@ gExCommandMap.makeCommand("undoWindow",
             ];
         });
     });
-gExCommandMap.makeCommand("showOptions", (args, tab) => {
+gExCommandMap.makeCommand("options", (args, tab) => {
     browser.runtime.openOptionsPage();
+    return Promise.resolve(true);
 });
 
