@@ -62,11 +62,9 @@ class Completer {
         let [orgValue, candidateStart, type, candidates] = this.candidateInfo;
         this.container.innerHTML = "";
         if (value.startsWith(orgValue)) {
-            const keywords = value.substr(candidateStart).split(/\s+/);
-            const filter = ([d, i]) => keywords.every((k) =>
-                    d.toString().includes(k) || i.includes(k));
-            const matchCandidates =
-                (needFilter ? candidates.filter(filter) : candidates);
+            const matchCandidates = (needFilter
+                ? Completer._filter(candidates, value.substr(candidateStart))
+                : candidates);
             this.container.appendChild(
                 createCandidateList(matchCandidates));
             const prefix = orgValue.substr(0, candidateStart);
@@ -122,6 +120,13 @@ class Completer {
         if (itemRect.bottom > containerRect.bottom) {
             container.scrollBy(0, itemRect.bottom - containerRect.bottom);
         }
+    }
+    static _filter(candidates, value) {
+        const keywords = value.split(/\s+/).map((v) => v.toLowerCase());
+        return candidates.filter((item) => {
+            item = item.map((v) => v.toLowerCase());
+            return keywords.every((k) => (item.some((v) => v.includes(k))));
+        });
     }
 }
 
