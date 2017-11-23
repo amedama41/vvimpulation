@@ -3,6 +3,13 @@
     "name": "VVimpulation",
     "version": "0.1",
 
+    "description": "Provides keyboard navigation like Vim.",
+
+    "icons": {
+        "48": "icons/icon.svg",
+        "96": "icons/icon.svg"
+    },
+
     "permissions": [
         "clipboardRead",
         "clipboardWrite",
