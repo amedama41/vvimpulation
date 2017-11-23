@@ -1,8 +1,9 @@
 'use strict';
 
 class ExCommand {
-    constructor(name, proc, completion = undefined) {
+    constructor(name, description, proc, completion = undefined) {
         this.name = name;
+        this.description = description;
         this.proc = proc;
         this.completion = completion;
     }
@@ -15,9 +16,6 @@ class ExCommand {
         }
         return this.completion(value, tab);
     }
-    toString() {
-        return this.name;
-    }
 }
 
 class ExCommandMap {
@@ -27,8 +25,8 @@ class ExCommandMap {
     addCommand(cmd) {
         this.cmdMap.set(cmd.name, cmd);
     }
-    makeCommand(name, proc, completion) {
-        this.addCommand(new ExCommand(name, proc, completion));
+    makeCommand(name, description, proc, completion) {
+        this.addCommand(new ExCommand(name, description, proc, completion));
     }
     execCommand(inputCmd, tab) {
         const args = inputCmd.trim().split(/\s/);
@@ -45,8 +43,10 @@ class ExCommandMap {
             const cmds = ExCommandMap.getCandidateCommands(
                 match[2], this.cmdMap);
             const cmdStart = match[1].length;
-            return Promise.resolve(
-                [value, cmdStart, 0, cmds.map((cmd) => cmd.toString())]);
+            return Promise.resolve([
+                value, cmdStart, 1,
+                cmds.map((cmd) => [cmd.name, cmd.description])
+            ]);
         }
         else {
             const cmdName = match[2];
@@ -98,7 +98,7 @@ function getHistory(value, tab) {
         return [0, 1, historyItems.map((item) => [item.url, item.title])];
     });
 }
-gExCommandMap.makeCommand("open", (args, tab) => {
+gExCommandMap.makeCommand("open", "Open link in current tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
@@ -109,7 +109,7 @@ gExCommandMap.makeCommand("open", (args, tab) => {
     browser.tabs.update(tab.id, { url: url });
     return Promise.resolve(true);
 }, getHistory);
-gExCommandMap.makeCommand("tabopen", (args, tab) => {
+gExCommandMap.makeCommand("tabopen", "Open link in new tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
@@ -120,7 +120,7 @@ gExCommandMap.makeCommand("tabopen", (args, tab) => {
     browser.tabs.create({ url: url, index: tab.index + 1, active: true });
     return Promise.resolve(true);
 }, getHistory);
-gExCommandMap.makeCommand("private", (args, tab) => {
+gExCommandMap.makeCommand("private", "Open link in private window", (args, tab) => {
     if (args.length === 0) {
         args.push("about:blank");
     }
@@ -132,8 +132,9 @@ gExCommandMap.makeCommand("private", (args, tab) => {
     return Promise.resolve(false); // always reject to avoid adding to history
 }, getHistory);
 class SearchCommand {
-    constructor(name, useNewTab) {
+    constructor(name, description, useNewTab) {
         this.name = name;
+        this.description = description;
         this.useNewTab = useNewTab;
         this.cmdMap = new Map();
         this.defaultCmd = null;
@@ -268,15 +269,14 @@ class SearchCommand {
         }
         return [candidates[0], null];
     }
-    toString() {
-        return this.name;
-    }
 }
-const gSearchCommand = new SearchCommand("search", false);
-const gTabSearchCommand = new SearchCommand("tabsearch", true);
+const gSearchCommand =
+    new SearchCommand("search", "Search keyword in current tab", false);
+const gTabSearchCommand =
+    new SearchCommand("tabsearch", "Search keyword in new tab", true);
 gExCommandMap.addCommand(gSearchCommand);
 gExCommandMap.addCommand(gTabSearchCommand);
-gExCommandMap.makeCommand("buffer", (args, tab) => {
+gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
@@ -294,7 +294,7 @@ gExCommandMap.makeCommand("buffer", (args, tab) => {
             ([index, title]) => title.includes(value))
     ]);
 });
-gExCommandMap.makeCommand("download", (args, tab) => {
+gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
     return browser.downloads.search({}).then((dlItems) => {
         if (!tab.incognito) {
             dlItems = dlItems.filter((item) => !item.incognito);
@@ -337,7 +337,7 @@ gExCommandMap.makeCommand("download", (args, tab) => {
         })];
     });
 });
-gExCommandMap.makeCommand("history", (args, tab) => {
+gExCommandMap.makeCommand("history", "Show history items", (args, tab) => {
     return Promise.resolve(true);
 }, (value, tab) => {
     return browser.history.search({
@@ -346,7 +346,7 @@ gExCommandMap.makeCommand("history", (args, tab) => {
         return [0, 1, historyItems.map((item) => [item.url, item.title])];
     });
 });
-gExCommandMap.makeCommand("undoTab",
+gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
     (args, tab) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
@@ -373,7 +373,7 @@ gExCommandMap.makeCommand("undoTab",
         });
     });
 
-gExCommandMap.makeCommand("undoWindow",
+gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
     (args, tab) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
@@ -401,7 +401,7 @@ gExCommandMap.makeCommand("undoWindow",
             ];
         });
     });
-gExCommandMap.makeCommand("options", (args, tab) => {
+gExCommandMap.makeCommand("options", "Open option page", (args, tab) => {
     browser.runtime.openOptionsPage();
     return Promise.resolve(true);
 });
