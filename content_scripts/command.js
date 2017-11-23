@@ -84,6 +84,7 @@ const COMMAND_DESCRIPTIONS = {
     incrementFrameURL: {},
     decrementFrameURL: {},
     yankFrameURL: {},
+    yankFrameTitle: {},
     showFrameURL: {},
 
     /** Commands for page zoom manipulation **/
@@ -141,6 +142,7 @@ const COMMAND_DESCRIPTIONS = {
     smartOpen: {},
     smartOpenInTab: {},
     yankCurrentURL: { topFrame: true },
+    yankPageTitle: { topFrame: true },
     repeatLastCommand: {},
     showLastMessage: { topFrame: true },
     ignore: {},
