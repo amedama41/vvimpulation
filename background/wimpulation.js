@@ -620,12 +620,15 @@ class Command {
 }
 class MacroManager {
     constructor() {
-        this.registerMap = new Map();
+        this.registerMap = {};
         this.recordRegister = undefined;
         this.recordKeyList = undefined;
         this.recordTabInfo = undefined;
         this.playKeyList = undefined;
         this.previousPlayRegister = undefined;
+        browser.storage.local.get({ registers: {} }).then(({ registers }) => {
+            this.registerMap = registers;
+        });
     }
     start(register, tabInfo) {
         if (this.recordRegister) {
@@ -633,7 +636,7 @@ class MacroManager {
         }
         if (/[A-Z]/.test(register)) {
             register = register.toLowerCase();
-            this.recordKeyList = this.registerMap.get(register) || [];
+            this.recordKeyList = this.registerMap[register] || [];
         }
         else {
             this.recordKeyList = [];
@@ -648,7 +651,8 @@ class MacroManager {
         if (!this.recordRegister) {
             return;
         }
-        this.registerMap.set(this.recordRegister, this.recordKeyList);
+        this.registerMap[this.recordRegister] = this.recordKeyList;
+        browser.storage.local.set({ registers: this.registerMap });
         if (sendStopMessage) {
             this.recordTabInfo.forEachPort((port, id) => {
                 forwardModeCommand(port, "NORMAL", { command: "stopMacro" });
@@ -682,7 +686,7 @@ class MacroManager {
             }
             this.previousPlayRegister = register;
         }
-        this.playKeyList = this.registerMap.get(register);
+        this.playKeyList = this.registerMap[register];
         if (!this.playKeyList) {
             return;
         }
