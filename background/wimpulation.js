@@ -89,6 +89,14 @@ class TabInfo {
         }
         return port.sendMessage(msg);
     }
+    forwardModeCommand(frameId, mode, data) {
+        const port = this.frameInfoMap.get(frameId);
+        if (!port) {
+            return Promise.reject(
+                `port ${this.id}-${frameId} is already disconnected`);
+        }
+        return forwardModeCommand(port, mode, data);
+    }
     setConsolePort(port) {
         this.consolePort = port;
     }
@@ -104,6 +112,9 @@ class TabInfo {
             this.consolePort = undefined;
         }
     }
+}
+function forwardModeCommand(port, mode, data) {
+    return port.sendMessage({ command: "forwardModeCommand", mode, data });
 }
 
 function postAllFrame(msg) {
@@ -154,7 +165,7 @@ class HintMode {
     applyFilter(filter, sender, tabInfo) {
         const msg = { command: "applyFilter", filter };
         tabInfo.forEachPort((port, id) => {
-            HintMode._forward(port, msg);
+            forwardModeCommand(port, "HINT", msg);
         });
     }
     stopFilter(result, filter, sender, tabInfo) {
@@ -189,8 +200,8 @@ class HintMode {
             handleError);
     }
     startFilter(tabInfo) {
-        HintMode._forwardHintCommand(
-            tabInfo, 0, { command: "startFilter", filter: this.filter });
+        tabInfo.forwardModeCommand(
+            0, "HINT", { command: "startFilter", filter: this.filter });
     }
     toggleAutoFocus() {
         this.autoFocus = !this.autoFocus;
@@ -200,7 +211,7 @@ class HintMode {
         const promiseList = [];
         const msg = { command: "getFilterResult" };
         tabInfo.forEachPort((port, id) => {
-            promiseList.push(HintMode._forward(port, msg));
+            promiseList.push(forwardModeCommand(port, "HINT", msg));
         });
         Promise.all(promiseList).then((resultList) => {
             const filterResult = resultList.reduce((filterResult, result) => {
@@ -212,8 +223,9 @@ class HintMode {
             this.filterIndexMap = indexMap;
             this.currentIndex = 0;
             tabInfo.forEachPort((port, id) => {
-                HintMode._forward(
-                    port, { command: "setHintLabel", labelList: labelMap[id] });
+                forwardModeCommand(port, "HINT", {
+                    command: "setHintLabel", labelList: labelMap[id]
+                });
             });
         });
     }
@@ -226,8 +238,8 @@ class HintMode {
             const currentFrameId =
                 this.idList[this.filterIndexMap[this.currentIndex]];
             const count = cmd.count || 0;
-            HintMode._forwardHintCommand(
-                tabInfo, currentFrameId, { command, count });
+            tabInfo.forwardModeCommand(
+                currentFrameId, "HINT", { command, count });
         }
     }
     _handleDigit(num, tabInfo) {
@@ -245,22 +257,15 @@ class HintMode {
         const nextIndex = this.filterIndexMap[nextDisplayedIndex];
         const nextId = this.idList[nextIndex];
         if (prevId !== nextId) {
-            HintMode._forwardHintCommand(
-                tabInfo, prevId,
+            tabInfo.forwardModeCommand(
+                prevId, "HINT",
                 { command: "blurHintLink", autoFocus: this.autoFocus });
         }
-        HintMode._forwardHintCommand(tabInfo, nextId, {
+        tabInfo.forwardModeCommand(nextId, "HINT", {
             command: "focusHintLink",
             index: nextIndex, autoFocus: this.autoFocus
         });
         this.currentIndex = nextDisplayedIndex;
-    }
-    static _forward(port, data) {
-        return port.sendMessage({ command: "forwardHintCommand", data });
-    }
-    static _forwardHintCommand(tabInfo, frameId, msg) {
-        return tabInfo.sendMessage(
-            frameId, { command: "forwardHintCommand", data: msg });
     }
     static _makePattern(type, url) {
         const hintPattern = gOptions.hintPattern;
@@ -635,9 +640,7 @@ class MacroManager {
         this.recordRegister = register;
         this.recordTabInfo = tabInfo;
         this.recordTabInfo.forEachPort((port, id) => {
-            port.sendMessage({
-                command: "normalModeCommand", data: { command: "startMacro" }
-            });
+            forwardModeCommand(port, "NORMAL", { command: "startMacro" });
         });
     }
     stop(sendStopMessage) {
@@ -647,9 +650,7 @@ class MacroManager {
         this.registerMap.set(this.recordRegister, this.recordKeyList);
         if (sendStopMessage) {
             this.recordTabInfo.forEachPort((port, id) => {
-                port.sendMessage({
-                    command: "normalModeCommand", data: { command: "stopMacro" }
-                });
+                forwardModeCommand(port, "NORMAL", { command: "stopMacro" });
             });
         }
         this.recordRegister = undefined;
@@ -689,9 +690,8 @@ class MacroManager {
                 this.playKeyList = undefined;
                 return;
             }
-            tabInfo.sendMessage(frameId, {
-                command: "normalModeCommand",
-                data: { command: "playMacro", key: this.playKeyList[index] }
+            tabInfo.forwardModeCommand(frameId, "NORMAL", {
+                command: "playMacro", key: this.playKeyList[index]
             }).then(() => {
                 sendKey(index + 1);
             }).catch(() => {

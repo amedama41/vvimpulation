@@ -65,6 +65,9 @@ class VisualModeBase {
 }
 
 class VisualMode extends VisualModeBase {
+    static getModeName() {
+        return "VISUAL";
+    }
     init(selection) {}
     destroy(selection) {
         selection.collapseToEnd();
@@ -75,6 +78,9 @@ class VisualMode extends VisualModeBase {
 }
 
 class CaretMode extends VisualModeBase {
+    static getModeName() {
+        return "CARET";
+    }
     init(selection) {
         const node = this.selection.focusNode;
         const offset = this.selection.focusOffset;

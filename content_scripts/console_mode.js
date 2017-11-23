@@ -13,6 +13,9 @@ class ConsoleMode {
                 frameInfo.changeMode("NORMAL");
             });
     }
+    static getModeName() {
+        return "CONSOLE";
+    }
     getTarget() {
         return this.consoleFrame;
     }

@@ -151,8 +151,8 @@ class FrameInfo {
     handleMessage(msg) {
         return this._mode.onMessageEvent(msg, this);
     }
-    isCurrentModeClass(modeClass) {
-        return this._mode instanceof modeClass;
+    currentMode() {
+        return this._mode.constructor.getModeName();
     }
     setKeyMapping(keyMapping) {
         this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);

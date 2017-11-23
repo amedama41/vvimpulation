@@ -17,6 +17,9 @@ class NormalMode {
             }, 0);
         }
     }
+    static getModeName() {
+        return "NORMAL";
+    }
     getTarget() {
         // activeElement may be null (e.g. about:blank)
         return document.activeElement || document.documentElement;
@@ -105,9 +108,11 @@ class NormalMode {
 }
 
 class MessageCommand {
-    static normalModeCommand(msg) {
-        if (!gFrameInfo.isCurrentModeClass(NormalMode)) {
-            return Promise.reject('no normal mode');
+    static forwardModeCommand(msg) {
+        const mode = gFrameInfo.currentMode();
+        if (msg.mode !== mode) {
+            return Promise.reject(
+                `Different mode (current: ${mode}, expected: ${msg.mode})`);
         }
         return gFrameInfo.handleMessage(msg.data);
     }
@@ -117,12 +122,6 @@ class MessageCommand {
             bottom: window.innerHeight, right: window.innerWidth
         };
         return makeHints(msg.pattern, msg.type, winArea, gFrameInfo);
-    }
-    static forwardHintCommand(msg) {
-        if (!gFrameInfo.isCurrentModeClass(HintMode)) {
-            return Promise.reject('no hint mode');
-        }
-        return gFrameInfo.handleMessage(msg.data);
     }
     static hideConsole(msg) {
         return gFrameInfo.handleMessage(msg);

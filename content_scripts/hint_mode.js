@@ -20,6 +20,9 @@ class HintMode {
         target.appendChild(container);
         this.indexMap = indexMap;
     }
+    static getModeName() {
+        return "HINT";
+    }
     getTarget() {
         const [span, elem] = this.hints[this.focusIndex];
         return elem;

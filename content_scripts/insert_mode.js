@@ -19,6 +19,9 @@ class InsertMode {
             frameInfo.changeMode("NORMAL");
         }, true);
     }
+    static getModeName() {
+        return "INSERT";
+    }
     getTarget() {
         return this.target;
     }
