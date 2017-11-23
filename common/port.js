@@ -101,13 +101,9 @@ class Port {
             try {
                 return Promise.resolve(handler(msg.msg, this.port.sender));
             }
-            catch (e if e instanceof Error) {
-                // can not send an Error object by postMessage.
-                return Promise.reject(
-                    e.message + ' ' + e.fileName + ':' + e.lineNumber);
-            }
             catch (e) {
-                return Promise.reject(e);
+                // can not send an Error object by postMessage.
+                return Promise.reject(Port._toString(e));
             }
         });
         Promise.race(promiseList).then((response) => {
