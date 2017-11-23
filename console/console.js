@@ -1,39 +1,27 @@
 'use strict';
 
-function createCandidateList(candidates, type) {
+function createCandidateList(candidates) {
     const margin = document.createTextNode(" ");
-    if (type === 0) {
-        return candidates.reduce((fragment, data) => {
-            const li = document.createElement("li");
-            const span = document.createElement("span");
-            span.textContent = data;
-            li.appendChild(margin.cloneNode(true));
-            li.appendChild(span);
-            fragment.appendChild(li);
-            return fragment;
-        }, document.createDocumentFragment());
-    }
-    else {
-        const sep = document.createElement("span");
-        sep.textContent = ":";
-        const dataNode = document.createElement("span");
-        dataNode.className = (type === 1 ? "ex_string_data" : "ex_number_data");
-        const infoNode = document.createElement("span");
-        infoNode.className = (type === 1 ? "ex_string_info" : "ex_number_info");
-        return candidates.reduce((fragment, [data, info]) => {
-            const li = document.createElement("li");
-            const span1 = dataNode.cloneNode(false);
-            span1.textContent = data;
-            const span2 = infoNode.cloneNode(false);
-            span2.textContent = info;
-            li.appendChild(margin.cloneNode(true));
-            li.appendChild(span1);
-            li.appendChild(sep.cloneNode(true));
-            li.appendChild(span2);
-            fragment.appendChild(li);
-            return fragment;
-        }, document.createDocumentFragment());
-    }
+    const sep = document.createElement("span");
+    sep.className = "candidate_separator"
+    sep.textContent = ":";
+    const dataNode = document.createElement("span");
+    dataNode.className = "candidate_data";
+    const infoNode = document.createElement("span");
+    infoNode.className = "candidate_info";
+    const li = document.createElement("li");
+    li.appendChild(margin.cloneNode(false));
+    li.appendChild(dataNode);
+    li.appendChild(sep);
+    li.appendChild(infoNode);
+
+    return candidates.reduce((fragment, [data, info]) => {
+        const item = li.cloneNode(true);
+        item.children[0].textContent = data;
+        item.children[2].textContent = info;
+        fragment.appendChild(item);
+        return fragment;
+    }, document.createDocumentFragment());
 }
 class Completer {
     constructor(container) {
@@ -57,6 +45,7 @@ class Completer {
     setCandidates(candidateInfo) {
         this.candidates = [];
         let [orgValue, candidateStart, type, candidates] = candidateInfo;
+        this.container.className = type;
         this.candidateInfo = candidateInfo;
         this.update(orgValue, false);
     }
@@ -74,19 +63,15 @@ class Completer {
         this.container.innerHTML = "";
         if (value.startsWith(orgValue)) {
             const keywords = value.substr(candidateStart).split(/\s+/);
-            const filter = (type === 0 ?
-                (c) => keywords.every((k) => c.includes(k)) :
-                ([d, i]) => keywords.every((k) =>
-                    d.toString().includes(k) || i.includes(k)));
+            const filter = ([d, i]) => keywords.every((k) =>
+                    d.toString().includes(k) || i.includes(k));
             const matchCandidates =
                 (needFilter ? candidates.filter(filter) : candidates);
             this.container.appendChild(
-                createCandidateList(matchCandidates, type));
+                createCandidateList(matchCandidates));
             const prefix = orgValue.substr(0, candidateStart);
             this.candidates =
-                [ value ].concat(matchCandidates.map((c) => {
-                    return type === 0 ? prefix + c : prefix + c[0];
-                }));
+                [ value ].concat(matchCandidates.map((c) => prefix + c[0]));
             this.selectIndex = 0;
         }
         else {

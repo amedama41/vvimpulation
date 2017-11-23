@@ -44,7 +44,7 @@ class ExCommandMap {
                 match[2], this.cmdMap);
             const cmdStart = match[1].length;
             return Promise.resolve([
-                value, cmdStart, 1,
+                value, cmdStart, "string",
                 cmds.map((cmd) => [cmd.name, cmd.description])
             ]);
         }
@@ -95,7 +95,9 @@ function getHistory(value, tab) {
         text: value, maxResults: 40,
         startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
     }).then((historyItems) => {
-        return [0, 1, historyItems.map((item) => [item.url, item.title])];
+        return [
+            0, "string", historyItems.map((item) => [item.url, item.title])
+        ];
     });
 }
 gExCommandMap.makeCommand("open", "Open link in current tab", (args, tab) => {
@@ -177,7 +179,8 @@ class SearchCommand {
                 SearchCommand.getCandidateSubcmds(match[1], this.cmdMap);
             if (cmds.length !== 0) {
                 return [
-                    0, 1, cmds.map(([name, urls]) => [name, urls.searchUrl])
+                    0, "string",
+                    cmds.map(([name, urls]) => [name, urls.searchUrl])
                 ];
             }
             if (this.defaultCmd) {
@@ -189,7 +192,7 @@ class SearchCommand {
         else {
             const [result, reason] = this.getSubCmd(match[1]);
             if (!result) { // ambiguous
-                return [0, 0, []];
+                return [0, "string", []];
             }
             suggest = result[1].suggest;
             // if reason is not null (use default), head of value is not command
@@ -197,7 +200,7 @@ class SearchCommand {
         }
 
         if (!suggest) {
-            return [0, 0, []];
+            return [0, "string", []];
         }
 
         const url = suggest.url.replace("%s", value.substr(argStart));
@@ -228,7 +231,7 @@ class SearchCommand {
                         });
                 }
             })
-            .then((result) => [argStart, 0, result]);
+            .then((result) => [argStart, "noinfo", result.map((e) => [e, ""])]);
     }
     static _getJSONSuggests(json, path, decode) {
         // TODO
@@ -290,7 +293,7 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
     });
 }, (value, tab) => {
     return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => [
-        0, 2, tabs.map((tab, index) => [index, tab.title]).filter(
+        0, "number", tabs.map((tab, index) => [index, tab.title]).filter(
             ([index, title]) => title.includes(value))
     ]);
 });
@@ -320,20 +323,20 @@ gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
         if (!tab.incognito) {
             dlItems = dlItems.filter((item) => !item.incognito);
         }
-        return [0, 0, dlItems.map((item) => {
-            let str = item.filename;
+        return [0, "string", dlItems.map((item) => {
+            let info = "";
             switch (item.state) {
                 case browser.downloads.State.IN_PROGRESS:
                 case browser.downloads.State.INTERRUPTED:
-                    str += ` ${item.estimatedEndTime || "--"}`;
-                    str += ` ${item.bytesReceived}`;
-                    str += `/${item.totalBytes || "--"}`;
+                    info += `${item.estimatedEndTime || "--"}`;
+                    info += ` ${item.bytesReceived}`;
+                    info += `/${item.totalBytes || "--"}`;
                     break;
                 case browser.downloads.State.COMPLETE:
-                    str += " complete";
+                    info += "complete";
                     break;
             }
-            return str;
+            return [item.filename, info];
         })];
     });
 });
@@ -343,7 +346,9 @@ gExCommandMap.makeCommand("history", "Show history items", (args, tab) => {
     return browser.history.search({
         text: value, maxResults: 1000, startTime: 0
     }).then((historyItems) => {
-        return [0, 1, historyItems.map((item) => [item.url, item.title])];
+        return [
+            0, "string", historyItems.map((item) => [item.url, item.title])
+        ];
     });
 });
 gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
@@ -369,7 +374,10 @@ gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter(
                 (s) => s.tab && s.tab.windowId === tab.windowId);
-            return [0, 2, tabSessions.map((s, index) => [index, s.tab.title])];
+            return [
+                0, "number",
+                tabSessions.map((s, index) => [index, s.tab.title])
+            ];
         });
     });
 
@@ -395,7 +403,7 @@ gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             return [
-                0, 2, winSessions.map((s, index) => [
+                0, "number", winSessions.map((s, index) => [
                     index, s.window.title || s.window.tabs[0].title
                 ])
             ];

@@ -35,17 +35,23 @@ body > * {
     overflow: hidden;
     box-sizing: border-box;
 }
-span.ex_string_data {
+#ex_candidates.noinfo span.candidate_separator {
+    display: none;
+}
+#ex_candidates.noinfo span.candidate_info {
+    display: none;
+}
+#ex_candidates.string span.candidate_data {
     width: 45%;
 }
-span.ex_string_info {
+#ex_candidates.string span.candidate_info {
     width: 50%;
     color: yellow;
 }
-span.ex_number_data {
+#ex_candidates.number span.candidate_data {
     width: 5%;
 }
-span.ex_number_info {
+#ex_candidates.number span.candidate_info {
     width: 90%;
     color: yellow;
 }
