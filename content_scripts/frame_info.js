@@ -104,6 +104,7 @@ class FrameInfo {
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
         this._lastMessage = "";
+        this._fixedMessage = undefined;
         if (this.isTopFrame()) {
             this._createConsoleFrame();
         }
@@ -214,6 +215,9 @@ class FrameInfo {
                     clearTimeout(this._consoleTimerId);
                     this._consoleTimerId = 0;
                 }
+                if (this._fixedMessage) {
+                    this._fixedMessage = undefined;
+                }
                 this._consoleFrame.classList.add("wimpulation-show-console");
                 this._consoleFrame.focus();
                 return true;
@@ -227,7 +231,8 @@ class FrameInfo {
     }
     showMessage(message) {
         if (!this.isTopFrame()) {
-            this._port.postMessage({ command: "showMessage", message });
+            this._port.postMessage(
+                { command: "showMessage", message, fixed: false });
             return;
         }
         if (!this._consoleFrame) {
@@ -243,10 +248,34 @@ class FrameInfo {
                 this._consoleFrame.classList.add(CLASS_NAME);
                 this._consoleTimerId = setTimeout(() => {
                     if (this._consoleTimerId !== 0) {
-                        this._consoleFrame.classList.remove(CLASS_NAME);
                         this._consoleTimerId = 0;
+                        if (this._fixedMessage) {
+                            this.showFixedMessage(this._fixedMessage);
+                        }
+                        else {
+                            this._consoleFrame.classList.remove(CLASS_NAME);
+                        }
                     }
                 }, 3000);
+            });
+    }
+    showFixedMessage(message) {
+        if (!this.isTopFrame()) {
+            this._port.postMessage(
+                { command: "showMessage", message, fixed: true });
+            return;
+        }
+        if (!this._consoleFrame) {
+            return;
+        }
+        const CLASS_NAME = "wimpulation-show-console";
+        this._fixedMessage = message;
+        this._sendConsoleMessage({ command: "setMessage", message })
+            .then((result) => {
+                if (this._consoleTimerId !== 0) {
+                    clearTimeout(this._consoleTimerId);
+                }
+                this._consoleFrame.classList.add(CLASS_NAME);
             });
     }
     showLastMessage() {
@@ -261,6 +290,14 @@ class FrameInfo {
             return;
         }
         this._consoleFrame.classList.remove("wimpulation-show-console");
+    }
+    hideFixedMessage() {
+        if (!this.isTopFrame()) {
+            this._port.postMessage({ command: "hideFixedMessage" });
+            return;
+        }
+        this._fixedMessage = undefined;
+        this.hideConsole();
     }
 
     _createMode(mode, data=undefined) {

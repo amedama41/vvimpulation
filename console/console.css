@@ -11,9 +11,11 @@ body * {
     padding: 0px;
     border: none;
     color: white;
-    background-color: dimgray;
     font-family: monospace;
     font-size: large;
+}
+body > * {
+    background-color: rgba(69, 69, 69, 0.6);
 }
 
 #ex_candidates {
@@ -24,7 +26,8 @@ body * {
 }
 #ex_candidates > li.ex_select_candidate,
 #ex_candidates > li.ex_select_candidate > span {
-    background-color: gray;
+    background-color: lightgray;
+    color: black;
 }
 #ex_candidates > li > span {
     display: inline-block;
@@ -63,6 +66,7 @@ span.ex_number_info {
 #ex_input {
     box-sizing: border-box;
     width: calc(100% - 1em);
+    background-color: transparent;
 }
 
 #ex_message {

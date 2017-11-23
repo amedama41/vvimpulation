@@ -26,6 +26,7 @@ class NormalMode {
             if (/^[0-9a-zA-Z]$/.test(key)) {
                 this.macroState = NORMAL_MODE_RECORD_MACRO;
                 frameInfo.postMessage({ command: "startMacro", key });
+                frameInfo.showFixedMessage("recording @" + key.toLowerCase());
             }
             else {
                 this.macroState = undefined;
@@ -48,6 +49,7 @@ class NormalMode {
                 if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
                     this.macroState = undefined;
                     frameInfo.postMessage({ command: "stopMacro" });
+                    frameInfo.hideFixedMessage();
                 }
                 return [true, optCmd, cmd, dropKeys];
             }
@@ -64,6 +66,7 @@ class NormalMode {
     onReset(frameInfo) {
         if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
             frameInfo.postMessage({ command: "stopMacro" });
+            frameInfo.hideFixedMessage();
         }
     }
     onInvoking(cmdName, frameInfo) {
@@ -166,7 +169,15 @@ class MessageCommand {
         }
     }
     static showMessage(msg) {
-        gFrameInfo.showMessage(msg.message);
+        if (msg.fixed) {
+            gFrameInfo.showFixedMessage(msg.message);
+        }
+        else {
+            gFrameInfo.showMessage(msg.message);
+        }
+    }
+    static hideFixedMessage(msg) {
+        gFrameInfo.hideFixedMessage();
     }
 };
 

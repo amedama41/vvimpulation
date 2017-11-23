@@ -567,6 +567,9 @@ class Command {
     static getLastCommand(msg, sender, tabInfo) {
         return gLastCommand;
     }
+    static hideFixedMessage(msg, sender, tabInfo) {
+        tabInfo.sendMessage(0, msg);
+    }
 
     static execCommand(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {
