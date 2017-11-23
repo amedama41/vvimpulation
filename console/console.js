@@ -124,7 +124,7 @@ class Completer {
     static _filter(candidates, value) {
         const keywords = value.split(/\s+/).map((v) => v.toLowerCase());
         return candidates.filter((item) => {
-            item = item.map((v) => v.toLowerCase());
+            item = item.map((v) => v.toString().toLowerCase());
             return keywords.every((k) => (item.some((v) => v.includes(k))));
         });
     }
