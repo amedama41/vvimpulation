@@ -708,6 +708,11 @@ class MacroManager {
     isRecord(tabId) {
         return (this.recordTabInfo && this.recordTabInfo.id === tabId);
     }
+    getRegisters() {
+        return Object.keys(this.registerMap)
+            .sort()
+            .map((register) => [register, this.registerMap[register]]);
+    }
 }
 const gMacro = new MacroManager();
 

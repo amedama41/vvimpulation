@@ -405,4 +405,11 @@ gExCommandMap.makeCommand("options", "Open option page", (args, tab) => {
     browser.runtime.openOptionsPage();
     return Promise.resolve(true);
 });
+gExCommandMap.makeCommand(
+    "registers", "Show the contents of all registers",
+    (args, tab) => {
+        return Promise.resolve(
+            gMacro.getRegisters().map(
+                ([register, keyList]) => `"${register}: ${keyList.join("")}`));
+    });
 
