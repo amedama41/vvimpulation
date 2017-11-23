@@ -61,12 +61,11 @@ class HintMode {
                 return this._getFilterResult(msg, frameInfo);
             case "setHintLabel":
                 return this._setHintLabel(msg, frameInfo);
+            case "invoke":
+                return invokeCommand(msg.commandName, msg.count, frameInfo);
             default:
-                if (this.focusIndex === undefined) {
-                    return;
-                }
-                const count = msg.count || 0;
-                return invokeCommand(msg.command, count, frameInfo);
+                console.warn("Unknown command:", msg.command);
+                break;
         }
     }
 

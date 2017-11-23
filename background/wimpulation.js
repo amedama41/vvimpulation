@@ -239,7 +239,8 @@ class HintMode {
                 this.idList[this.filterIndexMap[this.currentIndex]];
             const count = cmd.count || 0;
             tabInfo.forwardModeCommand(
-                currentFrameId, "HINT", { command, count });
+                currentFrameId, "HINT",
+                { command: "invoke", commandName: command, count });
         }
     }
     _handleDigit(num, tabInfo) {
