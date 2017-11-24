@@ -437,6 +437,18 @@ Loop: ${video.loop}`
             elem, "mouseout", 1, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
     }
+    static mousemove(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const rect = elem.getBoundingClientRect();
+        count = Math.max(count, 1);
+        const timerId = setInterval(() => {
+            emulateMouseEvent(
+                elem, "mousemove", rect, false, false, false, false);
+            if (--count === 0) {
+                clearInterval(timerId);
+            }
+        }, 1000);
+    }
 
     /**
      * Commands for select element manipulation

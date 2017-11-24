@@ -180,6 +180,7 @@ const DEFAULT_OPTIONS = {
             "m<C-D>": { command: "mousedown", count: 1 },
             "mi": { command: "mousein", count: 0 },
             "mo": { command: "mouseout", count: 0 },
+            "mm": { command: "mousemove", count: 5 },
             "e": { command: "pressEnter", count: 0 },
             "E": { command: "pressEnter", count: 2 },
             "<C-E>": { command: "pressEnter", count: 1 },
