@@ -477,8 +477,9 @@ Loop: ${video.loop}`
     static deleteWordBackward(count, frameInfo) {
         _editElement(frameInfo, (elem) => DomUtils.deleteWordBackward(elem));
     }
-    static deleteToBeggingOfLine(count, frameInfo) {
-        _editElement(frameInfo, (elem) => DomUtils.deleteToBeggingOfLine(elem));
+    static deleteToBeginningOfLine(count, frameInfo) {
+        _editElement(
+            frameInfo, (elem) => DomUtils.deleteToBeginningOfLine(elem));
     }
     static deleteToEndOfLine(count, frameInfo) {
         _editElement(frameInfo, (elem) => DomUtils.deleteToEndOfLine(elem));

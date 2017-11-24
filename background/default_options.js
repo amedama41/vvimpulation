@@ -114,7 +114,7 @@ const DEFAULT_OPTIONS = {
             "<C-H>": "deleteCharBackward",
             "<C-W>": "deleteWordBackward",
             "<C-K>": "deleteToEndOfLine",
-            "<C-U>": "deleteToBeggingOfLine",
+            "<C-U>": "deleteToBeginningOfLine",
             "<C-F>": "charNext",
             "<C-B>": "charPrevious",
             "<C-A>": "beginLine",

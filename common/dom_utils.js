@@ -127,7 +127,7 @@ return (class Edit {
         }
         return true;
     }
-    static deleteToBeggingOfLine(elem) {
+    static deleteToBeginningOfLine(elem) {
         const start = elem.selectionStart;
         const end = elem.selectionEnd;
         if (start !== end) {

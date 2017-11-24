@@ -298,8 +298,8 @@ class ConsoleCommand {
     static deleteWordBackward(mode) {
         DomUtils.deleteWordBackward(mode.getTarget());
     }
-    static deleteToBeggingOfLine(mode) {
-        DomUtils.deleteToBeggingOfLine(mode.getTarget());
+    static deleteToBeginningOfLine(mode) {
+        DomUtils.deleteToBeginningOfLine(mode.getTarget());
     }
     static deleteToEndOfLine(mode) {
         DomUtils.deleteToEndOfLine(mode.getTarget());
@@ -311,7 +311,7 @@ const CONSOLE_CMD_MAP = Utils.toPreparedCmdMap({
     "<C-M>": "execute",
     "<C-H>": "deleteCharBackward",
     "<C-W>": "deleteWordBackward",
-    "<C-U>": "deleteToBeggingOfLine",
+    "<C-U>": "deleteToBeginningOfLine",
     "<C-K>": "deleteToEndOfLine",
     "<C-I>": "getCandidate",
     "<Tab>": "getCandidate",
