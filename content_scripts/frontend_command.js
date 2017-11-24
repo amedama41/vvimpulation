@@ -821,8 +821,8 @@ function emulateMouseEvent(
     if (rect === 1) {
         rect = related.getBoundingClientRect();
     }
-    const x = Math.max((rect.left + rect.right) / 2, 0);
-    const y = Math.max((rect.top + rect.bottom) / 2, 0);
+    const x = Math.random() * (rect.right - rect.left + 1) + rect.left;
+    const y = Math.random() * (rect.bottom - rect.top + 1) + rect.top;
     const mouseEvent = new MouseEvent(type, {
         bubbles: true,
         cancelable: true,
