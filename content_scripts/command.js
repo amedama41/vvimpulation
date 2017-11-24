@@ -103,6 +103,7 @@ const COMMAND_DESCRIPTIONS = {
     /** Commands for mouse emulation **/
     mouseclick: { description: "Generate a mouse click event for the target" },
     mousedown: { description: "Generate a mouse down event for the target" },
+    mouseup: { description: "Generate a mouse up event for the target" },
     mousein: { description: "Generate a mouse in event for the target" },
     mouseout: { description: "Generate a mouse out event for the target" },
     mousemove: { description: "Generate a mouse move event on the target for N seconds" },

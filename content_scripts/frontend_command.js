@@ -419,6 +419,11 @@ Loop: ${video.loop}`
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
     }
+    static mouseup(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
+        emulateMouseEvent(elem, "mouseup", 0, ctrl, alt, shift, meta);
+    }
     static mousein(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const rect = elem.getBoundingClientRect();
