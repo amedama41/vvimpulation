@@ -350,6 +350,11 @@ Loop: ${video.loop}`
             frameInfo.showMessage("Yank current frame URL");
         }
     }
+    static yankFrameHost(count, frameInfo) {
+        if (DomUtils.setToClipboard(location.host)) {
+            frameInfo.showMessage("Yank current frame host");
+        }
+    }
     static yankFrameTitle(count, frameInfo) {
         if (DomUtils.setToClipboard(document.title)) {
             frameInfo.showMessage("Yank current frame title");
@@ -616,6 +621,11 @@ Loop: ${video.loop}`
     static yankCurrentURL(count, frameInfo) {
         if (DomUtils.setToClipboard(location.href)) {
             frameInfo.showMessage("Yank current page URL");
+        }
+    }
+    static yankPageHost(count, frameInfo) {
+        if (DomUtils.setToClipboard(location.host)) {
+            frameInfo.showMessage("Yank current page host");
         }
     }
     static yankPageTitle(count, frameInfo) {

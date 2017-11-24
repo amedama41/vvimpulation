@@ -84,6 +84,7 @@ const COMMAND_DESCRIPTIONS = {
     incrementFrameURL: { description: "Increment the last number in the current frame URL" },
     decrementFrameURL: { description: "Decrement the last number in the current frame URL" },
     yankFrameURL: { description: "Yank the current frame URL" },
+    yankFrameHost: { description: "Yank the current frame host" },
     yankFrameTitle: { description: "Yank the current frame title" },
     showFrameURL: { description: "Show information of the current frame" },
 
@@ -142,6 +143,7 @@ const COMMAND_DESCRIPTIONS = {
     smartOpen: { description: "Open the target in the current page or click the target" },
     smartOpenInTab: { description: "Open the target in a new page or click the target" },
     yankCurrentURL: { topFrame: true, description: "Yank the current page URL" },
+    yankPageHost: { topFrame: true, description: "Yank the current page host" },
     yankPageTitle: { topFrame: true, description: "Yank the current page title" },
     repeatLastCommand: { description: "Run the latest invoked command" },
     showLastMessage: { topFrame: true, description: "Show the latest message" },
