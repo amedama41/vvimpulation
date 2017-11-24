@@ -6,8 +6,8 @@
     "description": "Provides keyboard navigation like Vim.",
 
     "icons": {
-        "48": "icons/icon.svg",
-        "96": "icons/icon.svg"
+        "48": "icons/icon48.png",
+        "96": "icons/icon96.png"
     },
 
     "permissions": [
