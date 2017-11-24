@@ -203,8 +203,11 @@ class HintMode {
         tabInfo.forwardModeCommand(
             0, "HINT", { command: "startFilter", filter: this.filter });
     }
-    toggleAutoFocus() {
+    toggleAutoFocus(tabInfo) {
         this.autoFocus = !this.autoFocus;
+        const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
+        tabInfo.sendMessage(
+            0, { command: "showMessage", message, fixed: false });
     }
 
     _fixFilter(tabInfo) {
