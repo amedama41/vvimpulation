@@ -1,3 +1,5 @@
+'use strict';
+
 window.addEventListener("DOMContentLoaded", (e) => {
     const optionMgr = new Options();
     browser.storage.local.get("options").then(({ options }) => {
