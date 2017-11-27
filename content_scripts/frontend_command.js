@@ -134,16 +134,7 @@ class FrontendCommand {
      * Commands for focus manipulation
      */
     static focusTopFrame(count, frameInfo) {
-        const a = document.createElement("a");
-        a.style.position = "absolute";
-        a.style.top = window.scrollY + "px";
-        a.style.left = window.scrollX + "px";
-        a.href = "";
-        const target = document.documentElement;
-        target.appendChild(a);
-        a.focus();
-        a.blur();
-        target.removeChild(a);
+        document.documentElement.focus();
     }
     static focusin(count, frameInfo) {
         const elem = frameInfo.getTarget();
