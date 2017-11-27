@@ -150,15 +150,20 @@ function isOutOfArea(rect, winArea) {
         || rect.left > winArea.right
         || rect.right < winArea.left);
 }
-function getRectsInAncestorVisibleArea(elem, rectList) {
+function hasSpaceInParent(style) {
+    return ((style.position === "static" || style.position === "sticky")
+        && style.float === "none");
+}
+function getRectsInAncestorVisibleArea(elem, rectList, style) {
     const root = document.documentElement;
-    if (elem === root) {
-        return rectList;
-    }
     const body = document.body;
-    for (let p = elem.parentNode; p !== root && p !== body; p = p.parentNode) {
-        const style = window.getComputedStyle(p, null);
-        if (style.overflow === "visible") continue;
+    let p = elem;
+    while (p !== root && p !== body && hasSpaceInParent(style)) {
+        p = p.parentNode;
+        style = window.getComputedStyle(p, null);
+        if (style.overflow === "visible") {
+            continue;
+        }
         rectList = getRectsInArea(rectList, p.getBoundingClientRect());
         if (rectList.length === 0) {
             return [];
@@ -246,7 +251,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
         }
         if (!isAreaElem) {
             // if some of ancestors are scrollable, elem may not be displayed.
-            rectList = getRectsInAncestorVisibleArea(elem, rectList)
+            rectList = getRectsInAncestorVisibleArea(elem, rectList, style)
             if (rectList.length === 0) {
                 continue;
             }
