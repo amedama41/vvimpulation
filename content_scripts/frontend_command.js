@@ -134,7 +134,8 @@ class FrontendCommand {
      * Commands for focus manipulation
      */
     static focusTopFrame(count, frameInfo) {
-        document.documentElement.focus();
+        // Suppress scroll when an html element has height 100%.
+        DomUtils.fixedFocus(document.documentElement);
     }
     static focusin(count, frameInfo) {
         const elem = frameInfo.getTarget();
