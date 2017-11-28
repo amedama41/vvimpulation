@@ -160,7 +160,8 @@ class SearchCommand {
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        const url = result[1].searchUrl.replace("%s", args.join(" "));
+        const url = result[1].searchUrl.replace(
+            "%s", encodeURIComponent(args.join(" ")));
         if (this.useNewTab) {
             browser.tabs.create(
                 { url: url, index: tab.index + 1, active: true });
@@ -203,7 +204,8 @@ class SearchCommand {
             return [0, "string", []];
         }
 
-        const url = suggest.url.replace("%s", value.substr(argStart));
+        const url = suggest.url.replace(
+            "%s", encodeURIComponent(value.substr(argStart)));
         const headers = new Headers();
         switch (suggest.type) {
             case "json":
