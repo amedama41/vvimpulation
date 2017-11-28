@@ -104,8 +104,10 @@ const COMMAND_DESCRIPTIONS = {
     mouseclick: { description: "Generate a mouse click event for the target" },
     mousedown: { description: "Generate a mouse down event for the target" },
     mouseup: { description: "Generate a mouse up event for the target" },
-    mousein: { description: "Generate a mouse in event for the target" },
-    mouseout: { description: "Generate a mouse out event for the target" },
+    mouseinTo: { description: "Generate a mouse in event from an element to the target" },
+    mouseinFrom: { description: "Generate a mouse in event from the target to an element" },
+    mouseoutTo: { description: "Generate a mouse out event from an element to the target" },
+    mouseoutFrom: { description: "Generate a mouse out event from the target to an element" },
     mousemove: { description: "Generate a mouse move event on the target for N seconds" },
 
     /** Commands for select manipulation **/

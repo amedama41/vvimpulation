@@ -415,20 +415,38 @@ Loop: ${video.loop}`
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
         emulateMouseEvent(elem, "mouseup", 0, ctrl, alt, shift, meta);
     }
-    static mousein(count, frameInfo) {
+    static mouseinTo(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
+        const rect = elem.getBoundingClientRect();
         emulateMouseEvent(
             elem, "mouseover", 0, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
     }
-    static mouseout(count, frameInfo) {
+    static mouseinFrom(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        const rect = elem.getBoundingClientRect();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
+        const rect = body.getBoundingClientRect();
+        emulateMouseEvent(
+            body, "mouseover", 0, false, false, false, false, elem);
+        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+    }
+    static mouseoutTo(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const doc = elem.ownerDocument;
+        const body = doc.body || doc.documentElement;
+        const rect = elem.getBoundingClientRect();
+        emulateMouseEvent(
+            body, "mouseout", 1, false, false, false, false, elem);
+        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+    }
+    static mouseoutFrom(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const doc = elem.ownerDocument;
+        const body = doc.body || doc.documentElement;
+        const rect = body.getBoundingClientRect();
         emulateMouseEvent(
             elem, "mouseout", 1, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
