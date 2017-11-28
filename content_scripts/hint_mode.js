@@ -151,20 +151,25 @@ function isOutOfArea(rect, winArea) {
         || rect.right < winArea.left);
 }
 function hasSpaceInParent(style) {
-    return ((style.position === "static" || style.position === "sticky")
+    return ((style.position !== "absolute" && style.position !== "fixed")
         && style.float === "none");
 }
 function getRectsInAncestorVisibleArea(elem, rectList, style) {
     const root = document.documentElement;
     const body = document.body;
-    let p = elem;
-    while (p !== root && p !== body && hasSpaceInParent(style)) {
-        p = p.parentNode;
-        style = window.getComputedStyle(p, null);
+    // If an html element has height 100%, the size of documentElement and body
+    // are different from the visual size. So, ignore them.
+    if (elem === root || elem === body) {
+        return rectList;
+    }
+    for (let ancestor = elem.parentNode;
+        ancestor !== root && ancestor !== body && hasSpaceInParent(style);
+        ancestor = ancestor.parentNode) {
+        style = window.getComputedStyle(ancestor, null);
         if (style.overflow === "visible") {
             continue;
         }
-        rectList = getRectsInArea(rectList, p.getBoundingClientRect());
+        rectList = getRectsInArea(rectList, ancestor.getBoundingClientRect());
         if (rectList.length === 0) {
             return [];
         }
