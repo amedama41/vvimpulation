@@ -419,45 +419,43 @@ Loop: ${video.loop}`
         const elem = frameInfo.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
-        const rect = elem.getBoundingClientRect();
+        const coord = getRandomCoord(elem);
         emulateMouseEvent(
-            elem, "mouseover", 0, false, false, false, false, body);
-        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+            elem, "mouseover", coord, false, false, false, false, body);
+        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseinFrom(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
-        const rect = body.getBoundingClientRect();
+        const coord = getRandomCoord(body);
         emulateMouseEvent(
-            body, "mouseover", 0, false, false, false, false, elem);
-        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+            body, "mouseover", coord, false, false, false, false, elem);
+        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseoutTo(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
-        const rect = elem.getBoundingClientRect();
+        const coord = getRandomCoord(elem);
         emulateMouseEvent(
-            body, "mouseout", 1, false, false, false, false, elem);
-        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+            body, "mouseout", coord, false, false, false, false, elem);
+        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseoutFrom(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const doc = elem.ownerDocument;
         const body = doc.body || doc.documentElement;
-        const rect = body.getBoundingClientRect();
+        const coord = getRandomCoord(body);
         emulateMouseEvent(
-            elem, "mouseout", 1, false, false, false, false, body);
-        emulateMouseEvent(elem, "mousemove", rect, false, false, false, false);
+            elem, "mouseout", coord, false, false, false, false, body);
+        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mousemove(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        const rect = elem.getBoundingClientRect();
         count = Math.max(count, 1);
         const timerId = setInterval(() => {
-            emulateMouseEvent(
-                elem, "mousemove", rect, false, false, false, false);
+            emulateMouseEvent(elem, "mousemove", 0, false, false, false, false);
             if (--count === 0) {
                 clearInterval(timerId);
             }
@@ -839,16 +837,16 @@ function emulateClick(target, ctrl, alt, shift, meta) {
 }
 
 function emulateMouseEvent(
-    target, type, rect,
+    target, type, coord,
     ctrl=false, alt=false, shift=false, meta=false, related=null) {
-    if (rect === 0) {
-        rect = target.getBoundingClientRect();
+    if (coord === 0) {
+        coord = getRandomCoord(target);
     }
-    if (rect === 1) {
-        rect = related.getBoundingClientRect();
+    if (coord === 1) {
+        coord = getRandomCoord(related);
     }
-    const x = Math.random() * (rect.right - rect.left + 1) + rect.left;
-    const y = Math.random() * (rect.bottom - rect.top + 1) + rect.top;
+    const x = coord[0];
+    const y = coord[1];
     const mouseEvent = new MouseEvent(type, {
         bubbles: true,
         cancelable: true,
@@ -864,6 +862,13 @@ function emulateMouseEvent(
         relatedTarget: related
     });
     target.dispatchEvent(mouseEvent);
+}
+
+function getRandomCoord(elem) {
+    const rect = elem.getBoundingClientRect();
+    const x = Math.random() * (rect.right - rect.left + 1) + rect.left;
+    const y = Math.random() * (rect.bottom - rect.top + 1) + rect.top;
+    return [x, y];
 }
 
 function emulateEnter(target, type, ctrl, alt, shift, meta) {
