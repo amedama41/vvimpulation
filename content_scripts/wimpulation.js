@@ -151,16 +151,28 @@ class MessageCommand {
         window.focus();
     }
     static find(msg) {
-        // reset selection in order to search from head or end of page.
-        if (msg.reset) {
-            const selection = window.getSelection();
-            // getSelection for a window with display none style can return null
-            if (selection) {
-                selection.removeAllRanges();
-            }
+        const { keyword, caseSensitive, backward, reset } = msg;
+        const selection = window.getSelection();
+        // getSelection for a window with display none style can return null
+        if (!selection) {
+            return false;
         }
+        // reset selection in order to search from head or end of page.
+        if (reset) {
+            selection.removeAllRanges();
+        }
+
+        const current = (backward ? selection.focusNode : selection.anchorNode);
+
         try {
-            return window.find(msg.keyword, msg.caseSensitive, msg.backward);
+            const result = window.find(keyword, caseSensitive, backward);
+            // If find match value of input or textarea, selection is clear
+            if (result && selection.anchorNode === null) {
+                const selectedElem = findSelectedEditableElement(
+                    current, keyword, caseSensitive, backward);
+                selection.setBaseAndExtent(selectedElem, 0, selectedElem, 0);
+            }
+            return result;
         }
         catch (e) {
             // some window (e.g. about:blank) can throw an exception
@@ -179,6 +191,45 @@ class MessageCommand {
         gFrameInfo.hideFixedMessage();
     }
 };
+
+function findSelectedEditableElement(current, key, caseSensitive, backward) {
+    const [boundary, elemList, positionBit] = ((boundary, elemList) => {
+        if (!boundary) {
+            const walker = document.createTreeWalker(
+                document.documentElement, NodeFilter.SHOW_TEXT);
+            if (backward) {
+                boundary = walker.lastChild();
+            }
+            else {
+                boundary = walker.firstChild();
+            }
+        }
+        if (backward) {
+            elemList.reverse();
+            return [boundary, elemList, Node.DOCUMENT_POSITION_PRECEDING];
+        }
+        else {
+            return [boundary, elemList, Node.DOCUMENT_POSITION_FOLLOWING];
+        }
+    })(current, Array.from(document.querySelectorAll(
+        "input[type='text'], input:not([type]), input[type='search'], " +
+        "input[type='tel'], input[type='url'], input[type='email'], " +
+        "input[type='datetime-local'], input[type='month'], " +
+        "input[type='week'], textarea"
+    )));
+    return elemList.find((elem) => {
+        if (elem.getClientRects().length === 0 ||
+            !(boundary.compareDocumentPosition(elem) & positionBit)) {
+            return false;
+        }
+        if (caseSensitive) {
+            return elem.value.includes(key);
+        }
+        else {
+            return elem.value.toLowerCase().includes(key.toLowerCase());
+        }
+    });
+}
 
 function init() {
     const reconnectTimeout = 500;
