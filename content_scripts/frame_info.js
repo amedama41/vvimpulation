@@ -229,17 +229,19 @@ class FrameInfo {
                 return Promise.reject(error);
             });
     }
-    showMessage(message) {
+    showMessage(message, saveMessage=true) {
         if (!this.isTopFrame()) {
             this._port.postMessage(
-                { command: "showMessage", message, fixed: false });
+                { command: "showMessage", message, saveMessage, fixed: false });
             return;
         }
         if (!this._consoleFrame) {
             return;
         }
         const CLASS_NAME = "wimpulation-show-console";
-        this._lastMessage = message;
+        if (saveMessage) {
+            this._lastMessage = message;
+        }
         this._sendConsoleMessage({ command: "setMessage", message })
             .then((result) => {
                 if (this._consoleTimerId !== 0) {

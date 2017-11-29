@@ -184,7 +184,7 @@ class MessageCommand {
             gFrameInfo.showFixedMessage(msg.message);
         }
         else {
-            gFrameInfo.showMessage(msg.message);
+            gFrameInfo.showMessage(msg.message, msg.saveMessage);
         }
     }
     static hideFixedMessage(msg) {

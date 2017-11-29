@@ -206,8 +206,9 @@ class HintMode {
     toggleAutoFocus(tabInfo) {
         this.autoFocus = !this.autoFocus;
         const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
-        tabInfo.sendMessage(
-            0, { command: "showMessage", message, fixed: false });
+        tabInfo.sendMessage(0, {
+            command: "showMessage", message, saveMessage: false, fixed: false
+        });
     }
 
     _fixFilter(tabInfo) {
