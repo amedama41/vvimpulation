@@ -131,8 +131,11 @@ class MessageCommand {
         invokeCommand(data.command, data.count, gFrameInfo);
     }
     static collectFrameId(msg) {
-        const frameIdList = Array.from(window.frames)
-            .map((frame) => gFrameInfo.getChildFrameId(frame))
+        // Collect only displayed frame ids.
+        const frameIdList =
+            Array.from(document.querySelectorAll("frame, iframe, object"))
+            .filter((frame) => frame.getClientRects().length !== 0)
+            .map((frame) => gFrameInfo.getChildFrameId(frame.contentWindow))
             .filter((frameId) => frameId !== undefined);
         return Promise.all(
             frameIdList.map((frameId) => gFrameInfo.sendMessage({
@@ -143,12 +146,14 @@ class MessageCommand {
             [ gFrameInfo.getSelfFrameId() ]));
     }
     static focusFrame(msg) {
-        if (document.body instanceof HTMLFrameSetElement &&
-            window.frames.length > 0) {
-            window.frames[0].focus();
-            return;
-        }
         window.focus();
+        // Keep focus in this frame, not in a child frame.
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLIFrameElement
+            || activeElement instanceof HTMLFrameElement
+            || activeElement instanceof HTMLObjectElement) {
+            document.documentElement.focus();
+        }
     }
     static find(msg) {
         const { keyword, caseSensitive, backward, reset } = msg;
