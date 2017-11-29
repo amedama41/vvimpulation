@@ -152,7 +152,7 @@ class MessageCommand {
         if (activeElement instanceof HTMLIFrameElement
             || activeElement instanceof HTMLFrameElement
             || activeElement instanceof HTMLObjectElement) {
-            document.documentElement.focus();
+            DomUtils.fixedFocus(document.documentElement);
         }
     }
     static find(msg) {
