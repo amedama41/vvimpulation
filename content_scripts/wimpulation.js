@@ -236,6 +236,59 @@ function findSelectedEditableElement(current, key, caseSensitive, backward) {
     });
 }
 
+function insertFocusRule(sheet) {
+    const cssRules = sheet.cssRules;
+    for (let i = 0; i < cssRules.length; ++i) {
+        const rule = cssRules[i];
+        const selector = rule.selectorText;
+        if (!selector || !selector.includes(":hover")) {
+            continue;
+        }
+        const newSelector = selector.replace(/:hover\b/g, ":focus-within");
+        i = sheet.insertRule(`${newSelector} {${rule.style.cssText}}`, i + 1);
+    }
+}
+function killHover() {
+    const promiseList = Array.from(document.styleSheets).map((sheet) => {
+        try {
+            sheet.cssRules; // check CORS.
+            return Promise.resolve(sheet);
+        }
+        catch (e) {
+            return new Promise((resolve, reject) => {
+                const originalLink = sheet.ownerNode;
+                const link = originalLink.cloneNode(true);
+                link.crossOrigin = "anonymous";
+                link.addEventListener("load", (e) => {
+                    resolve(e.target.sheet);
+                    originalLink.parentNode.removeChild(originalLink);
+                }, { once: true });
+                link.addEventListener("error", (e) => {
+                    console.warn("can't load ", e.target.href);
+                    link.parentNode.removeChild(link);
+                    resolve(null);
+                }, { once: true });
+                originalLink.parentNode.insertBefore(link, originalLink);
+            });
+        }
+    });
+    Promise.all(promiseList).then((sheetList) => {
+        sheetList.forEach((sheet) => {
+            if (!sheet) {
+                return;
+            }
+            try {
+                insertFocusRule(sheet);
+            }
+            catch (e) {
+                console.error(Utils.errorString(e), sheet.href);
+            }
+        });
+    });
+}
+
+window.addEventListener("load", (e) => killHover(), { once: true });
+
 function init() {
     const reconnectTimeout = 500;
     connectToBackGround(reconnectTimeout);
