@@ -231,7 +231,8 @@ function makeHints(pattern, type, winArea, frameInfo) {
     const selfFrameId = frameInfo.getSelfFrameId();
 
     const scrX = win.scrollX, scrY = win.scrollY;
-    const elems = win.document.querySelectorAll("frame, iframe, " + pattern);
+    const elems = win.document.querySelectorAll(
+        "frame, iframe, object[type='text/html'], " + pattern);
     const isFocusType = (type === 'focus');
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
@@ -250,7 +251,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
             continue;
         }
         const tagName = elem.tagName.toUpperCase();
-        const isFrame = tagName.endsWith("FRAME");
+        const isFrame = !!elem.contentWindow;
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
@@ -286,7 +287,8 @@ function makeHints(pattern, type, winArea, frameInfo) {
             };
             idOrPromiseList.push(frameInfo.sendMessage({
                 command: "collectHint",
-                type: type, area: frameArea, frameId: frameId, url: elem.src
+                type: type, area: frameArea, frameId: frameId,
+                url: elem.src || elem.data || ""
             }));
         }
     }
