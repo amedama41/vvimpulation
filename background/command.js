@@ -90,15 +90,21 @@ class ExCommandMap {
 }
 const gExCommandMap = new ExCommandMap();
 
-function getHistory(value, tab) {
-    return browser.history.search({
-        text: value, maxResults: 40,
-        startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
-    }).then((historyItems) => {
-        return [
-            0, "string", historyItems.map((item) => [item.url, item.title])
-        ];
-    });
+function getHistoryAndBookmark(value, tab) {
+    return Promise.all([
+        browser.history.search({
+            text: value, maxResults: 40,
+            startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
+        }).then((historyItems) => {
+            return historyItems.map((item) => [item.url, "H:" + item.title])
+        }),
+        browser.bookmarks.search({ query: value }).then((treeNodeList) => {
+            return treeNodeList
+                .filter((node) => (node.type === "bookmark" &&
+                    !node.url.startsWith("place:")))
+                .map((node) => [node.url, "B:" + node.title]);
+        })
+    ]).then(([history, bookmark]) => [0, "string", history.concat(bookmark)]);
 }
 gExCommandMap.makeCommand("open", "Open link in current tab", (args, tab) => {
     if (args.length === 0) {
@@ -110,7 +116,7 @@ gExCommandMap.makeCommand("open", "Open link in current tab", (args, tab) => {
     }
     browser.tabs.update(tab.id, { url: url });
     return Promise.resolve(true);
-}, getHistory);
+}, getHistoryAndBookmark);
 gExCommandMap.makeCommand("tabopen", "Open link in new tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
@@ -121,7 +127,7 @@ gExCommandMap.makeCommand("tabopen", "Open link in new tab", (args, tab) => {
     }
     browser.tabs.create({ url: url, index: tab.index + 1, active: true });
     return Promise.resolve(true);
-}, getHistory);
+}, getHistoryAndBookmark);
 gExCommandMap.makeCommand("private", "Open link in private window", (args, tab) => {
     if (args.length === 0) {
         args.push("about:blank");
@@ -132,7 +138,7 @@ gExCommandMap.makeCommand("private", "Open link in private window", (args, tab) 
     }
     browser.windows.create({ url: url, incognito: true });
     return Promise.resolve(false); // always reject to avoid adding to history
-}, getHistory);
+}, getHistoryAndBookmark);
 class SearchCommand {
     constructor(name, description, useNewTab) {
         this.name = name;
