@@ -97,6 +97,10 @@ class TabInfo {
         }
         return forwardModeCommand(port, mode, data);
     }
+    showMessage(message, saveMessage, fixed) {
+        this.sendMessage(
+            0, { command: "showMessage", message, saveMessage, fixed });
+    }
     setConsolePort(port) {
         this.consolePort = port;
     }
@@ -195,9 +199,11 @@ class HintMode {
             command: "collectHint",
             type: type,
             pattern: HintMode._makePattern(type, tabInfo.tab.url),
-        }).then(
-            (hintsInfoList) => changeHintMode(tabInfo, hintsInfoList, this),
-            handleError);
+        }).then((hintsInfoList) => {
+            changeHintMode(tabInfo, hintsInfoList, this);
+        }).catch((e) => {
+            handleError(tabInfo, "reconstruct", e);
+        });
     }
     startFilter(tabInfo) {
         tabInfo.forwardModeCommand(
@@ -206,9 +212,7 @@ class HintMode {
     toggleAutoFocus(tabInfo) {
         this.autoFocus = !this.autoFocus;
         const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
-        tabInfo.sendMessage(0, {
-            command: "showMessage", message, saveMessage: false, fixed: false
-        });
+        tabInfo.showMessage(message, false, false);
     }
 
     _fixFilter(tabInfo) {
@@ -307,45 +311,41 @@ class HintMode {
     }
 }
 
-function handleError(error) {
-    if (error === undefined) {
-        error = 'some error occured';
-    }
-    console.error(Utils.errorString(error));
-    browser.notifications.create("wimpulation-error-notification", {
-        type: "basic",
-        message: error.toString(),
-        title: "wimpulation error",
-    });
+function handleError(tabInfo, func, error) {
+    console.error(`${func}: ${Utils.errorString(error)}`);
+    tabInfo.showMessage(
+        `${func} error (${(error || "some error occured").toString()})`,
+        true, false);
 }
 
 function selectTab(tabId, getIndex) {
-    browser.tabs.get(tabId).then((tab) => {
+    return browser.tabs.get(tabId).then((tab) => {
         return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => {
             const index = getIndex(tab.index, tabs.length);
             browser.tabs.update(tabs[index].id, { active: true });
         });
-    }, handleError);
+    });
 }
 
 function moveTab(tabId, distance, toLeft) {
-    browser.tabs.get(tabId).then((tab) => {
-        return browser.tabs.query({ pinned: tab.pinned, windowId: tab.windowId })
-            .then((tabs) => {
-                const cmpFunc = (toLeft
-                    ? (lhs, rhs) => rhs.index - lhs.index
-                    : (lhs, rhs) => lhs.index - rhs.index);
-                tabs.sort(cmpFunc);
-                const currIndex = tabs.findIndex((elem) => elem.id === tabId);
-                if (currIndex === -1) {
-                    console.warn("not found tab", tabId);
-                    return;
-                }
-                const newIdx = tabs[(currIndex + distance) % tabs.length].index;
-                browser.tabs.move(
-                    tabId, { windowId: tab.windowId, index: newIdx });
+    return browser.tabs.get(tabId).then((tab) => {
+        return browser.tabs.query({
+            pinned: tab.pinned, windowId: tab.windowId
+        }).then((tabs) => {
+            const cmpFunc = (toLeft
+                ? (lhs, rhs) => rhs.index - lhs.index
+                : (lhs, rhs) => lhs.index - rhs.index);
+            tabs.sort(cmpFunc);
+            const currIndex = tabs.findIndex((elem) => elem.id === tabId);
+            if (currIndex === -1) {
+                console.warn("not found tab", tabId);
+                return;
+            }
+            const newIdx = tabs[(currIndex + distance) % tabs.length].index;
+            return browser.tabs.move(
+                tabId, { windowId: tab.windowId, index: newIdx });
         });
-    }, handleError);
+    });
 }
 
 function findAllFrame(
@@ -406,11 +406,13 @@ class Command {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(
+            return findAllFrame(
                 tabInfo, keyword, index, frameIdList, caseSensitive, backward)
                 .then(([result, index]) => {
                     tabInfo.lastSearchInfo[3] = index;
                 });
+        }).catch((e) => {
+            handleError(tabInfo, "findNext", e);
         });
     }
     static findPrevious(msg, sender, tabInfo) {
@@ -420,45 +422,61 @@ class Command {
             return;
         }
         tabInfo.frameIdList((frameIdList) => {
-            findAllFrame(
+            return findAllFrame(
                 tabInfo, keyword, index, frameIdList, caseSensitive, !backward)
                 .then(([result, index]) => {
                     tabInfo.lastSearchInfo[3] = index;
                 });
+        }).catch((e) => {
+            handleError(tabInfo, "findPrevious", e);
         });
     }
 
     static nextTab(msg, sender, tabInfo) {
         const tab = sender.tab;
         const count = msg.count;
-        if (count === 0) {
-            selectTab(tab.id, (index, tabLen) => (index + 1) % tabLen);
-        }
-        else {
-            selectTab(
-                tab.id, (index, tabLen) => (count < tabLen) ?  count : index);
-        }
+        selectTab(
+            tab.id,
+            (count === 0
+                ? (index, tabLen) => (index + 1) % tabLen
+                : (index, tabLen) => (count < tabLen) ?  count : index)
+        ).catch((e) => {
+            handleError(tabInfo, "nextTab", e);
+        });
     }
     static previousTab(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
         selectTab(
             sender.tab.id,
-            (index, tabLen) => (index + tabLen - (count % tabLen)) % tabLen);
+            (index, tabLen) => (index + tabLen - (count % tabLen)) % tabLen
+        ).catch((e) => {
+            handleError(tabInfo, "previousTab", e);
+        });
     }
     static firstTab(msg, sender, tabInfo) {
-        selectTab(sender.tab.id, (index, tabLen) => 0);
+        selectTab(sender.tab.id, (index, tabLen) => 0).catch((e) => {
+            handleError(tabInfo, "firstTab", e);
+        });
     }
     static lastTab(msg, sender, tabInfo) {
-        selectTab(sender.tab.id, (index, tabLen) => tabLen - 1);
+        selectTab(sender.tab.id, (index, tabLen) => tabLen - 1).catch((e) => {
+            handleError(tabInfo, "lastTab", e);
+        });
     }
     static moveTabToLeft(msg, sender, tabInfo) {
-        moveTab(sender.tab.id, Math.max(msg.count, 1), true);
+        moveTab(sender.tab.id, Math.max(msg.count, 1), true).catch((e) => {
+            handleError(tabInfo, "moveTabToLeft", e);
+        });
     }
     static moveTabToRight(msg, sender, tabInfo) {
-        moveTab(sender.tab.id, Math.max(msg.count, 1), false);
+        moveTab(sender.tab.id, Math.max(msg.count, 1), false).catch((e) => {
+            handleError(tabInfo, "moveTabToRight", e);
+        });
     }
     static removeCurrentTab(msg, sender, tabInfo) {
-        browser.tabs.remove(sender.tab.id);
+        browser.tabs.remove(sender.tab.id).catch((e) => {
+            handleError(tabInfo, "removeCurrentTab", e);
+        });
     }
     static undoCloseTab(msg, sender, tabInfo) {
         browser.sessions.getRecentlyClosed().then((sessions) => {
@@ -468,47 +486,69 @@ class Command {
             }
             const tab = tabSessions[Math.min(msg.count, tabSessions.length - 1)];
             return browser.sessions.restore(tab.tab.sessionId);
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "undoCloseTab", e);
+        });
     }
     static duplicateTab(msg, sender, tabInfo) {
-        browser.tabs.duplicate(sender.tab.id);
+        browser.tabs.duplicate(sender.tab.id).catch((e) => {
+            handleError(tabInfo, "duplicateTab", e);
+        });
     }
     static openTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             return browser.tabs.create(
                 { index: tab.index + 1, windowId: tab.windowId });
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "openTab", e);
+        });
     }
     static removeCurrentWindow(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             return browser.windows.remove(tab.windowId);
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "removeCurrentWindow", e);
+        });
     }
     static reload(msg, sender, tabInfo) {
-        browser.tabs.reload(sender.tab.id);
+        browser.tabs.reload(sender.tab.id).catch((e) => {
+            handleError(tabInfo, "reload", e);
+        });
     }
     static reloadSkipCache(msg, sender, tabInfo) {
-        browser.tabs.reload(sender.tab.id, { bypassCache: true });
+        browser.tabs.reload(sender.tab.id, { bypassCache: true }).catch((e) => {
+            handleError(tabInfo, "reloadSkipCache", e);
+        });
     }
     static zoomIn(msg, sender, tabInfo) {
         const tabId = sender.tab.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
-            browser.tabs.setZoom(tabId, Math.min(factor + count / 10, 3));
-        }, handleError);
+            return browser.tabs.setZoom(
+                tabId, Math.min(factor + count / 10, 3));
+        }).catch((e) => {
+            handleError(tabInfo, "zoomIn", e);
+        });
     }
     static zoomOut(msg, sender, tabInfo) {
         const tabId = sender.tab.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
-            browser.tabs.setZoom(tabId, Math.max(factor - count / 10, 0.3));
-        }, handleError);
+            return browser.tabs.setZoom(
+                tabId, Math.max(factor - count / 10, 0.3));
+        }).catch((e) => {
+            handleError(tabInfo, "zoomOut", e);
+        });
     }
     static zoomReset(msg, sender, tabInfo) {
-        browser.tabs.setZoom(sender.tab.id, 0);
+        browser.tabs.setZoom(sender.tab.id, 0).catch((e) => {
+            handleError(tabInfo, "zoomReset", e);
+        });
     }
     static openLink(msg, sender, tabInfo) {
-        browser.tabs.update(sender.tab.id, { url: msg.url });
+        browser.tabs.update(sender.tab.id, { url: msg.url }).catch((e) => {
+            handleError(tabInfo, "openLink", e);
+        });
     }
     static openLinkInTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
@@ -517,14 +557,18 @@ class Command {
                 url: msg.url, openerTabId: tab.id,
                 index: tab.index + 1, active: active
             });
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "openLinkInTab", e);
+        });
     }
     static downloadLink(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
             return browser.downloads.download({
                 url: msg.url, incognito: tab.incognito, saveAs: true
             });
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "downloadLink", e);
+        });
     }
 
     static toHintMode(msg, sender, tabInfo) {
@@ -535,7 +579,9 @@ class Command {
             pattern: HintMode._makePattern(type, sender.tab.url),
         }).then((hintsInfoList) => {
             changeHintMode(tabInfo, hintsInfoList, new HintMode(type))
-        }, handleError);
+        }).catch((e) => {
+            handleError(tabInfo, "toHintMode", e);
+        });
     }
     static collectHint(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, {
@@ -845,7 +891,9 @@ browser.storage.local.get({
             mode: tabInfo.getMode(),
         });
     });
-}).catch(handleError);
+}).catch((error) => {
+    console.error(Utils.errorString(error || 'some error occured'));
+});
 function invokeCommand(msg, sender) {
     const tabInfo = gTabInfoMap.get(sender.tab.id);
     if (!tabInfo) {
