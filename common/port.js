@@ -42,7 +42,7 @@ class Port {
     sendMessage(msg) {
         const id = this.id;
         const replyPromise = new Promise((resolve, reject) => {
-            this.pendingTxnMap.set(id, [ resolve, reject, false ]);
+            this.pendingTxnMap.set(id, [ resolve, reject, false, msg.command ]);
         });
         this.port.postMessage({ type: 'request', id: id, msg: msg });
         this.id = (this.id + 1) % Number.MAX_SAFE_INTEGER;
@@ -119,7 +119,7 @@ class Port {
     _handleResponse(msg) {
         const pendingInfo = this.pendingTxnMap.get(msg.id);
         if (!pendingInfo) {
-            console.warn('', msg);
+            console.warn('no request for', msg.id, msg.command);
             return;
         }
         this.pendingTxnMap.delete(msg.id);
@@ -143,7 +143,7 @@ class Port {
     _checkTimeoutTxn() {
         this.pendingTxnMap.forEach((txn, id) => {
             if (txn[2]) {
-                console.warn(`request ${id} is timeout`);
+                console.warn(`request ${id} is timeout: ${txn[3]}`);
                 this.pendingTxnMap.delete(id);
             }
             else {
