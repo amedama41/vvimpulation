@@ -315,6 +315,13 @@ Loop: ${video.loop}`
             location.href = url;
         }
     }
+    static openSourceInFrame(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const url = getSource(elem);
+        if (url) {
+            location.href = url;
+        }
+    }
     static backFrame(count, frameInfo) {
         history.go(-Math.min(Math.max(count, 1), history.length - 1));
     }
@@ -366,6 +373,22 @@ Loop: ${video.loop}`
     static openLinkInTab(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const url = getLink(elem);
+        if (url) {
+            const active = (count === 0);
+            frameInfo.postMessage(
+                { command: 'openLinkInTab', url: url, active: active });
+        }
+    }
+    static openSource(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const url = getSource(elem);
+        if (url) {
+            frameInfo.postMessage({ command: 'openLink', url: url });
+        }
+    }
+    static openSourceInTab(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const url = getSource(elem);
         if (url) {
             const active = (count === 0);
             frameInfo.postMessage(

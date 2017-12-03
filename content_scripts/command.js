@@ -77,6 +77,7 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for current frame **/
     openLinkInFrame: { description: "Open a link in the current frame" },
+    openSourceInFrame: { description: "Open a source of the target in the current frame" },
     backFrame: { description: "Go backward in the current frame history" },
     forwardFrame: { description: "Go forward in the current frame history" },
     stopLoadFrame: { description: "Stop loading of the current frame" },
@@ -96,6 +97,8 @@ const COMMAND_DESCRIPTIONS = {
     /** Commands for link manipulation **/
     openLink: { description: "Open a link of target in the current tab" },
     openLinkInTab: { description: "Open a link of target in a new tab" },
+    openSource: { description: "Open a source of the target media in the current tab" },
+    openSourceInTab: { description: "Open a source of the target media in a new tab" },
     yankLink: { description: "Yank a link of the target" },
     downloadLink: { description: "Download a link of the target" },
     pressEnter: { description: "Generate a enter key press event for the target" },
