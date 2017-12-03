@@ -255,8 +255,11 @@ function killHover() {
             return Promise.resolve(sheet);
         }
         catch (e) {
+            const originalLink = sheet.ownerNode;
+            if (originalLink.href.startsWith("resource://")) {
+                return Promise.resolve(null);
+            }
             return new Promise((resolve, reject) => {
-                const originalLink = sheet.ownerNode;
                 const link = originalLink.cloneNode(true);
                 link.crossOrigin = "anonymous";
                 link.addEventListener("load", (e) => {
@@ -264,7 +267,7 @@ function killHover() {
                     originalLink.parentNode.removeChild(originalLink);
                 }, { once: true });
                 link.addEventListener("error", (e) => {
-                    console.warn("can't load ", e.target.href);
+                    console.warn("can't load ", e.target.href, location.href);
                     link.parentNode.removeChild(link);
                     resolve(null);
                 }, { once: true });
