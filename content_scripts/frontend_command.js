@@ -165,19 +165,15 @@ class FrontendCommand {
         const NEXT_KEYWORDS = [
             "次のページ", "次へ", "次ページ", "NEXT", ">>", "»"
         ];
-        for (let key of NEXT_KEYWORDS) {
-            if (window.find(key, false, false, true, true)) break;
-            if (window.find(key, false, true, true, true)) break;
-        }
+        focusNextKeywordLink(
+            NEXT_KEYWORDS, Math.max(count, 1), frameInfo.getTarget());
     }
     static findPreviousPage(count, frameInfo) {
         const PREVIOUS_KEYWORDS = [
             "前のページ", "前へ", "前ページ", "PREV", "<<", "«"
         ];
-        for (let key of PREVIOUS_KEYWORDS) {
-            if (window.find(key, false, false, true, true)) break;
-            if (window.find(key, false, true, true, true)) break;
-        }
+        focusNextKeywordLink(
+            PREVIOUS_KEYWORDS, Math.max(count, 1), frameInfo.getTarget());
     }
 
     /**
@@ -930,5 +926,20 @@ function invokeCommand(cmdName, count, frameInfo) {
     }
     frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
     return isIgnore;
+}
+
+function focusNextKeywordLink(keywords, count, target) {
+    const linkList = Array.prototype.filter.call(
+        document.getElementsByTagName("a"), (link) => {
+            return (link.getClientRects().length !== 0
+                && keywords.some((k) => link.innerText.includes(k)));
+        });
+    if (linkList.length === 0) {
+        return;
+    }
+    const positionBit = Node.DOCUMENT_POSITION_PRECEDING;
+    const index = linkList.findIndex(
+        (link) => (link.compareDocumentPosition(target) & positionBit));
+    linkList[(Math.max(index - 1, -1) + count) % linkList.length].focus();
 }
 
