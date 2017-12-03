@@ -378,7 +378,7 @@ Loop: ${video.loop}`
     }
     static yankLink(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        const url = getLink(elem);
+        const url = getSource(elem);
         if (url) {
             if (DomUtils.setToClipboard(url)) {
                 frameInfo.showMessage("Yank current target link");
@@ -387,7 +387,7 @@ Loop: ${video.loop}`
     }
     static downloadLink(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        const url = getLink(elem);
+        const url = getSource(elem);
         if (url) {
             frameInfo.postMessage({ command: 'downloadLink', url: url });
         }
@@ -772,6 +772,19 @@ function incrementURL(location, count) {
 }
 
 function getLink(elem) {
+    try {
+        if (!elem.href) {
+            return undefined;
+        }
+        const link = elem.href;
+        return (link instanceof SVGAnimatedString ? link.animVal : link);
+    }
+    catch (e) {
+        console.warn(`Element ${elem} is likely dead:`, Utils.errorString(e));
+    }
+    return undefined;
+}
+function getSource(elem) {
     try {
         const link = (() => {
             if (elem.href) { // anchor, area
