@@ -57,6 +57,7 @@ const DEFAULT_OPTIONS = {
             "<C-P>": "previousTab",
             "g0": "firstTab",
             "g$": "lastTab",
+            "<C-^>": "lastActivatedTab",
             "<": "moveTabToLeft",
             ">": "moveTabToRight",
             "dd": "removeCurrentTab",

@@ -40,6 +40,7 @@ const COMMAND_DESCRIPTIONS = {
     previousTab: { background: true, description: "Activate the previous tab" },
     firstTab: { background: true, description: "Activate the first tab" },
     lastTab: { background: true, description: "Activate the last tab" },
+    lastActivatedTab: { background: true, description: "Activate the last activated tab" },
     moveTabToLeft: { background: true, description: "Move the current tab to left" },
     moveTabToRight: { background: true, description: "Move the current tab to right" },
     removeCurrentTab: { background: true, description: "Close the current tab" },

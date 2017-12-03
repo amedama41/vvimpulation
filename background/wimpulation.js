@@ -463,6 +463,24 @@ class Command {
             handleError(tabInfo, "lastTab", e);
         });
     }
+    static lastActivatedTab(msg, sender, tabInfo) {
+        browser.tabs.get(tabInfo.id).then((activeTab) => {
+            return browser.tabs.query({
+                windowId: activeTab.windowId
+            }).then((tabs) => {
+                tabs = tabs.filter((tab) => tab.id !== activeTab.id);
+                if (tabs.length === 0) {
+                    return;
+                }
+                const lastActivated = tabs.reduce((lhs, rhs) => {
+                    return (lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs);
+                });
+                return browser.tabs.update(lastActivated.id, { active: true });
+            });
+        }).catch((e) => {
+            handleError(tabInfo, "lastActivatedTab", e);
+        });
+    }
     static moveTabToLeft(msg, sender, tabInfo) {
         moveTab(sender.tab.id, Math.max(msg.count, 1), true).catch((e) => {
             handleError(tabInfo, "moveTabToLeft", e);
