@@ -735,13 +735,16 @@ Loop: ${video.loop}`
         });
     }
     static toHintMode(count, frameInfo) {
-        frameInfo.postMessage({ command: "toHintMode", type: "link" });
+        // TODO: slot 3, 4
+        const TYPE_LIST = ["link", "focus", "media", "link", "link"];
+        const type = TYPE_LIST[count % TYPE_LIST.length];
+        frameInfo.postMessage({ command: "toHintMode", type });
     }
     static toHintFocusMode(count, frameInfo) {
-        frameInfo.postMessage({ command: "toHintMode", type: "focus" });
+        FrontendCommand.toHintMode(1, frameInfo);
     }
     static toHintMediaMode(count, frameInfo) {
-        frameInfo.postMessage({ command: "toHintMode", type: "media" });
+        FrontendCommand.toHintMode(2, frameInfo);
     }
     static toVisualMode(count, frameInfo) {
         frameInfo.changeMode("VISUAL");
