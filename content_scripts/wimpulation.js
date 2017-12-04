@@ -162,9 +162,16 @@ class MessageCommand {
         if (!selection) {
             return false;
         }
+        let activeElement = null;
         // reset selection in order to search from head or end of page.
         if (reset) {
             selection.removeAllRanges();
+            activeElement = document.activeElement;
+            if (activeElement) {
+                // If an editable element is already focused, window.find
+                // starts from the element.
+                activeElement.blur();
+            }
         }
 
         const current = (backward ? selection.focusNode : selection.anchorNode);
@@ -175,7 +182,12 @@ class MessageCommand {
             if (result && selection.anchorNode === null) {
                 const selectedElem = findSelectedEditableElement(
                     current, keyword, caseSensitive, backward);
+                selectedElem.focus();
+                // Need setBaseAndExtent when selectedElem.focus has no effect.
                 selection.setBaseAndExtent(selectedElem, 0, selectedElem, 0);
+            }
+            if (!result && activeElement) {
+                DomUtils.fixedFocus(activeElement);
             }
             return result;
         }
