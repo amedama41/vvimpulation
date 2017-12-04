@@ -68,7 +68,8 @@ class Options {
         reader.onloadend = () => {
             try {
                 this.setOptions(JSON.parse(reader.result));
-                Options.setErrorMessage("");
+                Options.setErrorMessage(
+                    "Import options (These are not saved yet)");
             }
             catch (e) {
                 Options.setErrorMessage(e.message);
