@@ -651,7 +651,7 @@ class Command {
     }
     static getCandidate(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {
-            return gExCommandMap.getCandidate(msg.value, sender.tab);
+            return gExCommandMap.getCandidate(msg.value, tab);
         });
     }
 
