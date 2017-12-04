@@ -17,6 +17,8 @@ class Options {
             .addEventListener("click", (e) => { this.importOptions(); });
         document.getElementById("export-button")
             .addEventListener("click", (e) => { this.exportOptions(); });
+        document.getElementById("restore-button")
+            .addEventListener("click", (e) => { this.restoreOptions(); });
         document.getElementById("save-button")
             .addEventListener("click", (e) => { this.saveOptions(); });
     }
@@ -76,6 +78,10 @@ class Options {
             Options.setErrorMessage(reader.error.message);
         };
         reader.readAsText(jsonFile);
+    }
+    restoreOptions() {
+        this.setOptions(DEFAULT_OPTIONS);
+        Options.setErrorMessage("Restore options (These are not saved yet)");
     }
     static setErrorMessage(message) {
         const error = document.getElementById("option-bar-error");
