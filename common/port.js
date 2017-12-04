@@ -143,8 +143,10 @@ class Port {
     _checkTimeoutTxn() {
         this.pendingTxnMap.forEach((txn, id) => {
             if (txn[2]) {
-                console.warn(`request ${id} is timeout: ${txn[3]}`);
                 this.pendingTxnMap.delete(id);
+                const command = txn[3];
+                txn[1](new Error(`Request timeout (${command})`));
+                console.warn(`request ${id} is timeout: ${command}`);
             }
             else {
                 txn[2] = true;
