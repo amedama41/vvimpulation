@@ -498,8 +498,11 @@ class Command {
         });
     }
     static undoCloseTab(msg, sender, tabInfo) {
+        const windowId = tabInfo.windowId;
         browser.sessions.getRecentlyClosed().then((sessions) => {
-            const tabSessions = sessions.filter((s) => s.tab !== undefined);
+            const tabSessions = sessions.filter((s) => {
+                return s.tab !== undefined && s.tab.windowId === windowId;
+            });
             if (tabSessions.length === 0) {
                 return;
             }
