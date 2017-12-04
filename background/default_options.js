@@ -212,7 +212,7 @@ const DEFAULT_OPTIONS = {
 
     "hintPattern": {
         "global": {
-            "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], *[role='radio'], *[role='option'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area",
+            "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], *[role='radio'], *[role='option'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area, summary",
             "focus": "body *",
             "media": "img, canvas, video, object, embed"
         },
@@ -220,12 +220,6 @@ const DEFAULT_OPTIONS = {
             "www.google.co.jp": {
                 "link": [
                     ["#cdrlnk", "Link to specify period"]
-                ]
-            },
-            "github.com": {
-                "link": [
-                    ["#user-links svg.octicon-plus, #user-links img.avatar", "Header dropdown list icons"],
-                    ["details.get-repo-select-menu > summary.btn", "Clone or download button"]
                 ]
             },
             "twitter.com": {
