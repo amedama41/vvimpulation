@@ -26,6 +26,12 @@ class TabInfo {
     get id() {
         return this.tab.id;
     }
+    get windowId() {
+        return this.tab.windowId;
+    }
+    set windowId(id) {
+        this.tab.windowId = id;
+    }
     update(tab) {
         this.tab = tab;
     }
@@ -318,12 +324,11 @@ function handleError(tabInfo, func, error) {
         true, false);
 }
 
-function selectTab(tabId, getIndex) {
-    return browser.tabs.get(tabId).then((tab) => {
-        return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => {
-            const index = getIndex(tab.index, tabs.length);
-            browser.tabs.update(tabs[index].id, { active: true });
-        });
+function selectTab(tabInfo, getIndex) {
+    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+        const currentTab = tabs.find((tab) => tab.id === tabInfo.id);
+        const index = getIndex(currentTab.index, tabs.length);
+        return browser.tabs.update(tabs[index].id, { active: true });
     });
 }
 
@@ -436,7 +441,7 @@ class Command {
         const tab = sender.tab;
         const count = msg.count;
         selectTab(
-            tab.id,
+            tabInfo,
             (count === 0
                 ? (index, tabLen) => (index + 1) % tabLen
                 : (index, tabLen) => (count < tabLen) ?  count : index)
@@ -447,36 +452,32 @@ class Command {
     static previousTab(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
         selectTab(
-            sender.tab.id,
+            tabInfo,
             (index, tabLen) => (index + tabLen - (count % tabLen)) % tabLen
         ).catch((e) => {
             handleError(tabInfo, "previousTab", e);
         });
     }
     static firstTab(msg, sender, tabInfo) {
-        selectTab(sender.tab.id, (index, tabLen) => 0).catch((e) => {
+        selectTab(tabInfo, (index, tabLen) => 0).catch((e) => {
             handleError(tabInfo, "firstTab", e);
         });
     }
     static lastTab(msg, sender, tabInfo) {
-        selectTab(sender.tab.id, (index, tabLen) => tabLen - 1).catch((e) => {
+        selectTab(tabInfo, (index, tabLen) => tabLen - 1).catch((e) => {
             handleError(tabInfo, "lastTab", e);
         });
     }
     static lastActivatedTab(msg, sender, tabInfo) {
-        browser.tabs.get(tabInfo.id).then((activeTab) => {
-            return browser.tabs.query({
-                windowId: activeTab.windowId
-            }).then((tabs) => {
-                tabs = tabs.filter((tab) => tab.id !== activeTab.id);
-                if (tabs.length === 0) {
-                    return;
-                }
-                const lastActivated = tabs.reduce((lhs, rhs) => {
-                    return (lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs);
-                });
-                return browser.tabs.update(lastActivated.id, { active: true });
+        browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+            tabs = tabs.filter((tab) => tab.id !== tabInfo.id);
+            if (tabs.length === 0) {
+                return;
+            }
+            const lastActivated = tabs.reduce((lhs, rhs) => {
+                return (lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs);
             });
+            return browser.tabs.update(lastActivated.id, { active: true });
         }).catch((e) => {
             handleError(tabInfo, "lastActivatedTab", e);
         });
@@ -522,9 +523,7 @@ class Command {
         });
     }
     static removeCurrentWindow(msg, sender, tabInfo) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
-            return browser.windows.remove(tab.windowId);
-        }).catch((e) => {
+        browser.windows.remove(tabInfo.windowId).catch((e) => {
             handleError(tabInfo, "removeCurrentWindow", e);
         });
     }
@@ -844,6 +843,13 @@ browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
     if (gMacro.isRecord(tabId)) {
         gMacro.stop(false);
     }
+});
+browser.tabs.onAttached.addListener((tabId, attachInfo) => {
+    const tabInfo = gTabInfoMap.get(tabId);
+    if (!tabInfo) {
+        return;
+    }
+    tabInfo.windowId = attachInfo.newWindowId;
 });
 
 browser.storage.local.get({
