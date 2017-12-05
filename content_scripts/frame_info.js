@@ -219,6 +219,12 @@ class FrameInfo {
                     this._fixedMessage = undefined;
                 }
                 this._consoleFrame.classList.add("wimpulation-show-console");
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    // Can not focus a frame if an element in another frame is
+                    // already focused.
+                    activeElement.blur();
+                }
                 this._consoleFrame.focus();
                 return true;
             })
