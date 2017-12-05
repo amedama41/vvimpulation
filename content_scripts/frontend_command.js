@@ -781,7 +781,7 @@ Loop: ${video.loop}`
 }
 
 function incrementURL(location, count) {
-    const url = decodeURI(location.href);
+    const url = decodeURIComponent(location.href);
     const match = /^(.*\D)(\d+)(\D*)$/.exec(url);
     if (!match) {
         return;
