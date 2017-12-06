@@ -955,10 +955,12 @@ function invokeCommand(cmdName, count, frameInfo) {
 }
 
 function focusNextKeywordLink(keywords, count, target) {
+    keywords = keywords.map((key) => key.toLowerCase());
     const linkList = Array.prototype.filter.call(
         document.getElementsByTagName("a"), (link) => {
             return (link.getClientRects().length !== 0
-                && keywords.some((k) => link.innerText.includes(k)));
+                && keywords.some(
+                    (k) => link.innerText.toLowerCase().includes(k)));
         });
     if (linkList.length === 0) {
         return;
