@@ -33,6 +33,8 @@ const COMMAND_DESCRIPTIONS = {
     focusTopFrame: { topFrame: true, description: "Focus the most top frame" },
     focusin: { description: "Focus the target" },
     focusout: { description: "Remove focus from the target" },
+    focusNext: { description: "Focus a next element" },
+    focusPrevious: { description: "Focus a previous element" },
     focusNextFrame: { background: true, description: "Focus next frame" },
 
     /** Commands for tab manipulation **/

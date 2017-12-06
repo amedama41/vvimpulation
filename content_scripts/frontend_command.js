@@ -157,6 +157,32 @@ class FrontendCommand {
                 `Element ${elem} is likely dead:`, Utils.errorString(e));
         }
     }
+    static focusNext(count, frameInfo) {
+        const walker = createFocusNodeWalker(frameInfo.getTarget());
+        const node = walker.nextNode();
+        if (node) {
+            setTimeout(() => node.focus(), 0);
+        }
+        else {
+            // TODO: move parent frame
+            walker.currentNode = document.documentElement;
+            const firstNode = (walker.firstChild() || document.documentElement);
+            setTimeout(() => firstNode.focus(), 0);
+        }
+    }
+    static focusPrevious(count, frameInfo) {
+        const walker = createFocusNodeWalker(frameInfo.getTarget());
+        const node = walker.previousNode();
+        if (node) {
+            node.focus();
+        }
+        else {
+            // TODO: move parent frame
+            walker.currentNode = document.documentElement;
+            const lastNode = getLastNode(walker);
+            setTimeout(() => lastNode.focus(), 0);
+        }
+    }
 
     /**
      * Commands for search
@@ -969,5 +995,40 @@ function focusNextKeywordLink(keywords, count, target) {
     const index = linkList.findIndex(
         (link) => (link.compareDocumentPosition(target) & positionBit));
     linkList[(Math.max(index - 1, -1) + count) % linkList.length].focus();
+}
+
+function createFocusNodeWalker(currentNode) {
+    const acceptNode = (node) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) {
+            return NodeFilter.FILTER_REJECT;
+        }
+        const style = window.getComputedStyle(node, null);
+        if (style.visibility === "hidden") {
+            return NodeFilter.FILTER_SKIP;
+        }
+        if (node.tabIndex !== -1 || Scroll.isScrollable(node, style)) {
+            return NodeFilter.FILTER_ACCEPT;
+        }
+        else {
+            return NodeFilter.FILTER_SKIP;
+        }
+    };
+    const walker = document.createTreeWalker(
+        document.documentElement, NodeFilter.SHOW_ELEMENT, { acceptNode });
+    walker.currentNode = currentNode;
+    return walker;
+}
+
+function getLastNode(walker) {
+    let lastNode = document.documentElement;
+    while (true) {
+        const node = walker.lastChild();
+        if (!node) {
+            break;
+        }
+        lastNode = node;
+    }
+    return lastNode;
 }
 

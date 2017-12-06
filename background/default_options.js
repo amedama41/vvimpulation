@@ -72,6 +72,8 @@ const DEFAULT_OPTIONS = {
             "<C-X>": "decrementURL",
             "gu": "goToParent",
             "gU": "goToRoot",
+            "]]": "focusNext",
+            "[[": "focusPrevious",
             "zi": "zoomIn",
             "zo": "zoomOut",
             "zr": "zoomReset",
