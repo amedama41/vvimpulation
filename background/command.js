@@ -300,9 +300,10 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
         return true;
     });
 }, (value, tab) => {
+    const filter = Utils.makeFilter(value);
     return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => [
         0, "number", tabs.map((tab, index) => [index, tab.title]).filter(
-            ([index, title]) => title.includes(value))
+            ([index, title]) => filter.match(title))
     ]);
 });
 gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
