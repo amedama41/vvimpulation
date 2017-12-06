@@ -85,6 +85,30 @@ const KEY_NAME_MAP = {
     " ": "Space", "\u00a5": "\\", "\u005c": "\\"
 };
 
+class StringFilter {
+    constructor(keywordList, caseSensitive) {
+        this.keywordList = keywordList;
+        this.caseSensitive = caseSensitive;
+        if (!this.caseSensitive) {
+            this.keywordList = keywordList.map((key) => key.toLowerCase());
+        }
+    }
+    match(value) {
+        if (!this.caseSensitive) {
+            value = value.toLowerCase();
+        }
+        return this.keywordList.every((key) => value.includes(key));
+    }
+    matchList(valueList) {
+        if (!this.caseSensitive) {
+            valueList = valueList.map((v) => v.toLowerCase());
+        }
+        return this.keywordList.every((key) => {
+            return valueList.some((value) => value.includes(key));
+        });
+    }
+}
+
 return class {
     static getRegulatedKey(keyEvent) {
         let key = keyEvent.key
@@ -148,6 +172,12 @@ return class {
 
     static makeCommandMapper(cmdMap) {
         return new CommandMapper(cmdMap);
+    }
+
+    static makeFilter(
+        keywords, caseSensitive=/[A-Z]/.test(keywords), needSplit=true) {
+        keywords = (needSplit ? keywords.split(/\s+/) : [keywords]);
+        return new StringFilter(keywords, caseSensitive);
     }
 
     static countToModifiers(count) {

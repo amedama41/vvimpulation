@@ -233,17 +233,11 @@ function findSelectedEditableElement(current, key, caseSensitive, backward) {
         "input[type='datetime-local'], input[type='month'], " +
         "input[type='week'], textarea"
     )));
+    const filter = Utils.makeFilter(key, caseSensitive, false);
     return elemList.find((elem) => {
-        if (elem.getClientRects().length === 0 ||
-            !(boundary.compareDocumentPosition(elem) & positionBit)) {
-            return false;
-        }
-        if (caseSensitive) {
-            return elem.value.includes(key);
-        }
-        else {
-            return elem.value.toLowerCase().includes(key.toLowerCase());
-        }
+        return (elem.getClientRects().length !== 0 &&
+            (boundary.compareDocumentPosition(elem) & positionBit) &&
+            filter.match(elem.value));
     });
 }
 
