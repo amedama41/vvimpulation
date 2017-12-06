@@ -1003,6 +1003,9 @@ function createFocusNodeWalker(currentNode) {
         if (rect.width === 0 && rect.height === 0) {
             return NodeFilter.FILTER_REJECT;
         }
+        if (rect.width === 0 || rect.height === 0) {
+            return NodeFilter.FILTER_SKIP;
+        }
         const style = window.getComputedStyle(node, null);
         if (style.visibility === "hidden") {
             return NodeFilter.FILTER_SKIP;
