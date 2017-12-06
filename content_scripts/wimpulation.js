@@ -162,21 +162,20 @@ class MessageCommand {
         if (!selection) {
             return false;
         }
-        let activeElement = null;
         // reset selection in order to search from head or end of page.
         if (reset) {
             selection.removeAllRanges();
-            activeElement = document.activeElement;
-            if (activeElement) {
-                // If an editable element is already focused, window.find
-                // starts from the element.
-                activeElement.blur();
-            }
         }
 
         const current = (backward ? selection.focusNode : selection.anchorNode);
 
         try {
+            const activeElement = document.activeElement;
+            if (activeElement && DomUtils.isEditable(activeElement)) {
+                // If an editable element is focused, selection.anchorNode is
+                // not null after a new editable is found by window.find.
+                activeElement.blur();
+            }
             const result = window.find(keyword, caseSensitive, backward);
             // If find match value of input or textarea, selection is clear
             if (result && selection.anchorNode === null) {
