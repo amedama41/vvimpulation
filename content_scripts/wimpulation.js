@@ -245,12 +245,25 @@ function insertFocusRule(sheet) {
     const cssRules = sheet.cssRules;
     for (let i = 0; i < cssRules.length; ++i) {
         const rule = cssRules[i];
-        const selector = rule.selectorText;
-        if (!selector || !selector.includes(":hover")) {
-            continue;
+        switch (rule.type) {
+            case CSSRule.STYLE_RULE:
+                const selector = rule.selectorText;
+                if (!selector || !selector.includes(":hover")) {
+                    continue;
+                }
+                const newSelector =
+                    selector.replace(/:hover\b/g, ":focus-within");
+                i = sheet.insertRule(
+                    `${newSelector} {${rule.style.cssText}}`, i + 1);
+                break;
+            case CSSRule.MEDIA_RULE:
+            case CSSRule.SUPPORTS_RULE:
+            case CSSRule.DOCUMENT_RULE || 13:
+                insertFocusRule(rule);
+                break;
+            default:
+                break;
         }
-        const newSelector = selector.replace(/:hover\b/g, ":focus-within");
-        i = sheet.insertRule(`${newSelector} {${rule.style.cssText}}`, i + 1);
     }
 }
 function killHover() {
