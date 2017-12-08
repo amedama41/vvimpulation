@@ -90,12 +90,13 @@ class Options {
     }
 }
 
+const KEY_MAPPING_TYPES = ["normal", "insert", "visual", "hint", "console"];
 class KeyMapping {
     constructor() {
-        this.options = {
-            "normal": ["", ""], "insert": ["", ""],
-            "visual": ["", ""], "hint": ["", ""],
-        };
+        this.options = KEY_MAPPING_TYPES.reduce((options, type) => {
+            options[type] = ["", ""];
+            return options;
+        }, {});
         this.currentMode = "normal";
 
         const tabs = document.querySelectorAll("#key-mapping-tabs li");
@@ -128,7 +129,7 @@ class KeyMapping {
     getOptions() {
         try {
             const options = {};
-            for (const mode of ["normal", "insert", "visual", "hint"]) {
+            for (const mode of KEY_MAPPING_TYPES) {
                 options[mode] = JSON.parse(this.options[mode][0]);
             }
             return options;

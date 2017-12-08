@@ -315,27 +315,13 @@ class ConsoleCommand {
     }
 }
 
-const CONSOLE_CMD_MAP = Utils.toPreparedCmdMap({
-    "<Enter>": "execute",
-    "<C-M>": "execute",
-    "<C-H>": "deleteCharBackward",
-    "<C-W>": "deleteWordBackward",
-    "<C-U>": "deleteToBeginningOfLine",
-    "<C-K>": "deleteToEndOfLine",
-    "<C-A>": "beginLine",
-    "<C-E>": "endLine",
-    "<C-F>": "charNext",
-    "<C-B>": "charPrevious",
-    "<C-I>": "getCandidate",
-    "<Tab>": "getCandidate",
-    "<C-N>": "selectNextHistoryOrCandidate",
-    "<C-P>": "selectPreviousHistoryOrCandidate",
-    "<C-X><C-D>": "removeAllHistory",
-    "<C-X><C-R>": "removeFromHistory",
-    "<C-C>": "closeConsoleMode",
-    "<Esc>": "closeConsoleMode",
-    "<C-[>": "closeConsoleMode",
-});
+function makeCommandMapper(keyMap) {
+    Object.keys(keyMap).forEach((key) => {
+        keyMap[key] = keyMap[key].replace(/^console./, "");
+    });
+    return Utils.makeCommandMapper(Utils.toPreparedCmdMap(keyMap));
+}
+
 class ConsoleMode {
     constructor(options, port, input, container) {
         this._isOpened = false;
@@ -344,7 +330,7 @@ class ConsoleMode {
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultCommand;
-        this._mapper = Utils.makeCommandMapper(CONSOLE_CMD_MAP);
+        this._mapper = makeCommandMapper(options.keyMap);
 
         this.onInit(container, options);
     }

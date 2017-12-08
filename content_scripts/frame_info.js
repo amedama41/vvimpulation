@@ -100,6 +100,7 @@ class FrameInfo {
         this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
+        this._consoleKeyMap = keyMapping["console"];
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
@@ -158,6 +159,7 @@ class FrameInfo {
         this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
+        this._consoleKeyMap = keyMapping["console"];
     }
 
     // Method related to frame id.
@@ -205,7 +207,7 @@ class FrameInfo {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
         }
-        const options = { mode, defaultCommand };
+        const options = { mode, defaultCommand, keyMap: this._consoleKeyMap };
         return this._sendConsoleMessage({ command: "setConsoleMode", options })
             .then((result) => {
                 if (this._mode !== requestMode) { // Maybe mode is changed.
