@@ -897,9 +897,9 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
     }
     if (elem instanceof HTMLSelectElement ||
         elem instanceof HTMLTextAreaElement) {
+        FrontendCommand.pressEnter(count, frameInfo);
         elem.dispatchEvent(
             new Event("change", { bubbles: true, cancelable: false }));
-        FrontendCommand.pressEnter(count, frameInfo);
         return;
     }
     return FrontendCommand.mouseclick(count, frameInfo);
