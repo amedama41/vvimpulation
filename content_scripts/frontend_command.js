@@ -880,8 +880,22 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
             // ignore
         }
     }
+    if (elem instanceof HTMLInputElement) {
+        const type = elem.type;
+        if (type === "checkbox" || type === "radio" || type === "file") {
+            FrontendCommand.mouseclick(count, frameInfo);
+        }
+        else {
+            FrontendCommand.pressEnter(count, frameInfo);
+        }
+        if (type !== "button" && type !== "image" &&
+            type !== "reset" && type !== "submit") {
+            elem.dispatchEvent(
+                new Event("change", { bubbles: true, cancelable: false }));
+        }
+        return;
+    }
     if (elem instanceof HTMLSelectElement ||
-        elem instanceof HTMLInputElement ||
         elem instanceof HTMLTextAreaElement) {
         elem.dispatchEvent(
             new Event("change", { bubbles: true, cancelable: false }));
