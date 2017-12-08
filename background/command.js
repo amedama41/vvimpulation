@@ -1,5 +1,59 @@
 'use strict';
 
+class CommandMap {
+    constructor() {
+        this.map = new Map();
+    }
+    clear() {
+        this.map.clear();
+    }
+    set(name, cmd) {
+        this.map.set(name, cmd);
+    }
+    getCommand(name, defaultCmdName="") {
+        const cmd = this.map.get(name);
+        if (cmd) {
+            return [cmd, ""];
+        }
+        const cmdList = CommandMap._filter(name, this.map);
+        if (cmdList.length === 1) {
+            return [cmdList[0], ""];
+        }
+        if (cmdList.length > 1) {
+            return [null, `${name} is ambiguous (${cmdList.join(",")})`];
+        }
+        if (defaultCmdName) {
+            return [this.map.get(defaultCmdName), "use default command"];
+        }
+        return [null, `${name} is unknown`];
+    }
+    getCandidate(value) {
+        const match = /^(\s*)(\S*)(\s*)/.exec(value);
+        if (match[3].length === 0) { // no arguments
+            const namePrefix = match[2];
+            const cmdList = CommandMap._filter(namePrefix, this.map);
+            return [cmdList, match[1].length];
+        }
+        else {
+            const cmdName = match[2];
+            const [cmd, reason] = this.getCommand(cmdName);
+            if (cmd === null) {
+                return [[], 0];
+            }
+            return [cmd, match[0].length];
+        }
+    }
+    static _filter(prefix, cmdMap) {
+        const cmdList = [];
+        for (let [name, cmd] of cmdMap) {
+            if (name.startsWith(prefix)) {
+                cmdList.push(cmd);
+            }
+        }
+        return cmdList;
+    }
+}
+
 class ExCommand {
     constructor(name, description, proc, completion = undefined) {
         this.name = name;
@@ -20,7 +74,7 @@ class ExCommand {
 
 class ExCommandMap {
     constructor() {
-        this.cmdMap = new Map();
+        this.cmdMap = new CommandMap();
     }
     addCommand(cmd) {
         this.cmdMap.set(cmd.name, cmd);
@@ -31,61 +85,30 @@ class ExCommandMap {
     execCommand(inputCmd, tab) {
         const args = inputCmd.trim().split(/\s/);
         const cmdName = args.shift();
-        const [cmd, reason] = ExCommandMap.getCommand(cmdName, this.cmdMap);
+        const [cmd, reason] = this.cmdMap.getCommand(cmdName);
         if (!cmd) {
             return Promise.reject(reason);
         }
         return cmd.invoke(args, tab);
     }
     getCandidate(value, tab) {
-        const match = /^(\s*)(\S*)(\s*)/.exec(value);
-        if (match[3].length === 0) {
-            const cmds = ExCommandMap.getCandidateCommands(
-                match[2], this.cmdMap);
-            const cmdStart = match[1].length;
+        const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
+        if (Array.isArray(cmdList)) {
             return Promise.resolve([
-                value, cmdStart, "string",
-                cmds.map((cmd) => [cmd.name, cmd.description])
+                value, fixedLen, "string",
+                cmdList.map((cmd) => [cmd.name, cmd.description])
             ]);
         }
         else {
-            const cmdName = match[2];
-            const [cmd, reason] = ExCommandMap.getCommand(cmdName, this.cmdMap);
-            if (!cmd) {
-                return;
-            }
-            const argStart = match[0].length;
-            const result = cmd.complete(value.substr(argStart), tab);
+            const cmd = cmdList;
+            const result = cmd.complete(value.substr(fixedLen), tab);
             if (!result) {
                 return;
             }
             return Promise.resolve(result).then(([start, type, candidates]) => {
-                return [value, argStart + start, type, candidates];
+                return [value, fixedLen + start, type, candidates];
             });
         }
-    }
-    static getCandidateCommands(word, cmdMap) {
-        const result = [];
-        for (let [name, cmd] of cmdMap) {
-            if (name.startsWith(word)) {
-                result.push(cmd);
-            }
-        }
-        return result;
-    }
-    static getCommand(cmdName, cmdMap) {
-        const cmd = cmdMap.get(cmdName);
-        if (cmd) {
-            return [cmd, null];
-        }
-        const candidates = ExCommandMap.getCandidateCommands(cmdName, cmdMap);
-        if (candidates.length === 0) {
-            return [null, `${cmdName} is unknown`];
-        }
-        if (candidates.length !== 1) {
-            return [null, `${cmdName} is ambiguous (${candidates.join(",")})`];
-        }
-        return [candidates[0], null];
     }
 }
 const gExCommandMap = new ExCommandMap();
@@ -144,29 +167,31 @@ class SearchCommand {
         this.name = name;
         this.description = description;
         this.useNewTab = useNewTab;
-        this.cmdMap = new Map();
-        this.defaultCmd = null;
+        this.engineMap = new CommandMap();
+        this.defaultEngineName = null;
     }
     setEngine(searchEngine) {
         const engines = searchEngine.engines;
-        this.cmdMap.clear();
+        this.engineMap.clear();
         Object.keys(engines).forEach((keyword) => {
-            this.cmdMap.set(keyword, engines[keyword]);
+            this.engineMap.set(
+                keyword, Object.assign({ name: keyword }, engines[keyword]));
         });
-        this.defaultCmd = searchEngine.defaultEngine;
+        this.defaultEngineName = searchEngine.defaultEngine;
     }
     invoke(args, tab) {
         if (args.length === 0) {
             return Promise.reject("no subcommand");
         }
-        const [result, reason] = this.getSubCmd(args[0]);
-        if (!result) {
+        const [engine, reason] =
+            this.engineMap.getCommand(args[0], this.defaultEngineName);
+        if (!engine) {
             return Promise.reject(reason);
         }
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        const url = result[1].searchUrl.replace(
+        const url = engine.searchUrl.replace(
             "%s", encodeURIComponent(args.join(" ")));
         if (this.useNewTab) {
             browser.tabs.create(
@@ -178,32 +203,27 @@ class SearchCommand {
         return Promise.resolve(true);
     }
     complete(value, tab) {
-        const match = /^(\S*)(\s*)/.exec(value);
         let suggest = undefined;
         let argStart = 0;
-        if (match[2].length === 0) {
-            const cmds =
-                SearchCommand.getCandidateSubcmds(match[1], this.cmdMap);
-            if (cmds.length !== 0) {
+        const [engineList, fixedLen] = this.engineMap.getCandidate(value);
+        if (Array.isArray(engineList)) {
+            if (engineList.length !== 0) {
                 return [
                     0, "string",
-                    cmds.map(([name, urls]) => [name, urls.searchUrl])
+                    engineList.map((engine) => [engine.name, engine.searchUrl])
                 ];
             }
-            if (this.defaultCmd) {
-                const [result, reason] = this.getSubCmd(this.defaultCmd);
-                suggest = result[1].suggest;
-                argStart = 0;
-            }
-        }
-        else {
-            const [result, reason] = this.getSubCmd(match[1]);
-            if (!result) { // ambiguous
+            if (!this.defaultEngineName) {
                 return [0, "string", []];
             }
-            suggest = result[1].suggest;
-            // if reason is not null (use default), head of value is not command
-            argStart = (reason ? 0 : match[0].length);
+            const [engine, reason] =
+                this.engineMap.getCommand(this.defaultEngineName)
+            suggest = engine.suggest;
+            argStart = 0;
+        }
+        else {
+            suggest = engineList.suggest;
+            argStart = fixedLen;
         }
 
         if (!suggest) {
@@ -251,34 +271,6 @@ class SearchCommand {
         const suggests = Array.from(doc.querySelectorAll(path));
         return suggests.map(
             (e) => decode ? decodeURIComponent(e.textContent) : e.textContent);
-    }
-    static getCandidateSubcmds(word, cmdMap) {
-        const result = [];
-        for (let [name, engine] of cmdMap) {
-            if (name.startsWith(word)) {
-                result.push([name, engine]);
-            }
-        }
-        return result;
-    }
-    getSubCmd(cmdName) {
-        const urls = this.cmdMap.get(cmdName);
-        if (urls) {
-            return [[cmdName, urls], null];
-        }
-        const candidates =
-            SearchCommand.getCandidateSubcmds(cmdName, this.cmdMap);
-        if (candidates.length === 0 && this.defaultCmd) {
-            return [
-                [this.defaultCmd, this.cmdMap.get(this.defaultCmd)],
-                "use default command"
-            ];
-        }
-        if (candidates.length !== 1) {
-            const cmdList = candidates.map(([name, urls]) => name).join(",");
-            return [null, `${cmdName} is ambiguous (${cmdList})`];
-        }
-        return [candidates[0], null];
     }
 }
 const gSearchCommand =
