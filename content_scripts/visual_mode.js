@@ -19,6 +19,7 @@ class VisualModeBase {
         this.count = "0";
         this.init(this.selection);
         this.mapper = Utils.makeCommandMapper(keyMap);
+        frameInfo.showFixedMessage(`-- ${this.constructor.getModeName()} --`);
     }
     getTarget() {
         return selection.anchorNode;
@@ -30,7 +31,8 @@ class VisualModeBase {
         }
         return this.mapper.get(key);
     }
-    onReset() {
+    onReset(frameInfo) {
+        frameInfo.hideFixedMessage();
         if (this.selection) {
             try {
                 this.destroy(this.selection);
