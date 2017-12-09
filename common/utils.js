@@ -44,6 +44,9 @@ class CommandMapper {
             return [false, optCmd, undefined, dropKeyList];
         }
     }
+    hasPendingKeys() {
+        return this.state !== undefined;
+    }
     reset() {
         this.state = undefined;
     }

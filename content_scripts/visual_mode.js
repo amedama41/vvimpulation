@@ -24,6 +24,10 @@ class VisualModeBase {
         return selection.anchorNode;
     }
     consume(key, frameInfo) {
+        if (key === "0" && this.count !== "0" && // Is continuation of count?
+            !this.mapper.hasPendingKeys()) {
+            return [false, undefined, undefined, undefined];
+        }
         return this.mapper.get(key);
     }
     onReset() {

@@ -43,6 +43,10 @@ class NormalMode {
             }
             return [true, undefined, undefined, undefined];
         }
+        if (key === "0" && this.count !== "0" && // Is continuation of count?
+            !this.mapper.hasPendingKeys()) {
+            return [false, undefined, undefined, undefined];
+        }
         const [consumed, optCmd, cmd, dropKeys] = this.mapper.get(key);
         if (!consumed) {
             if (key === "q") {
