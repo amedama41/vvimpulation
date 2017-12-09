@@ -661,6 +661,10 @@ class Command {
     static toNormalMode(msg, sender, tabInfo) {
         changeNormalMode(tabInfo);
     }
+    static toSuspendMode(msg, sender, tabInfo) {
+        const changeModeMsg = { command: "changeMode", mode: "SUSPEND" };
+        tabInfo.forEachPort((port, frameId) => port.postMessage(changeModeMsg));
+    }
 
     static sendConsoleMessage(msg, sender, tabInfo) {
         return tabInfo.sendConsoleMessage(msg.data);

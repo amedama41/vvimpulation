@@ -4,6 +4,7 @@ const DEFAULT_OPTIONS = {
     "keyMapping": {
         "normal": {
             ".": "repeatLastCommand",
+            "<C-Z>": "toSuspendMode",
             "<Esc>": "toNormalMode",
             "<C-[>": "toNormalMode",
             "f": "toHintMode",
@@ -121,6 +122,7 @@ const DEFAULT_OPTIONS = {
             "<M-Enter>": "ignore",
         },
         "insert": {
+            "<C-Z>": "toSuspendMode",
             "<C-H>": "deleteCharBackward",
             "<C-W>": "deleteWordBackward",
             "<C-K>": "deleteToEndOfLine",

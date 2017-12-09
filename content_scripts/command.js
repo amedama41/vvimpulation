@@ -160,6 +160,7 @@ const COMMAND_DESCRIPTIONS = {
     ignore: { description: "Do nothing and through pass through the keydown event" },
 
     /** Commands for mode changing **/
+    toSuspendMode: { background: true, description: "Change suspend mode" },
     toNormalMode: { background: true, description: "Change normal mode" },
     toInsertMode: { description: "Change insert mode with the current target or a first input element" },
     toInsertModeOnFirstElement: { description: "Change insert mode with a first input element"},

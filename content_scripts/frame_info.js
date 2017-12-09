@@ -93,7 +93,6 @@ class FrameIdInfo {
 
 class FrameInfo {
     constructor(selfFrameId, port, modeName, keyMapping) {
-        this._suspend = false;
         this._frameIdInfo = new FrameIdInfo(selfFrameId);
         this._port = port;
         this._modeEventListenerList = [];
@@ -117,14 +116,6 @@ class FrameInfo {
     handleKeydown(keyEvent) {
         const key = Utils.getRegulatedKey(keyEvent);
         if (!key) {
-            return;
-        }
-
-        if (key === '<C-Z>') {
-            this._suspend = !this._suspend;
-            return;
-        }
-        if (this._suspend) {
             return;
         }
 
@@ -325,6 +316,8 @@ class FrameInfo {
                     return new CaretMode(this, this._visualKeyMap, data);
                 case "CONSOLE":
                     return new ConsoleMode(this, data);
+                case "SUSPEND":
+                    return new SuspendMode(this);
                 default:
                     console.assert(false, "never reach here");
                     return new NormalMode(this, this._normalKeyMap);
