@@ -59,7 +59,7 @@ class FrameIdInfo {
         }
     }
     _registerChild(sourceWindow, data) {
-        if (!FrameIdInfo._isChildFrame(sourceWindow)
+        if (sourceWindow.parent !== window
             || !data.frameId || !Number.isInteger(data.frameId)) {
             return;
         }
@@ -78,16 +78,6 @@ class FrameIdInfo {
             window.clearInterval(this._registerIntervalId);
             this._registerIntervalId = 0;
         }
-    }
-    static _isChildFrame(targetWindow) {
-        const frames = window.frames;
-        const frameLen = frames.length;
-        for (let i = 0; i < frameLen; ++i) {
-            if (frames[i] === targetWindow) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 
