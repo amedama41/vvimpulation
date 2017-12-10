@@ -9,10 +9,12 @@ class FrameIdInfo {
         window.addEventListener("message", (msgEvent) => {
             this._handleFrameMessage(msgEvent);
         }, true);
-        window.addEventListener("unload", (event) => {
-            this._unregisterToParent();
-        }, { capture: true, once: true });
         this._startRegisterToParent();
+        setTimeout(() => {
+            // Don't use unload event because removing iframes can not occur
+            // the unload event.
+            setInterval(() => this._checkClosedFrame(), 60000);
+        }, Math.floor(Math.random() * 30000));
     }
     getSelfFrameId() {
         return this._selfFrameId;
@@ -31,13 +33,6 @@ class FrameIdInfo {
                 { type: "registerChild", frameId: this._selfFrameId }, "*");
         }, 100);
     }
-    _unregisterToParent() {
-        const parentWin = window.parent;
-        if (parentWin === window) {
-            return;
-        }
-        parentWin.postMessage({ type: "unregisterChild" }, "*");
-    }
     _handleFrameMessage(msgEvent) {
         const source = msgEvent.source;
         const data = msgEvent.data;
@@ -50,9 +45,6 @@ class FrameIdInfo {
                 break;
             case "completeRegisterChild":
                 this._stopRegisterToParent(source);
-                break;
-            case "unregisterChild":
-                this._unregisterChild(source);
                 break;
             default:
                 break;
@@ -67,9 +59,6 @@ class FrameIdInfo {
         this._childFrameIdMap.set(sourceWindow, frameId);
         sourceWindow.postMessage({ type: "completeRegisterChild" }, "*");
     }
-    _unregisterChild(sourceWindow) {
-        this._childFrameIdMap.delete(sourceWindow);
-    }
     _stopRegisterToParent(sourceWindow) {
         if (sourceWindow !== window.parent) {
             return;
@@ -77,6 +66,21 @@ class FrameIdInfo {
         if (this._registerIntervalId !== 0) {
             window.clearInterval(this._registerIntervalId);
             this._registerIntervalId = 0;
+        }
+    }
+    _checkClosedFrame() {
+        this._childFrameIdMap.forEach((id, frame) => {
+            if (FrameIdInfo._isClosed(frame)) {
+                this._childFrameIdMap.delete(frame);
+            }
+        });
+    }
+    static _isClosed(frame) {
+        try {
+            return frame.closed;
+        }
+        catch (e) { // Removed frame's window may be dead object.
+            return true;
         }
     }
 }
