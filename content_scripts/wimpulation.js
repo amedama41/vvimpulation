@@ -2,14 +2,22 @@
 
 let gFrameInfo = null;
 
-const NORMAL_MODE_START_MACRO = 0;
-const NORMAL_MODE_RECORD_MACRO = 1;
+const NORMAL_MODE_KYE_ARG_COMMAND_INFO = {
+    "q": {
+        acceptKey: /^[0-9a-zA-Z]$/,
+        command: "startMacro",
+    },
+    "@": {
+        acceptKey: /^[0-9a-zA-Z@]$/,
+        command: "playMacro",
+    },
+};
 
 class NormalMode {
     constructor(frameInfo, keyMap, keyList=undefined) {
         this.count = "0";
-        this.macroState = undefined;
-        this.isPlayMacro = false;
+        this.keyArgCmd = undefined;
+        this.isRecordingMacro = false;
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
@@ -25,53 +33,41 @@ class NormalMode {
         return document.activeElement || document.documentElement;
     }
     consume(key, frameInfo) {
-        if (this.macroState === NORMAL_MODE_START_MACRO) {
-            if (/^[0-9a-zA-Z]$/.test(key)) {
-                this.macroState = NORMAL_MODE_RECORD_MACRO;
-                frameInfo.postMessage({ command: "startMacro", key });
-                frameInfo.showFixedMessage("recording @" + key.toLowerCase());
-            }
-            else {
-                this.macroState = undefined;
+        if (this.keyArgCmd) {
+            const keyArgCmd = this.keyArgCmd;
+            this.keyArgCmd = undefined;
+            if (keyArgCmd.acceptKey.test(key)) {
+                this[keyArgCmd.command](key, frameInfo);
             }
             return [true, undefined, undefined, undefined];
         }
-        if (this.isPlayMacro) {
-            this.isPlayMacro = false;
-            if (/^[0-9a-zA-Z@]$/.test(key)) {
-                frameInfo.postMessage({ command: "playMacro", key });
-            }
-            return [true, undefined, undefined, undefined];
-        }
+
         if (key === "0" && this.count !== "0" && // Is continuation of count?
             !this.mapper.hasPendingKeys()) {
             return [false, undefined, undefined, undefined];
         }
         const [consumed, optCmd, cmd, dropKeys] = this.mapper.get(key);
+
         if (!consumed) {
-            if (key === "q") {
-                if (this.macroState === undefined) {
-                    this.macroState = NORMAL_MODE_START_MACRO;
-                }
-                if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
-                    this.macroState = undefined;
-                    frameInfo.postMessage({ command: "stopMacro" });
-                    frameInfo.hideFixedMessage();
-                }
+            if (key === "q" && this.isRecordingMacro) {
+                this.isRecordingMacro = false;
+                frameInfo.postMessage({ command: "stopMacro" });
+                frameInfo.hideFixedMessage();
                 return [true, optCmd, cmd, dropKeys];
             }
-            if (key === "@") {
-                this.isPlayMacro = true;
+            const keyArgCmd = NORMAL_MODE_KYE_ARG_COMMAND_INFO[key];
+            if (keyArgCmd) {
+                this.keyArgCmd = keyArgCmd;
                 return [true, optCmd, cmd, dropKeys];
             }
         }
-        if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
+        if (this.isRecordingMacro) {
             frameInfo.postMessage({ command: "recordMacro", key });
         }
         return [consumed, optCmd, cmd, dropKeys];
     }
     onReset(frameInfo) {
-        if (this.macroState === NORMAL_MODE_RECORD_MACRO) {
+        if (this.isRecordingMacro) {
             frameInfo.postMessage({ command: "stopMacro" });
             frameInfo.hideFixedMessage();
         }
@@ -96,10 +92,10 @@ class NormalMode {
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
             case "startMacro":
-                this.macroState = NORMAL_MODE_RECORD_MACRO;
+                this.isRecordingMacro = true;
                 break;
             case "stopMacro":
-                this.macroState = undefined;
+                this.isRecordingMacro = false;
                 break;
             case "playMacro":
                 frameInfo.handleKey(msg.key);
@@ -108,6 +104,14 @@ class NormalMode {
                 console.warn("Unknown command:", msg.command);
                 break;
         }
+    }
+    startMacro(key, frameInfo) {
+        this.isRecordingMacro = true;
+        frameInfo.postMessage({ command: "startMacro", key });
+        frameInfo.showFixedMessage("recording @" + key.toLowerCase());
+    }
+    playMacro(key, frameInfo) {
+        frameInfo.postMessage({ command: "playMacro", key });
     }
 }
 
