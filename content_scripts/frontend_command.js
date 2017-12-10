@@ -1011,6 +1011,10 @@ function focusNextKeywordLink(keywords, count, target) {
     linkList[(Math.max(index - 1, -1) + count) % linkList.length].focus();
 }
 
+function isNonFocusableAnchor(node) {
+    // Anchor elements without href can not be focused.
+    return node instanceof HTMLAnchorElement && !node.hasAttribute("href");
+}
 function createFocusNodeWalker(currentNode) {
     const acceptNode = (node) => {
         const rect = node.getBoundingClientRect();
@@ -1024,7 +1028,8 @@ function createFocusNodeWalker(currentNode) {
         if (style.visibility === "hidden") {
             return NodeFilter.FILTER_SKIP;
         }
-        if (node.tabIndex !== -1 || Scroll.isScrollable(node, style)) {
+        if ((node.tabIndex !== -1 && !isNonFocusableAnchor(node)) ||
+            Scroll.isScrollable(node, style)) {
             return NodeFilter.FILTER_ACCEPT;
         }
         else {
