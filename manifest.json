@@ -19,6 +19,7 @@
         "sessions",
         "storage",
         "tabs",
+        "webNavigation",
         "<all_urls>"
     ],
 

@@ -6,10 +6,7 @@ class FrameIdInfo {
         this._childFrameIdMap = new Map();
         this._registerIntervalId = 0;
 
-        window.addEventListener("message", (msgEvent) => {
-            this._handleFrameMessage(msgEvent);
-        }, true);
-        this._startRegisterToParent();
+        this._startRegistration();
         setTimeout(() => {
             // Don't use unload event because removing iframes can not occur
             // the unload event.
@@ -22,51 +19,38 @@ class FrameIdInfo {
     getChildFrameId(childWindow) {
         return this._childFrameIdMap.get(childWindow);
     }
+    handleFrameMessage(msgEvent, port) {
+        const sourceWindow = msgEvent.source;
+        const data = msgEvent.data;
+        if (sourceWindow.parent !== window
+            || !data.command || data.command !== "registerChild"
+            || !data.frameId || !Number.isInteger(data.frameId)) {
+            return;
+        }
+        const frameId = data.frameId;
+        port.sendMessage({ command: "registerChild", frameId })
+            .then((result) => {
+                if (result) {
+                    this._childFrameIdMap.set(sourceWindow, frameId);
+                }
+            });
+    }
+    stopRegistration() {
+        if (this._registerIntervalId !== 0) {
+            window.clearInterval(this._registerIntervalId);
+            this._registerIntervalId = 0;
+        }
+    }
 
-    _startRegisterToParent() {
+    _startRegistration() {
         const parentWin = window.parent;
         if (parentWin === window) {
             return;
         }
         this._registerIntervalId = window.setInterval(() => {
             parentWin.postMessage(
-                { type: "registerChild", frameId: this._selfFrameId }, "*");
-        }, 100);
-    }
-    _handleFrameMessage(msgEvent) {
-        const source = msgEvent.source;
-        const data = msgEvent.data;
-        if (!data.type) {
-            return;
-        }
-        switch (data.type) {
-            case "registerChild":
-                this._registerChild(source, data);
-                break;
-            case "completeRegisterChild":
-                this._stopRegisterToParent(source);
-                break;
-            default:
-                break;
-        }
-    }
-    _registerChild(sourceWindow, data) {
-        if (sourceWindow.parent !== window
-            || !data.frameId || !Number.isInteger(data.frameId)) {
-            return;
-        }
-        const frameId = data.frameId;
-        this._childFrameIdMap.set(sourceWindow, frameId);
-        sourceWindow.postMessage({ type: "completeRegisterChild" }, "*");
-    }
-    _stopRegisterToParent(sourceWindow) {
-        if (sourceWindow !== window.parent) {
-            return;
-        }
-        if (this._registerIntervalId !== 0) {
-            window.clearInterval(this._registerIntervalId);
-            this._registerIntervalId = 0;
-        }
+                { command: "registerChild", frameId: this._selfFrameId }, "*");
+        }, 300);
     }
     _checkClosedFrame() {
         this._childFrameIdMap.forEach((id, frame) => {
@@ -102,6 +86,9 @@ class FrameInfo {
         if (this.isTopFrame()) {
             this._createConsoleFrame();
         }
+        window.addEventListener("message", (msgEvent) => {
+            this._frameIdInfo.handleFrameMessage(msgEvent, this._port);
+        }, true);
     }
     reset() {
         this._resetMode();
@@ -145,6 +132,9 @@ class FrameInfo {
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+    }
+    completeChildRegistration() {
+        this._frameIdInfo.stopRegistration();
     }
 
     // Method related to frame id.

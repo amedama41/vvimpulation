@@ -338,6 +338,9 @@ function connectToBackGround(reconnectTimeout) {
         else if (msg.command === "updateKeyMapping") {
             gFrameInfo.setKeyMapping(msg.keyMapping);
         }
+        else if (msg.command === "completeChildRegistration") {
+            gFrameInfo.completeChildRegistration();
+        }
     };
     const handleRequest = (msg, sender) => {
         const cmd = MessageCommand[msg.command];

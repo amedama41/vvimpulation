@@ -83,9 +83,10 @@ class TabInfo {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
             console.warn(`port ${this.id}-${frameId} is already disconnected`);
-            return;
+            return false;
         }
         port.postMessage(msg);
+        return true;
     }
     sendMessage(frameId, msg) {
         const port = this.frameInfoMap.get(frameId);
@@ -690,6 +691,19 @@ class Command {
     }
     static playMacro(msg, sender, tabInfo) {
         gMacro.play(msg.key, sender.frameId, tabInfo);
+    }
+
+    static registerChild(msg, sender, tabInfo) {
+        const childFrameId = msg.frameId;
+        return browser.webNavigation.getFrame({
+            tabId: tabInfo.id, frameId: childFrameId
+        }).then((result) => {
+            if (result.parentFrameId !== sender.frameId) {
+                return false;
+            }
+            return tabInfo.postMessage(
+                childFrameId, { command: "completeChildRegistration" });
+        });
     }
 }
 class MacroManager {
