@@ -11,6 +11,18 @@ const NORMAL_MODE_KYE_ARG_COMMAND_INFO = {
         acceptKey: /^[0-9a-zA-Z@]$/,
         command: "playMacro",
     },
+    "m": {
+        acceptKey: /^[a-z'`]$/,
+        command: "markPosition",
+    },
+    "`": {
+        acceptKey: /^[a-z'`]$/,
+        command: "jumpToMark",
+    },
+    "'": {
+        acceptKey: /^[a-z'`]$/,
+        command: "jumpToMark",
+    },
 };
 
 class NormalMode {
@@ -112,6 +124,23 @@ class NormalMode {
     }
     playMacro(key, frameInfo) {
         frameInfo.postMessage({ command: "playMacro", key });
+    }
+    markPosition(key, frameInfo) {
+        if (key === "`") {
+            key = "'";
+        }
+        frameInfo.markPosition(key, [window.scrollX, window.scrollY]);
+    }
+    jumpToMark(key, frameInfo) {
+        if (key === "`") {
+            key = "'";
+        }
+        const position = frameInfo.getPosition(key);
+        if (!position) {
+            return;
+        }
+        frameInfo.markPosition("'", [window.scrollX, window.scrollY]);
+        window.scrollTo(position[0], position[1]);
     }
 }
 

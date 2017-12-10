@@ -83,6 +83,7 @@ class FrameInfo {
         this._consoleTimerId = 0;
         this._lastMessage = "";
         this._fixedMessage = undefined;
+        this._markPositionMap = {};
         if (this.isTopFrame()) {
             this._createConsoleFrame();
         }
@@ -283,6 +284,12 @@ class FrameInfo {
         }
         this._fixedMessage = undefined;
         this.hideConsole();
+    }
+    markPosition(key, position) {
+        this._markPositionMap[key] = position;
+    }
+    getPosition(key) {
+        return this._markPositionMap[key];
     }
 
     _createMode(mode, data=undefined) {
