@@ -1016,7 +1016,9 @@ function focusNextKeywordLink(keywords, count, target) {
 
 function isNonFocusableAnchor(node) {
     // Anchor elements without href can not be focused.
-    return node instanceof HTMLAnchorElement && !node.hasAttribute("href");
+    return (node instanceof HTMLAnchorElement &&
+        !node.hasAttribute("href") &&
+        !node.hasAttribute("tabindex"));
 }
 function createFocusNodeWalker(currentNode) {
     const acceptNode = (node) => {
