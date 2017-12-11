@@ -177,6 +177,7 @@ const COMMAND_DESCRIPTIONS = {
     toExModeOpenCurrentURL: { topFrame: true, description: "Change EX mode with open and URL" },
     toExModeTabOpen: { topFrame: true, description: "Change EX mode with tabopen" },
     toExModeTabOpenCurrentURL: { topFrame: true, description: "Change EX mode with tabopen and URL" },
+    toExModeBuffer: { topFrame: true, description: "Change EX mode with buffer" },
     toSearchMode: { topFrame: true, description: "Change search forward mode" },
     toBackwardSearchMode: { topFrame: true, description: "Change search backward mode" },
 };

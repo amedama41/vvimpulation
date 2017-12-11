@@ -796,6 +796,9 @@ Loop: ${video.loop}`
         return FrontendCommand.toExMode(
             count, frameInfo, "tabopen " + location.href);
     }
+    static toExModeBuffer(count, frameInfo) {
+        return FrontendCommand.toExMode(count, frameInfo, "buffer ");
+    }
     static toSearchMode(count, frameInfo, isBackward=false) {
         frameInfo.changeMode(
             "CONSOLE", { mode: "forwardSearch", defaultCommand: '' });
