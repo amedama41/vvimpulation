@@ -345,7 +345,10 @@ function killHover() {
     });
 }
 
-window.addEventListener("load", (e) => killHover(), { once: true });
+window.addEventListener("load", (e) => {
+    killHover();
+    HoverKiller.setTabIndex();
+}, { once: true });
 
 function init() {
     const reconnectTimeout = 500;
