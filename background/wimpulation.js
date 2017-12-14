@@ -378,6 +378,25 @@ function findAllFrame(
     return findFrame(0);
 }
 
+function continueFind(tabInfo, isNext) {
+    const [keyword, caseSensitive, backward, index] = tabInfo.lastSearchInfo;
+    if (keyword === "") {
+        return Promise.resolve();
+    }
+    return tabInfo.frameIdList((frameIdList) => {
+        return findAllFrame(
+            tabInfo, keyword, index, frameIdList,
+            caseSensitive, (isNext ? backward : !backward))
+            .then(([result, index]) => {
+                tabInfo.lastSearchInfo[3] = index;
+                if (!result) {
+                    const message = "Pattern not found: " + keyword;
+                    tabInfo.showMessage(message, false, false);
+                }
+            });
+    });
+}
+
 const IS_TAB_DEFAULT_INACTIVE = true;
 
 class Command {
@@ -406,34 +425,12 @@ class Command {
         });
     }
     static findNext(msg, sender, tabInfo) {
-        const [keyword, caseSensitive, backward, index] =
-            tabInfo.lastSearchInfo;
-        if (keyword === "") {
-            return;
-        }
-        tabInfo.frameIdList((frameIdList) => {
-            return findAllFrame(
-                tabInfo, keyword, index, frameIdList, caseSensitive, backward)
-                .then(([result, index]) => {
-                    tabInfo.lastSearchInfo[3] = index;
-                });
-        }).catch((e) => {
+        continueFind(tabInfo, true).catch((e) => {
             handleError(tabInfo, "findNext", e);
         });
     }
     static findPrevious(msg, sender, tabInfo) {
-        const [keyword, caseSensitive, backward, index] =
-            tabInfo.lastSearchInfo;
-        if (keyword === "") {
-            return;
-        }
-        tabInfo.frameIdList((frameIdList) => {
-            return findAllFrame(
-                tabInfo, keyword, index, frameIdList, caseSensitive, !backward)
-                .then(([result, index]) => {
-                    tabInfo.lastSearchInfo[3] = index;
-                });
-        }).catch((e) => {
+        continueFind(tabInfo, false).catch((e) => {
             handleError(tabInfo, "findPrevious", e);
         });
     }
