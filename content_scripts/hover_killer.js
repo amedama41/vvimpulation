@@ -62,9 +62,15 @@ const applyAllHoverRules = (sheet, func) => {
         switch (rule.type) {
             case CSSRule.STYLE_RULE:
                 const selector = rule.selectorText;
-                if (selector.includes(":hover")) {
-                    i = func(i, rule, sheet);
+                if (!selector.includes(":hover")) {
+                    continue;
                 }
+                const style = rule.style;
+                if (style.length === 0 ||
+                    (style.length === 1 && style[0] === "cursor")) {
+                    continue;
+                }
+                i = func(i, rule, sheet);
                 break;
             case CSSRule.MEDIA_RULE:
             case CSSRule.SUPPORTS_RULE:
