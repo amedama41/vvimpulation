@@ -7,7 +7,7 @@ class FrontendCommand {
     static scrollTop(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.scrollTop !== 0) {
+        if (elem) {
             elem.scrollTop = 0;
             return;
         }
@@ -16,7 +16,7 @@ class FrontendCommand {
     static scrollBottom(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
+        if (elem) {
             elem.scrollTop = elem.scrollHeight - elem.clientHeight;
             return;
         }
@@ -25,7 +25,7 @@ class FrontendCommand {
     static scrollUp(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.scrollTop !== 0) {
+        if (elem) {
             elem.scrollTop -= Math.max(count, 20);
             return;
         }
@@ -34,7 +34,7 @@ class FrontendCommand {
     static scrollDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
+        if (elem) {
             elem.scrollTop += Math.max(count, 20);
             return;
         }
@@ -49,7 +49,7 @@ class FrontendCommand {
     static moveHalfPageUp(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.scrollTop !== 0) {
+        if (elem) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
@@ -58,7 +58,7 @@ class FrontendCommand {
     static moveHalfPageDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
+        if (elem) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
@@ -67,7 +67,7 @@ class FrontendCommand {
     static movePageUp(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.scrollTop !== 0) {
+        if (elem) {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight;
             return;
         }
@@ -76,7 +76,7 @@ class FrontendCommand {
     static movePageDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
-        if (elem && elem.clientHeight !== elem.scrollHeight - elem.scrollTop) {
+        if (elem) {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight;
             return;
         }
@@ -85,7 +85,7 @@ class FrontendCommand {
     static scrollLeft(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
-        if (elem && elem.scrollLeft !== 0) {
+        if (elem) {
             elem.scrollLeft -= Math.max(count, 20);
             return;
         }
@@ -94,7 +94,7 @@ class FrontendCommand {
     static scrollRight(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
-        if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
+        if (elem) {
             elem.scrollLeft += Math.max(count, 20);
             return;
         }
@@ -103,7 +103,7 @@ class FrontendCommand {
     static scrollHome(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
-        if (elem && elem.scrollLeft !== 0) {
+        if (elem) {
             elem.scrollLeft = 0;
             return;
         }
@@ -112,7 +112,7 @@ class FrontendCommand {
     static scrollEnd(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
-        if (elem && elem.clientWidth !== elem.scrollWidth - elem.scrollLeft) {
+        if (elem) {
             elem.scrollLeft = elem.scrollWidth;
             return;
         }
