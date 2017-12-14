@@ -240,11 +240,6 @@ const DEFAULT_OPTIONS = {
             "media": "img, canvas, video, object, embed"
         },
         "local": {
-            "www.google.co.jp": {
-                "link": [
-                    ["#cdrlnk", "Link to specify period"]
-                ]
-            },
             "twitter.com": {
                 "link": [
                     ["div.new-tweets-bar.js-new-tweets-bar", "Link to display new tweets"],
