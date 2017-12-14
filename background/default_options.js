@@ -75,6 +75,7 @@ const DEFAULT_OPTIONS = {
             "gU": "goToRoot",
             "]]": "focusNext",
             "[[": "focusPrevious",
+            "_": "resetFocus",
             "zi": "zoomIn",
             "zo": "zoomOut",
             "zr": "zoomReset",

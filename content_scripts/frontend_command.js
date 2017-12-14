@@ -195,6 +195,10 @@ class FrontendCommand {
             setTimeout(() => lastNode.focus(), 0);
         }
     }
+    static resetFocus(count, frameInfo) {
+        // Suppress scroll when an html element has height 100%.
+        DomUtils.fixedFocus(document.documentElement);
+    }
 
     /**
      * Commands for search

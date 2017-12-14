@@ -36,6 +36,7 @@ const COMMAND_DESCRIPTIONS = {
     focusNext: { description: "Focus a next element" },
     focusPrevious: { description: "Focus a previous element" },
     focusNextFrame: { background: true, description: "Focus next frame" },
+    resetFocus: { description: "Reset focus state" },
 
     /** Commands for tab manipulation **/
     nextTab: { background: true, description: "Activate the next tab" },
