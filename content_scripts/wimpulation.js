@@ -278,75 +278,8 @@ function findSelectedEditableElement(current, key, caseSensitive, backward) {
     });
 }
 
-function insertFocusRule(sheet) {
-    const cssRules = sheet.cssRules;
-    for (let i = 0; i < cssRules.length; ++i) {
-        const rule = cssRules[i];
-        switch (rule.type) {
-            case CSSRule.STYLE_RULE:
-                const selector = rule.selectorText;
-                if (!selector || !selector.includes(":hover")) {
-                    continue;
-                }
-                const newSelector =
-                    selector.replace(/:hover\b/g, ":focus-within");
-                i = sheet.insertRule(
-                    `${newSelector} {${rule.style.cssText}}`, i + 1);
-                break;
-            case CSSRule.MEDIA_RULE:
-            case CSSRule.SUPPORTS_RULE:
-            case CSSRule.DOCUMENT_RULE || 13:
-                insertFocusRule(rule);
-                break;
-            default:
-                break;
-        }
-    }
-}
-function killHover() {
-    const promiseList = Array.from(document.styleSheets).map((sheet) => {
-        try {
-            sheet.cssRules; // check CORS.
-            return Promise.resolve(sheet);
-        }
-        catch (e) {
-            const originalLink = sheet.ownerNode;
-            if (originalLink.href.startsWith("resource://")) {
-                return Promise.resolve(null);
-            }
-            return new Promise((resolve, reject) => {
-                const link = originalLink.cloneNode(true);
-                link.crossOrigin = "anonymous";
-                link.addEventListener("load", (e) => {
-                    resolve(e.target.sheet);
-                    originalLink.parentNode.removeChild(originalLink);
-                }, { once: true });
-                link.addEventListener("error", (e) => {
-                    console.warn("can't load ", e.target.href, location.href);
-                    link.parentNode.removeChild(link);
-                    resolve(null);
-                }, { once: true });
-                originalLink.parentNode.insertBefore(link, originalLink);
-            });
-        }
-    });
-    Promise.all(promiseList).then((sheetList) => {
-        sheetList.forEach((sheet) => {
-            if (!sheet) {
-                return;
-            }
-            try {
-                insertFocusRule(sheet);
-            }
-            catch (e) {
-                console.error(Utils.errorString(e), sheet.href);
-            }
-        });
-    });
-}
-
 window.addEventListener("load", (e) => {
-    killHover();
+    HoverKiller.insertFocusRule();
     HoverKiller.setTabIndex();
 }, { once: true });
 

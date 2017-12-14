@@ -55,7 +55,7 @@ const setTabIndex = (element, index, selectorInfo) => {
     return true;
 }
 
-const collectHoverSelectors = (sheet, hoverSelectorList) => {
+const applyAllHoverRules = (sheet, func) => {
     const cssRules = sheet.cssRules;
     for (let i = 0; i < cssRules.length; ++i) {
         const rule = cssRules[i];
@@ -63,19 +63,60 @@ const collectHoverSelectors = (sheet, hoverSelectorList) => {
             case CSSRule.STYLE_RULE:
                 const selector = rule.selectorText;
                 if (selector.includes(":hover")) {
-                    hoverSelectorList.push(selector);
+                    i = func(i, rule, sheet);
                 }
                 break;
             case CSSRule.MEDIA_RULE:
             case CSSRule.SUPPORTS_RULE:
             case CSSRule.DOCUMENT_RULE || 13:
-                collectHoverSelectors(rule, hoverSelectorList);
+                applyAllHoverRules(rule, func);
                 break;
             default:
                 break;
         }
     }
 }
+
+const collectHoverSelectors = (sheet, hoverSelectorList) => {
+    applyAllHoverRules(sheet, (i, rule, sheet) => {
+        hoverSelectorList.push(rule.selectorText);
+        return i;
+    });
+}
+
+const insertFocusRule = (sheet) => {
+    applyAllHoverRules(sheet, (i, rule, sheet) => {
+        const orgSelector = rule.selectorText;
+        const selector = orgSelector.replace(/:hover\b/g, ":focus-within");
+        return sheet.insertRule(`${selector} {${rule.style.cssText}}`, i + 1);
+    });
+}
+
+const makeAccessibleSheetList = () => {
+    return Array.from(document.styleSheets).map((sheet) => {
+        if (accessible(sheet)) {
+            return Promise.resolve(sheet);
+        }
+        const originalLink = sheet.ownerNode;
+        if (originalLink.href.startsWith("resource://")) {
+            return Promise.resolve(null);
+        }
+        return new Promise((resolve, reject) => {
+            const link = originalLink.cloneNode(true);
+            link.crossOrigin = "anonymous";
+            link.addEventListener("load", (e) => {
+                resolve(e.target.sheet);
+                originalLink.parentNode.removeChild(originalLink);
+            }, { once: true });
+            link.addEventListener("error", (e) => {
+                console.warn("can't load ", e.target.href, location.href);
+                link.parentNode.removeChild(link);
+                resolve(null);
+            }, { once: true });
+            originalLink.parentNode.insertBefore(link, originalLink);
+        });
+    });
+};
 
 const accessible = (sheet) => {
     try {
@@ -96,23 +137,23 @@ class Parser {
         const ident = `(?:-?(?:[a-zA-Z_]|${nonascii}|${escape})(?:[a-zA-Z0-9_-]|${nonascii}|${escape})*)`;
         const string = `(?:"(?:${stringchar}|')*"|'(?:${stringchar}|")*')`;
 
-        const wqname_prefix = `(?:(${ident}?|\\*)\\|)`;
-        const attrib_match = `(?:[~|^$*]?=${wc}*)`;
-        const attrib_flags = `(?:${ident}${wc}*)`;
-        const attrib = `\\[${wc}*${wqname_prefix}?${ident}${wc}*(?:${attrib_match}(?:${ident}|${string})${wc}*${attrib_flags}?)?\\]`;
+        const wqnamePrefix = `(?:(${ident}?|\\*)\\|)`;
+        const attribMatch = `(?:[~|^$*]?=${wc}*)`;
+        const attribFlags = `(?:${ident}${wc}*)`;
+        const attrib = `\\[${wc}*${wqnamePrefix}?${ident}${wc}*(?:${attribMatch}(?:${ident}|${string})${wc}*${attribFlags}?)?\\]`;
         const nth = `${wc}*(?:[-+]?[0-9]*(?:n|\\\\0{0,4}(?:4e|6e)(?:\\r\\n|${wc})?|\\\\n)(?:${wc}*[-+]${wc}*[0-9]+)?|[-+]?[0-9]+|odd|even)`;
 
         this.nth = new RegExp(nth, "iy");
         this.ident = new RegExp(ident, "y");
 
         this.attrib = new RegExp(attrib, "y");
-        this.type_selector = new RegExp(`${wqname_prefix}?(${ident}|\\*)`, "y");
-        this._id_or_class_or_attrib = new RegExp(`(?:#${ident}|\\.${ident}|${attrib})`, "y");
+        this.typeSelector = new RegExp(`${wqnamePrefix}?(${ident}|\\*)`, "y");
+        this.idOrClassOrAttrib = new RegExp(`(?:#${ident}|\\.${ident}|${attrib})`, "y");
         this.pseudo = new RegExp(`(::?${ident})(\\(${wc}*)?`, "y");
-        this.pseudo_func_end = new RegExp(`${wc}*\\)`, "y");
+        this.pseudoFuncEnd = new RegExp(`${wc}*\\)`, "y");
         this.comma = new RegExp(`${wc}*,${wc}*`, "y");
         this.combinator = new RegExp(`${wc}*([\\x09\\x0A\\x0C\\x0D\\x20>+~])${wc}*`, "y");
-        this.pseudo_element = /^:(?::?(:?before|after|first-line|first-letter)|:(?:selection|cue|backdrop|placeholder))$/i;
+        this.pseudoElement = /^:(?::?(:?before|after|first-line|first-letter)|:(?:selection|cue|backdrop|placeholder))$/i;
     }
     getHoverSelectorInfo(selectorListStr) {
         const infoList = [];
@@ -242,7 +283,7 @@ class Parser {
         const info = {
             type: "*", hasNamespace: false, hasHover: false, pseudoInfoList: [],
         };
-        const result = Parser._exec(this.type_selector, input);
+        const result = Parser._exec(this.typeSelector, input);
         if (result) {
             const [matched, namespace, typeSelector] = result;
             if (namespace && namespace !== "*") {
@@ -260,7 +301,7 @@ class Parser {
         return info;
     }
     _nonTypeSimpleSelector(input, info) {
-        const result = Parser._exec(this._id_or_class_or_attrib, input);
+        const result = Parser._exec(this.idOrClassOrAttrib, input);
         if (result) {
             const [matched, namespace] = result;
             if (namespace && namespace !== "*") {
@@ -270,11 +311,11 @@ class Parser {
         }
 
         const pseudoStartIndex = input.matchedLen;
-        const pseudo_result = this._pseudo_exec(input);
-        if (!pseudo_result) {
+        const pseudResult = this._pseudoExec(input);
+        if (!pseudResult) {
             return false;
         }
-        const [pseudoName, hasNamespace] = pseudo_result;
+        const [pseudoName, hasNamespace] = pseudResult;
         if (hasNamespace) {
             info.hasNamespace = true;
         }
@@ -282,7 +323,7 @@ class Parser {
             info.hasHover = true;
             info.pseudoInfoList.push([pseudoStartIndex, Parser._removeHover]);
         }
-        else if (this.pseudo_element.test(pseudoName)) {
+        else if (this.pseudoElement.test(pseudoName)) {
             const length = pseudoName.length;
             info.pseudoInfoList.push(
                 [pseudoStartIndex, (str, index) => str.substr(index + length)]);
@@ -290,7 +331,7 @@ class Parser {
         return true;
     }
     // return [pseudoName, hasNamespace];
-    _pseudo_exec(input) {
+    _pseudoExec(input) {
         const result = Parser._exec(this.pseudo, input);
         if (!result) {
             return null;
@@ -301,17 +342,17 @@ class Parser {
             return [pseudoName, false];
         }
 
-        const argsResult = this._pseudo_func_args(input, pseudoName);
+        const argsResult = this._pseudoFuncArgs(input, pseudoName);
         if (!argsResult) {
             throw new Error(`invalid pseudo function: ${input}`);
         }
-        if (!Parser._test(this.pseudo_func_end, input)) {
+        if (!Parser._test(this.pseudoFuncEnd, input)) {
             throw new Error(`Missing end parenthesis ${input}`);
         }
         const [hasNamespace] = argsResult;
         return [pseudoName, hasNamespace];
     }
-    _pseudo_func_args(input, pseudoName) {
+    _pseudoFuncArgs(input, pseudoName) {
         switch (pseudoName) {
             case ":not": {
                 const info = this.compoundSelectorList(input);
@@ -364,6 +405,23 @@ class Parser {
 }
 
 return class HoverKillerImpl {
+    static insertFocusRule() {
+        const promiseList = makeAccessibleSheetList();
+        Promise.all(promiseList).then((sheetList) => {
+            sheetList.forEach((sheet) => {
+                if (!sheet) {
+                    return;
+                }
+                try {
+                    insertFocusRule(sheet);
+                }
+                catch (e) {
+                    console.error(Utils.errorString(e), sheet.href);
+                }
+            });
+        });
+    }
+
     static setTabIndex() {
         const sheetList = Array.from(document.styleSheets).filter(accessible);
         const hoverSelectorList = [];
@@ -389,6 +447,7 @@ return class HoverKillerImpl {
             }
         });
     }
+
     static makeParser() {
         return new Parser();
     }
