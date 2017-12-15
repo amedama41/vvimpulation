@@ -46,13 +46,13 @@ const setTabIndex = (element, index, selectorInfo) => {
     if (elems.length === 0) {
         return false;
     }
-    Array.from(elems).forEach((elem) => {
-        const result = setTabIndex(elem, index + 1, selectorInfo);
-        if (result && info.isTarget) {
+    return Array.from(elems).reduce((result, elem) => {
+        const isChildrenFound = setTabIndex(elem, index + 1, selectorInfo);
+        if (isChildrenFound && info.isTarget) {
             elem.tabIndex = Math.max(elem.tabIndex, 0);
         }
-    });
-    return true;
+        return result || isChildrenFound;
+    }, false);
 }
 
 const applyAllHoverRules = (sheet, func) => {
