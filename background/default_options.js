@@ -51,6 +51,8 @@ const DEFAULT_OPTIONS = {
             "g~": "toggleSelectOption",
             "n": "findNext",
             "N": "findPrevious",
+            "*": "findSelectionForward",
+            "#": "findSelectionBackward",
             "}": "findNextPage",
             "{": "findPreviousPage",
             "gt": "nextTab",

@@ -203,6 +203,24 @@ class FrontendCommand {
     /**
      * Commands for search
      **/
+    static findSelectionForward(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+            return;
+        }
+        frameInfo.postMessage({
+            command: "find", keyword: selection.toString(), backward: false
+        });
+    }
+    static findSelectionBackward(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+            return;
+        }
+        frameInfo.postMessage({
+            command: "find", keyword: selection.toString(), backward: true
+        });
+    }
     static findNextPage(count, frameInfo) {
         const NEXT_KEYWORDS = [
             "次のページ", "次へ", "次ページ", "NEXT", ">>", "»"

@@ -26,6 +26,8 @@ const COMMAND_DESCRIPTIONS = {
     /** Commands for search **/
     findNext: { background: true, description: "Repeat the latest '/' or '?'" },
     findPrevious: { background: true, description: "Repeat the latest '/' or '?' in opposite direction" },
+    findSelectionForward: { description: "Find selection text as keyword forward" },
+    findSelectionBackward: { description: "Find selection text as keyword backward" },
     findNextPage: { description: "Find a next label link" },
     findPreviousPage: { description: "Find a previous label link" },
 
