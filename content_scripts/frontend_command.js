@@ -1024,7 +1024,7 @@ function _editElement(frameInfo, editFunc) {
 }
 
 function invokeCommand(cmdName, count, frameInfo) {
-    const cmdAndArgs = cmdName.split(".");
+    const cmdAndArgs = cmdName.split("|");
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdAndArgs[0]];
     let isIgnore;
     if (cmdDesc.background) {
