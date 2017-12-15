@@ -625,6 +625,9 @@ class Command {
     static collectFrameId(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, msg);
     }
+    static killHover(msg, sender, tabInfo) {
+        tabInfo.forEachPort((port, frameId) => port.sendMessage(msg));
+    }
 
     static forwardCommand(msg, sender, tabInfo) {
         tabInfo.sendMessage(msg.frameId, msg);

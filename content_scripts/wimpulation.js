@@ -232,6 +232,10 @@ class MessageCommand {
             return false;
         }
     }
+    static killHover(msg) {
+        HoverKiller.insertFocusRule();
+        HoverKiller.setTabIndex();
+    }
     static showMessage(msg) {
         if (msg.fixed) {
             gFrameInfo.showFixedMessage(msg.message);

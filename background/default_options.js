@@ -79,6 +79,7 @@ const DEFAULT_OPTIONS = {
             "zi": "zoomIn",
             "zo": "zoomOut",
             "zr": "zoomReset",
+            "z=": "killHover",
             "yy": "yankCurrentURL",
             "yh": "yankPageHost",
             "yt": "yankPageTitle",

@@ -93,8 +93,16 @@ const collectHoverSelectors = (sheet, hoverSelectorList) => {
 const insertFocusRule = (sheet) => {
     applyAllHoverRules(sheet, (i, rule, sheet) => {
         const orgSelector = rule.selectorText;
-        const selector = orgSelector.replace(/:hover\b/g, ":focus-within");
-        return sheet.insertRule(`${selector} {${rule.style.cssText}}`, i + 1);
+        const newSelector = orgSelector.replace(/:hover\b/g, ":focus-within");
+        if (i !== 0) { // Avoid double insertion
+            const prevRule = sheet.cssRules[i - 1];
+            if (prevRule.selectorText === newSelector &&
+                prevRule.style.cssText === rule.style.cssText) {
+                return i;
+            }
+        }
+        sheet.insertRule(`${newSelector} {${rule.style.cssText}}`, i);
+        return i + 1;
     });
 }
 

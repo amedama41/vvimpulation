@@ -156,6 +156,7 @@ const COMMAND_DESCRIPTIONS = {
     yankCurrentURL: { topFrame: true, description: "Yank the current page URL" },
     yankPageHost: { topFrame: true, description: "Yank the current page host" },
     yankPageTitle: { topFrame: true, description: "Yank the current page title" },
+    killHover: { background: true, description: "Insert focus selector rules corresponding to hover, and set tabindex to hover targets" },
     repeatLastCommand: { description: "Run the latest invoked command" },
     showLastMessage: { topFrame: true, description: "Show the latest message" },
     ignore: { description: "Do nothing and through pass through the keydown event" },
