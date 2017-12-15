@@ -186,7 +186,7 @@ class FrontendCommand {
         const walker = createFocusNodeWalker(frameInfo.getTarget());
         const node = walker.previousNode();
         if (node) {
-            node.focus();
+            setTimeout(() => node.focus(), 0);
         }
         else {
             // TODO: move parent frame
