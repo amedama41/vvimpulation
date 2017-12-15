@@ -14,6 +14,7 @@ const DEFAULT_OPTIONS = {
             "i": "toInsertMode",
             "A": "toInsertModeOnLastElement",
             "v": "toVisualMode",
+            "gv": "toVisualModeWithCurrentSelection",
             ":": "toExMode",
             "g<": "showLastMessage",
             "o": "smartOpen",

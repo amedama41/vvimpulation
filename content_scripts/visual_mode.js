@@ -6,14 +6,9 @@
  */
 class VisualModeBase {
     constructor(frameInfo, keyMap, data) {
-        const selection  = window.getSelection();
+        const selection = window.getSelection();
         if (selection.rangeCount === 0) {
-            const point = document.caretPositionFromPoint(0, 0);
-            if (!point) {
-                throw new Error("No selection");
-            }
-            selection.setBaseAndExtent(
-                point.offsetNode, point.offset, point.offsetNode, point.offset);
+            throw new Error("No selection");
         }
         this.selection = selection;
         this.count = "0";

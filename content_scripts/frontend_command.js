@@ -789,6 +789,16 @@ Loop: ${video.loop}`
         FrontendCommand.toHintMode(2, frameInfo);
     }
     static toVisualMode(count, frameInfo) {
+        const point = document.caretPositionFromPoint(0, 0);
+        if (!point) {
+            return;
+        }
+        const selection = window.getSelection();
+        selection.setBaseAndExtent(
+            point.offsetNode, point.offset, point.offsetNode, point.offset);
+        frameInfo.changeMode("VISUAL");
+    }
+    static toVisualModeWithCurrentSelection(count, frameInfo) {
         frameInfo.changeMode("VISUAL");
     }
     static toCaretMode(selection, frameInfo) {
