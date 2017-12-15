@@ -57,10 +57,13 @@
     border: none !important;
     z-index: 2147483647 !important;
     display: none !important;
-    pointer-events: none;
+    pointer-events: none !important;
 }
 #wimpulation-console.wimpulation-show-console {
     display: block !important;
+}
+#wimpulation-console.wimpulation-console-mode {
+    pointer-events: auto !important;
 }
 
 .wimpulation-input {

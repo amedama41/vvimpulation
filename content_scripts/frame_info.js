@@ -196,6 +196,7 @@ class FrameInfo {
                 if (this._fixedMessage) {
                     this._fixedMessage = undefined;
                 }
+                this._consoleFrame.classList.add("wimpulation-console-mode");
                 this._consoleFrame.classList.add("wimpulation-show-console");
                 const activeElement = document.activeElement;
                 if (activeElement) {
@@ -271,6 +272,7 @@ class FrameInfo {
     }
     hideConsole() {
         this._consoleFrame.blur();
+        this._consoleFrame.classList.remove("wimpulation-console-mode");
         // If showing message, showMessage has a responsibility to close.
         if (this._consoleTimerId !== 0) {
             return;
