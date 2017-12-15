@@ -804,26 +804,15 @@ Loop: ${video.loop}`
     static toCaretMode(selection, frameInfo) {
         frameInfo.changeMode("CARET");
     }
-    static toExMode(count, frameInfo, defaultCommand="") {
+    static toConsoleMode(count, frameInfo, args) {
+        args.push("");
         frameInfo.changeMode(
-            "CONSOLE", { mode: "exec", defaultCommand: defaultCommand });
+            "CONSOLE", { mode: "exec", defaultCommand: args.join(" ") });
     }
-    static toExModeOpen(count, frameInfo) {
-        return FrontendCommand.toExMode(count, frameInfo, "open ");
-    }
-    static toExModeOpenCurrentURL(count, frameInfo) {
-        return FrontendCommand.toExMode(
-            count, frameInfo, "open " + location.href);
-    }
-    static toExModeTabOpen(count, frameInfo) {
-        return FrontendCommand.toExMode(count, frameInfo, "tabopen ");
-    }
-    static toExModeTabOpenCurrentURL(count, frameInfo) {
-        return FrontendCommand.toExMode(
-            count, frameInfo, "tabopen " + location.href);
-    }
-    static toExModeBuffer(count, frameInfo) {
-        return FrontendCommand.toExMode(count, frameInfo, "buffer ");
+    static toConsoleModeWithURL(count, frameInfo, args) {
+        args.push(location.href);
+        frameInfo.changeMode(
+            "CONSOLE", { mode: "exec", defaultCommand: args.join(" ") });
     }
     static toSearchMode(count, frameInfo, isBackward=false) {
         frameInfo.changeMode(
