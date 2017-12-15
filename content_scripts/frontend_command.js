@@ -1020,7 +1020,8 @@ function _editElement(frameInfo, editFunc) {
 }
 
 function invokeCommand(cmdName, count, frameInfo) {
-    const cmdDesc = COMMAND_DESCRIPTIONS[cmdName];
+    const cmdAndArgs = cmdName.split(".");
+    const cmdDesc = COMMAND_DESCRIPTIONS[cmdAndArgs[0]];
     let isIgnore;
     if (cmdDesc.background) {
         frameInfo.postMessage({ command: cmdName, count: count });
@@ -1034,7 +1035,8 @@ function invokeCommand(cmdName, count, frameInfo) {
         isIgnore = false;
     }
     else {
-        isIgnore = FrontendCommand[cmdName](count, frameInfo);
+        const command = cmdAndArgs.shift();
+        isIgnore = FrontendCommand[command](count, frameInfo, cmdAndArgs);
     }
     frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
     return isIgnore;
