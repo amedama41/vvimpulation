@@ -177,9 +177,7 @@ class FrontendCommand {
         }
         else {
             // TODO: move parent frame
-            walker.currentNode = document.documentElement;
-            const firstNode = (walker.firstChild() || document.documentElement);
-            setTimeout(() => firstNode.focus(), 0);
+            document.documentElement.focus();
         }
     }
     static focusPrevious(count, frameInfo) {
@@ -190,7 +188,6 @@ class FrontendCommand {
         }
         else {
             // TODO: move parent frame
-            walker.currentNode = document.documentElement;
             const lastNode = getLastNode(walker);
             setTimeout(() => lastNode.focus(), 0);
         }
@@ -1086,7 +1083,8 @@ function createFocusNodeWalker(currentNode) {
             return NodeFilter.FILTER_SKIP;
         }
         if ((node.tabIndex !== -1 && !isNonFocusableAnchor(node)) ||
-            Scroll.isScrollable(node, style)) {
+            Scroll.isScrollable(node, style) ||
+            node === document.documentElement) {
             return NodeFilter.FILTER_ACCEPT;
         }
         else {
@@ -1100,6 +1098,7 @@ function createFocusNodeWalker(currentNode) {
 }
 
 function getLastNode(walker) {
+    walker.currentNode = document.documentElement;
     let lastNode = document.documentElement;
     while (true) {
         const node = walker.lastChild();
