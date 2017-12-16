@@ -1,0 +1,11 @@
+body {
+    margin: 0px;
+}
+
+#errorURL {
+    box-sizing: border-box;
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+

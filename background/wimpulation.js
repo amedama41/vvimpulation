@@ -914,6 +914,22 @@ browser.tabs.onAttached.addListener((tabId, attachInfo) => {
     }
     tabInfo.windowId = attachInfo.newWindowId;
 });
+browser.webNavigation.onErrorOccurred.addListener((details) => {
+    if (details.frameId !== 0) {
+        return;
+    }
+    const tabId = details.tabId;
+    browser.tabs.get(tabId).then((tab) => {
+        if (tab.status !== "complete") {
+            return;
+        }
+        const url = browser.runtime.getURL("pages/error.html");
+        browser.tabs.update(tabId, {
+            url: `${url}?errorURL=${details.url}`,
+            loadReplace: true
+        });
+    });
+});
 
 browser.storage.local.get({
     options: DEFAULT_OPTIONS
