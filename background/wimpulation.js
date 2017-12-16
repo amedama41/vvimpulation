@@ -490,6 +490,15 @@ class Command {
             handleError(tabInfo, "moveTabToRight", e);
         });
     }
+    static moveTabToNewWindow(msg, sender, tabInfo) {
+        browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+            if (tabs.length > 1) {
+                return browser.windows.create({ tabId: tabInfo.id });
+            }
+        }).catch((e) => {
+            handleError(tabInfo, "moveTabToNewWindow", e);
+        });
+    }
     static removeCurrentTab(msg, sender, tabInfo) {
         browser.tabs.remove(sender.tab.id).catch((e) => {
             handleError(tabInfo, "removeCurrentTab", e);
