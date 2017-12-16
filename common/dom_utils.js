@@ -232,10 +232,6 @@ return (class Edit {
         }
     }
     static isFocusable(elem) {
-        const rect = elem.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) {
-            return false;
-        }
         const style = window.getComputedStyle(elem, null);
         if (style.visibility === "hidden") {
             return false;
@@ -260,12 +256,18 @@ return (class Edit {
             !elem.hasAttribute("href") &&
             !elem.hasAttribute("tabindex"));
     }
+    static isDisplay(elem) {
+        if (elem instanceof HTMLAreaElement) {
+            const rect = node.getBoundingClientRect();
+            return rect.width !== 0 || rect.height !== 0;
+        }
+        return elem.getClientRects().length !== 0;
+    }
     static acceptFocusable(node) {
-        const rect = node.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) {
+        if (!Edit.isDisplay(node)) {
             return NodeFilter.FILTER_REJECT;
         }
-        if (DomUtils.isFocusable(node)) {
+        if (Edit.isFocusable(node)) {
             return NodeFilter.FILTER_ACCEPT;
         }
         else {
