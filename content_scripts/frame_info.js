@@ -283,6 +283,7 @@ class FrameInfo {
             .then((result) => {
                 if (this._consoleTimerId !== 0) {
                     clearTimeout(this._consoleTimerId);
+                    this._consoleTimerId = 0;
                 }
                 this._consoleFrame.classList.add(CLASS_NAME);
             });
