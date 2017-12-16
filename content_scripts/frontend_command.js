@@ -171,9 +171,11 @@ class FrontendCommand {
     }
     static focusNext(count, frameInfo, args) {
         const getDocument = () => document.documentElement;
+        count = Math.max(count, 1);
         _moveFocus(count, frameInfo, true, args.length > 0, getDocument);
     }
     static focusPrevious(count, frameInfo, args) {
+        count = Math.max(count, 1);
         _moveFocus(count, frameInfo, false, args.length > 0, getLastNode);
     }
     static resetFocus(count, frameInfo) {
@@ -1008,23 +1010,36 @@ function _editElement(frameInfo, editFunc) {
 }
 
 function _moveFocus(count, frameInfo, isForward, isReset, getDefaultNode) {
+    let node = frameInfo.getTarget();
     if (isReset) {
-        _focusRecursively(getDefaultNode(), count, frameInfo, isForward);
-        return;
+        node = getDefaultNode();
+        if (node.contentWindow) {
+            _focusRecursively(node, count, frameInfo, isForward);
+            return;
+        }
+        --count;
     }
-    const walker = createFocusNodeWalker(frameInfo.getTarget());
-    const node = (isForward ? walker.nextNode() : walker.previousNode());
-    if (node) {
-        _focusRecursively(node, count, frameInfo, isForward);
-        return;
+    const walker = createFocusNodeWalker(node);
+    while (count > 0) {
+        let next = (isForward ? walker.nextNode() : walker.previousNode());
+        if (!next) {
+            if (!frameInfo.isTopFrame()) {
+                node.focus();
+                const command = (isForward ? "focusNext" : "focusPrevious");
+                frameInfo.forwardToParent({ command, count });
+                return;
+            }
+            next = getDefaultNode();
+            walker.currentNode = next;
+        }
+        if (next.contentWindow) {
+            _focusRecursively(next, count, frameInfo, isForward);
+            return;
+        }
+        node = next;
+        --count;
     }
-    if (frameInfo.isTopFrame()) {
-        _focusRecursively(getDefaultNode(), count, frameInfo, isForward);
-    }
-    else {
-        const command = (isForward ? "focusNext" : "focusPrevious");
-        frameInfo.forwardToParent({ command, count });
-    }
+    _focusRecursively(node, count, frameInfo, isForward);
 }
 function _focusRecursively(node, count, frameInfo, isForward) {
     const activeElement = document.activeElement;
