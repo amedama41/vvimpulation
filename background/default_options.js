@@ -116,7 +116,7 @@ const DEFAULT_OPTIONS = {
             "<Space>l": "seekForward",
             "<Space>r": "switchLoop",
             "<Space><C-L>": "reloadVideo",
-            "<Space><C-G>": "showVideInfo",
+            "<Space><C-G>": "showVideoInfo",
             "<Tab>": "ignore",
             "<S-Tab>": "ignore",
             "<Enter>": "ignore",

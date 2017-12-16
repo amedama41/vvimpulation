@@ -82,7 +82,7 @@ const COMMAND_DESCRIPTIONS = {
     seekBack: { description: "Seek backward the playback time of a video" },
     switchLoop: { description: "Switch loop mode of a video" },
     reloadVideo: { description: "Reload a video" },
-    showVideInfo: { description: "Show information of a video" },
+    showVideoInfo: { description: "Show information of a video" },
 
     /** Commands for current frame **/
     openLinkInFrame: { description: "Open a link in the current frame" },

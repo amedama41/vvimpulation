@@ -323,7 +323,7 @@ class FrontendCommand {
         }
         video.load();
     }
-    static showVideInfo(count, frameInfo) {
+    static showVideoInfo(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
             return;
