@@ -70,6 +70,8 @@ const DEFAULT_OPTIONS = {
             "<": "moveTabToLeft",
             ">": "moveTabToRight",
             "==": "moveTabToNewWindow",
+            "g<": "moveTabToPreviousWindow",
+            "g>": "moveTabToNextWindow",
             "u": "undoCloseTab",
             "dd": "removeCurrentTab",
             "dw": "removeCurrentWindow",

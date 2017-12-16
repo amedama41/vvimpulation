@@ -32,6 +32,9 @@ class TabInfo {
     set windowId(id) {
         this.tab.windowId = id;
     }
+    get incognito() {
+        return this.tab.incognito;
+    }
     update(tab) {
         this.tab = tab;
     }
@@ -353,6 +356,26 @@ function moveTab(tabId, distance, toLeft) {
         });
     });
 }
+function moveTabToWindow(tabInfo, distance) {
+    return browser.windows.getAll({ windowTypes: ["normal"] }).then((wins) => {
+        wins = wins.filter((win) => win.incognito === tabInfo.incognito);
+        const index = wins.findIndex((win) => win.id === tabInfo.windowId);
+        const nextWin = Utils.nextElement(wins, index, distance);
+        if (nextWin === wins[index]) {
+            return;
+        }
+        const tabId = tabInfo.id;
+        const windowId = nextWin.id;
+        return browser.tabs.move(tabId, { windowId, index: -1 }).then((tab) => {
+            return Promise.all([
+                browser.tabs.update(tabId, { active: true }),
+                browser.windows.update(windowId, { focused: true }),
+            ]);
+        });
+    }).catch((e) => {
+        handleError(tabInfo, "moveTabToNextWindow", e);
+    });
+}
 
 function findAllFrame(
     tabInfo, keyword, startIndex, frameIdList, caseSensitive, backward) {
@@ -497,6 +520,16 @@ class Command {
             }
         }).catch((e) => {
             handleError(tabInfo, "moveTabToNewWindow", e);
+        });
+    }
+    static moveTabToNextWindow(msg, sender, tabInfo) {
+        moveTabToWindow(tabInfo, Math.max(msg.count, 1)).catch((e) => {
+            handleError(tabInfo, "moveTabToNextWindow", e);
+        });
+    }
+    static moveTabToPreviousWindow(msg, sender, tabInfo) {
+        moveTabToWindow(tabInfo, -Math.max(msg.count, 1)).catch((e) => {
+            handleError(tabInfo, "moveTabToPreviousWindow", e);
         });
     }
     static removeCurrentTab(msg, sender, tabInfo) {

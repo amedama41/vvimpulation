@@ -208,6 +208,17 @@ return class {
         return count;
     }
 
+    static nextElement(array, index, distance) {
+        if (distance >= 0) {
+            return array[(index + distance) % array.length];
+        }
+        else {
+            const length = array.length;
+            distance = (-distance % length);
+            return array[(index + length - distance) % length];
+        }
+    }
+
     static errorString(error) {
         if (error instanceof Error) {
             return `${error.message} (${error.fileName}:${error.lineNumber})`;

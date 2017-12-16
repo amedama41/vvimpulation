@@ -49,6 +49,8 @@ const COMMAND_DESCRIPTIONS = {
     moveTabToLeft: { background: true, description: "Move the current tab to left" },
     moveTabToRight: { background: true, description: "Move the current tab to right" },
     moveTabToNewWindow: { background: true, description: "Move the current tab to a new window" },
+    moveTabToNextWindow: { background: true, description: "Move the current tab to the next window" },
+    moveTabToPreviousWindow: { background: true, description: "Move the current tab to the previous window" },
     removeCurrentTab: { background: true, description: "Close the current tab" },
     undoCloseTab: { background: true, description: "Reopen the latest closed tab" },
     duplicateTab: { background: true, description: "Open the current page in a new tab" },
