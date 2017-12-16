@@ -250,11 +250,32 @@ return (class Edit {
         }
         return true;
     }
+    static hasFocusableChild(elem) {
+        const walker = Edit.createFocusNodeWalker(elem);
+        return walker.firstChild() !== null;
+    }
     static isNonFocusableAnchor(elem) {
         // Anchor elements without href can not be focused.
         return (elem instanceof HTMLAnchorElement &&
             !elem.hasAttribute("href") &&
             !elem.hasAttribute("tabindex"));
+    }
+    static acceptFocusable(node) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) {
+            return NodeFilter.FILTER_REJECT;
+        }
+        if (DomUtils.isFocusable(node)) {
+            return NodeFilter.FILTER_ACCEPT;
+        }
+        else {
+            return NodeFilter.FILTER_SKIP;
+        }
+    };
+    static createFocusNodeWalker(root) {
+        return document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+            acceptNode: Edit.acceptFocusable
+        });
     }
 });
 

@@ -176,7 +176,7 @@ class FrontendCommand {
     }
     static focusPrevious(count, frameInfo, args) {
         count = Math.max(count, 1);
-        _moveFocus(count, frameInfo, false, args.length > 0, getLastNode);
+        _moveFocus(count, frameInfo, false, args.length > 0, _getLastNode);
     }
     static resetFocus(count, frameInfo) {
         // Suppress scroll when an html element has height 100%.
@@ -1009,6 +1009,18 @@ function _editElement(frameInfo, editFunc) {
     }
 }
 
+function _getLastNode() {
+    const walker = DomUtils.createFocusNodeWalker(document.documentElement);
+    let lastNode = document.documentElement;
+    while (true) {
+        const node = walker.lastChild();
+        if (!node) {
+            break;
+        }
+        lastNode = node;
+    }
+    return lastNode;
+}
 function _moveFocus(count, frameInfo, isForward, isReset, getDefaultNode) {
     let node = frameInfo.getTarget();
     if (isReset) {
@@ -1019,7 +1031,8 @@ function _moveFocus(count, frameInfo, isForward, isReset, getDefaultNode) {
         }
         --count;
     }
-    const walker = createFocusNodeWalker(node);
+    const walker = DomUtils.createFocusNodeWalker(document.documentElement);
+    walker.currentNode = node;
     while (count > 0) {
         let next = (isForward ? walker.nextNode() : walker.previousNode());
         if (!next) {
@@ -1092,37 +1105,5 @@ function focusNextKeywordLink(keywords, count, target) {
     const index = linkList.findIndex(
         (link) => (link.compareDocumentPosition(target) & positionBit));
     linkList[(Math.max(index - 1, -1) + count) % linkList.length].focus();
-}
-
-function createFocusNodeWalker(currentNode) {
-    const acceptNode = (node) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) {
-            return NodeFilter.FILTER_REJECT;
-        }
-        if (DomUtils.isFocusable(node)) {
-            return NodeFilter.FILTER_ACCEPT;
-        }
-        else {
-            return NodeFilter.FILTER_SKIP;
-        }
-    };
-    const walker = document.createTreeWalker(
-        document.documentElement, NodeFilter.SHOW_ELEMENT, { acceptNode });
-    walker.currentNode = currentNode;
-    return walker;
-}
-
-function getLastNode() {
-    const walker = createFocusNodeWalker(document.documentElement);
-    let lastNode = document.documentElement;
-    while (true) {
-        const node = walker.lastChild();
-        if (!node) {
-            break;
-        }
-        lastNode = node;
-    }
-    return lastNode;
 }
 

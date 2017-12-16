@@ -33,7 +33,7 @@ const querySelectorAll = (elem, combinator, selector) => {
 
 const setTabIndex = (element, index, selectorInfo) => {
     if (index === selectorInfo.length) {
-        return true;
+        return [true, false];
     }
     const info = selectorInfo[index];
     let selector = info.selector;
@@ -44,15 +44,22 @@ const setTabIndex = (element, index, selectorInfo) => {
     }
     const elems = querySelectorAll(element, info.combinator, selector);
     if (elems.length === 0) {
-        return false;
+        return [false, false];
     }
-    return Array.from(elems).reduce((result, elem) => {
-        const isChildrenFound = setTabIndex(elem, index + 1, selectorInfo);
-        if (isChildrenFound && info.isTarget) {
-            elem.tabIndex = Math.max(elem.tabIndex, 0);
+    return Array.from(elems).reduce(([hasChildren, hasFocusable], elem) => {
+        const [child, focus] = setTabIndex(elem, index + 1, selectorInfo);
+        if (!child) {
+            return [hasChildren, hasFocusable];
         }
-        return result || isChildrenFound;
-    }, false);
+        if (focus || DomUtils.hasFocusableChild(elem)) {
+            return [true, true];
+        }
+        if (info.isTarget) {
+            elem.tabIndex = Math.max(elem.tabIndex, 0);
+            return [true, true];
+        }
+        return [true, hasFocusable];
+    }, [false, false]);
 }
 
 const applyAllHoverRules = (sheet, func) => {
