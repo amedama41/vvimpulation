@@ -1032,10 +1032,7 @@ function invokeCommand(cmdName, count, frameInfo) {
         isIgnore = false;
     }
     else if (cmdDesc.topFrame && !frameInfo.isTopFrame()) {
-        frameInfo.postMessage({
-            command: 'forwardCommand', frameId: 0,
-            data: { command: cmdName, count: count }
-        });
+        frameInfo.forwardToFrame(0, { command: cmdName, count: count });
         isIgnore = false;
     }
     else {

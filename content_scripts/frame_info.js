@@ -4,6 +4,7 @@ class FrameIdInfo {
     constructor(selfFrameId) {
         this._selfFrameId = selfFrameId;
         this._childFrameIdMap = new Map();
+        this._parentFrameId = undefined;
         this._registerIntervalId = 0;
 
         this._startRegistration();
@@ -18,6 +19,12 @@ class FrameIdInfo {
     }
     getChildFrameId(childWindow) {
         return this._childFrameIdMap.get(childWindow);
+    }
+    getParentFrameId() {
+        return this._parentFrameId;
+    }
+    setParentFrameId(parentFrameId) {
+        this._parentFrameId = parentFrameId;
     }
     handleFrameMessage(msgEvent, port) {
         const sourceWindow = msgEvent.source;
@@ -134,8 +141,9 @@ class FrameInfo {
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
     }
-    completeChildRegistration() {
+    completeChildRegistration(msg) {
         this._frameIdInfo.stopRegistration();
+        this._frameIdInfo.setParentFrameId(msg.frameId);
     }
 
     // Method related to frame id.
@@ -155,6 +163,20 @@ class FrameInfo {
     }
     sendMessage(msg) {
         return this._port.sendMessage(msg);
+    }
+    forwardToParent(msg) {
+        this.forwardToFrame(this._frameIdInfo.getParentFrameId(), msg);
+    }
+    forwardToChildWindow(childWindow, msg) {
+        const frameId = this.getChildFrameId(childWindow);
+        if (!frameId) {
+            return false;
+        }
+        this.forwardToFrame(frameId, msg);
+        return true;
+    }
+    forwardToFrame(frameId, data) {
+        this._port.postMessage({ command: 'forwardCommand', frameId, data });
     }
 
     // Method for frontend commands.

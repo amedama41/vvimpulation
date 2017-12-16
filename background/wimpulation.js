@@ -743,8 +743,9 @@ class Command {
             if (result.parentFrameId !== sender.frameId) {
                 return false;
             }
-            return tabInfo.postMessage(
-                childFrameId, { command: "completeChildRegistration" });
+            return tabInfo.postMessage(childFrameId, {
+                command: "completeChildRegistration", frameId: sender.frameId
+            });
         });
     }
 }

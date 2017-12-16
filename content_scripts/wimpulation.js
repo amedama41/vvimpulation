@@ -312,7 +312,7 @@ function connectToBackGround(reconnectTimeout) {
             gFrameInfo.setKeyMapping(msg.keyMapping);
         }
         else if (msg.command === "completeChildRegistration") {
-            gFrameInfo.completeChildRegistration();
+            gFrameInfo.completeChildRegistration(msg);
         }
     };
     const handleRequest = (msg, sender) => {
