@@ -37,6 +37,8 @@ const COMMAND_DESCRIPTIONS = {
     focusout: { description: "Remove focus from the target" },
     focusNext: { description: "Focus a next element" },
     focusPrevious: { description: "Focus a previous element" },
+    focusNextAndChangeMode: { description: "Focus a next element and if the element is editable, then change to insert otherwise normal" },
+    focusPreviousAndChangeMode: { description: "Focus a previous element and if the element is editable, then change to insert otherwise normal" },
     focusNextFrame: { background: true, description: "Focus next frame" },
     resetFocus: { description: "Reset focus state" },
 

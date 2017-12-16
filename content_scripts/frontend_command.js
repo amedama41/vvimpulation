@@ -170,13 +170,30 @@ class FrontendCommand {
         }
     }
     static focusNext(count, frameInfo, args) {
-        const getDocument = () => document.documentElement;
-        count = Math.max(count, 1);
-        _moveFocus(count, frameInfo, true, args.length > 0, getDocument);
+        focusNext(count, frameInfo, args, "focusNext");
     }
     static focusPrevious(count, frameInfo, args) {
-        count = Math.max(count, 1);
-        _moveFocus(count, frameInfo, false, args.length > 0, _getLastNode);
+        focusPrevious(count, frameInfo, args, "focusPrevious");
+    }
+    static focusNextAndChangeMode(count, frameInfo, args) {
+        const elem =
+            focusNext(count, frameInfo, args, "focusNextAndChangeMode");
+        if (elem && DomUtils.isEditable(elem)) {
+            frameInfo.changeMode("INSERT", { editableElement: elem });
+        }
+        else {
+            frameInfo.changeMode("NORMAL");
+        }
+    }
+    static focusPreviousAndChangeMode(count, frameInfo, args) {
+        const elem =
+            focusPrevious(count, frameInfo, args, "focusPreviousAndChangeMode");
+        if (elem && DomUtils.isEditable(elem)) {
+            frameInfo.changeMode("INSERT", { editableElement: elem });
+        }
+        else {
+            frameInfo.changeMode("NORMAL");
+        }
     }
     static resetFocus(count, frameInfo) {
         // Suppress scroll when an html element has height 100%.
@@ -1009,6 +1026,20 @@ function _editElement(frameInfo, editFunc) {
     }
 }
 
+function focusNext(count, frameInfo, args, command) {
+    return _moveFocus(Math.max(count, 1), frameInfo, args.length > 0, {
+        command: command,
+        getNode: (walker) => walker.nextNode(),
+        getDefaultNode: () => document.documentElement
+    });
+}
+function focusPrevious(count, frameInfo, args, command) {
+    return _moveFocus(Math.max(count, 1), frameInfo, args.length > 0, {
+        command: command,
+        getNode: (walker) => walker.previousNode(),
+        getDefaultNode: _getLastNode
+    });
+}
 function _getLastNode() {
     const walker = DomUtils.createFocusNodeWalker(document.documentElement);
     let lastNode = document.documentElement;
@@ -1021,53 +1052,56 @@ function _getLastNode() {
     }
     return lastNode;
 }
-function _moveFocus(count, frameInfo, isForward, isReset, getDefaultNode) {
+function _moveFocus(count, frameInfo, isReset, details) {
     let node = frameInfo.getTarget();
     if (isReset) {
-        node = getDefaultNode();
+        node = details.getDefaultNode();
         if (node.contentWindow) {
-            _focusRecursively(node, count, frameInfo, isForward);
-            return;
+            _focusRecursively(node, count, frameInfo, details.command);
+            return null;
         }
         --count;
     }
     const walker = DomUtils.createFocusNodeWalker(document.documentElement);
     walker.currentNode = node;
     while (count > 0) {
-        let next = (isForward ? walker.nextNode() : walker.previousNode());
+        let next = details.getNode(walker);
         if (!next) {
             if (!frameInfo.isTopFrame()) {
-                node.focus();
-                const command = (isForward ? "focusNext" : "focusPrevious");
-                frameInfo.forwardToParent({ command, count });
-                return;
+                _exactlyFocus(node);
+                frameInfo.forwardToParent({ command: details.command, count });
+                return null;
             }
-            next = getDefaultNode();
+            next = details.getDefaultNode();
             walker.currentNode = next;
         }
         if (next.contentWindow) {
-            _focusRecursively(next, count, frameInfo, isForward);
-            return;
+            _focusRecursively(next, count, frameInfo, details.command);
+            return null;
         }
         node = next;
         --count;
     }
-    _focusRecursively(node, count, frameInfo, isForward);
+    _exactlyFocus(node);
+    return node;
 }
-function _focusRecursively(node, count, frameInfo, isForward) {
+function _focusRecursively(node, count, frameInfo, command) {
     const activeElement = document.activeElement;
     if (activeElement) {
         activeElement.blur();
     }
     const childWindow = node.contentWindow;
-    if (!childWindow) {
-        node.focus();
-        return;
-    }
-    const command = (isForward ? "focusNext" : "focusPrevious") + "|reset";
+    command = command + "|reset";
     if (!frameInfo.forwardToChildWindow(childWindow, { command, count })) {
         setTimeout(() => node.focus(), 0);
     }
+}
+function _exactlyFocus(node) {
+    const activeElement = document.activeElement;
+    if (activeElement && activeElement.contentWindow) {
+        activeElement.blur();
+    }
+    node.focus();
 }
 
 function invokeCommand(cmdName, count, frameInfo) {

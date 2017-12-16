@@ -159,8 +159,8 @@ const DEFAULT_OPTIONS = {
             "<C-C>": "toNormalMode",
             "<C-[>": "toNormalMode",
             "<Esc>": "toNormalMode",
-            "<Tab>": "toInsertModeOnNextInput",
-            "<S-Tab>": "toInsertModeOnPreviousInput",
+            "<Tab>": "focusNextAndChangeMode",
+            "<S-Tab>": "focusPreviousAndChangeMode",
         },
         "visual": {
             "h": "move backward character",
