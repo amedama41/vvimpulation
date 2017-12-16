@@ -1094,28 +1094,13 @@ function focusNextKeywordLink(keywords, count, target) {
     linkList[(Math.max(index - 1, -1) + count) % linkList.length].focus();
 }
 
-function isNonFocusableAnchor(node) {
-    // Anchor elements without href can not be focused.
-    return (node instanceof HTMLAnchorElement &&
-        !node.hasAttribute("href") &&
-        !node.hasAttribute("tabindex"));
-}
 function createFocusNodeWalker(currentNode) {
     const acceptNode = (node) => {
         const rect = node.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) {
             return NodeFilter.FILTER_REJECT;
         }
-        if (rect.width === 0 || rect.height === 0) {
-            return NodeFilter.FILTER_SKIP;
-        }
-        const style = window.getComputedStyle(node, null);
-        if (style.visibility === "hidden") {
-            return NodeFilter.FILTER_SKIP;
-        }
-        if ((node.tabIndex !== -1 && !isNonFocusableAnchor(node)) ||
-            Scroll.isScrollable(node, style) ||
-            node === document.documentElement) {
+        if (DomUtils.isFocusable(node)) {
             return NodeFilter.FILTER_ACCEPT;
         }
         else {

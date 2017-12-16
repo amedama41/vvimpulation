@@ -218,6 +218,7 @@ return (class Edit {
         }
         return true;
     }
+
     static fixedFocus(elem) {
         const x = window.scrollX;
         const y = window.scrollY;
@@ -229,6 +230,31 @@ return (class Edit {
         catch (e) {
             console.warn("elem is likely dead:", Utils.errorString(e));
         }
+    }
+    static isFocusable(elem) {
+        const rect = elem.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            return false;
+        }
+        const style = window.getComputedStyle(elem, null);
+        if (style.visibility === "hidden") {
+            return false;
+        }
+        if (elem.disabled) {
+            return false;
+        }
+        if ((elem.tabIndex === -1 || Edit.isNonFocusableAnchor(elem)) &&
+            !Scroll.isScrollable(elem, style) &&
+            elem !== document.documentElement) {
+            return false;
+        }
+        return true;
+    }
+    static isNonFocusableAnchor(elem) {
+        // Anchor elements without href can not be focused.
+        return (elem instanceof HTMLAnchorElement &&
+            !elem.hasAttribute("href") &&
+            !elem.hasAttribute("tabindex"));
     }
 });
 
