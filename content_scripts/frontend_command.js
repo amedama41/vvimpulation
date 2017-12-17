@@ -82,6 +82,15 @@ class FrontendCommand {
         }
         window.scrollByPages(Math.max(count, 1) * 1);
     }
+    static scrollVerticalMiddle(count, frameInfo) {
+        const baseElem = getScrollBaseElement(frameInfo.getTarget());
+        const elem = Scroll.getVerticalScrollableElem(baseElem);
+        if (elem) {
+            elem.scrollTop = elem.scrollTopMax / 2;
+            return;
+        }
+        window.scrollTo(window.scrollX, window.scrollMaxY / 2);
+    }
     static scrollLeft(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
@@ -118,14 +127,20 @@ class FrontendCommand {
         }
         window.scrollTo(window.scrollMaxX, window.scrollY);
     }
+    static scrollHorizontalMiddle(count, frameInfo) {
+        const baseElem = getScrollBaseElement(frameInfo.getTarget());
+        const elem = Scroll.getHorizontalScrollableElem(baseElem);
+        if (elem) {
+            elem.scrollLeft = elem.scrollLeftMax / 2;
+            return;
+        }
+        window.scrollTo(window.scrollMaxX / 2, window.scrollY);
+    }
     static scrollPercent(count, frameInfo) {
         if (count === 0) {
             return;
         }
         window.scrollTo(window.scrollX, window.scrollMaxY * count / 100);
-    }
-    static scrollMiddle(count, frameInfo) {
-        return FrontendCommand.scrollPercent(50, frameInfo);
     }
     static moveTargetAtTop(count, frameInfo) {
         const elem = getScrollBaseElement(frameInfo.getTarget());
