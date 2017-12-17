@@ -165,27 +165,10 @@ class FrontendCommand {
         DomUtils.fixedFocus(document.documentElement);
     }
     static focusin(count, frameInfo, args) {
-        const elem = (args.length === 0 ?
-            frameInfo.getTarget() :
-            frameInfo.getChildFrame(parseInt(args[0], 10)));
-        if (!elem) {
-            return;
-        }
-        try {
-            const activeElement = document.activeElement;
-            if (activeElement && activeElement.contentWindow) {
-                activeElement.blur();
-            }
-            elem.focus();
-            if (!frameInfo.isTopFrame() && !document.hasFocus()) {
-                frameInfo.forwardToParent(
-                    { command: "focusin|" + frameInfo.getSelfFrameId() });
-            }
-        }
-        catch (e) {
-            console.warn(
-                `Element ${elem} is likely dead:`, Utils.errorString(e));
-        }
+        _focusin("focusin", frameInfo, args, (elem) => elem.focus());
+    }
+    static fixedFocusin(count, frameInfo, args) {
+        _focusin("fixedFocusin", frameInfo, args, DomUtils.fixedFocus);
     }
     static focusout(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -1153,6 +1136,30 @@ function _exactlyFocus(node) {
         activeElement.blur();
     }
     node.focus();
+}
+
+function _focusin(command, frameInfo, args, focusElement) {
+    const elem = (args.length === 0 ?
+        frameInfo.getTarget() :
+        frameInfo.getChildFrame(parseInt(args[0], 10)));
+    if (!elem) {
+        return;
+    }
+    try {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.contentWindow) {
+            activeElement.blur();
+        }
+        focusElement(elem);
+        if (!frameInfo.isTopFrame() && !document.hasFocus()) {
+            frameInfo.forwardToParent(
+                { command: command + "|" + frameInfo.getSelfFrameId() });
+        }
+    }
+    catch (e) {
+        console.warn(
+            `Element ${elem} is likely dead:`, Utils.errorString(e));
+    }
 }
 
 function invokeCommand(cmdName, count, frameInfo) {

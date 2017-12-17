@@ -35,6 +35,7 @@ const COMMAND_DESCRIPTIONS = {
     /** Commands for focus manipulation **/
     focusTopFrame: { topFrame: true, description: "Focus the most top frame" },
     focusin: { description: "Focus the target" },
+    fixedFocusin: { description: "Focus the target without scroll" },
     focusout: { description: "Remove focus from the target" },
     focusNext: { description: "Focus a next element" },
     focusPrevious: { description: "Focus a previous element" },
