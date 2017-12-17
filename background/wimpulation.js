@@ -920,7 +920,11 @@ browser.webNavigation.onErrorOccurred.addListener((details) => {
     }
     const tabId = details.tabId;
     browser.tabs.get(tabId).then((tab) => {
-        if (tab.status !== "complete") {
+        if (tab.status !== "complete" || tab.url !== details.url) {
+            return;
+        }
+        if (details.error.endsWith("2152398850") || // Cancel loading
+            details.error.endsWith("2153578529")) { // Show image
             return;
         }
         const url = browser.runtime.getURL("pages/error.html");
@@ -929,7 +933,7 @@ browser.webNavigation.onErrorOccurred.addListener((details) => {
             loadReplace: true
         });
     });
-});
+}, { url: [{ schemes: ["http", "https"] }] });
 
 browser.storage.local.get({
     options: DEFAULT_OPTIONS
