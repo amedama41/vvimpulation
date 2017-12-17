@@ -236,61 +236,47 @@ class FrameInfo {
                 return Promise.reject(error);
             });
     }
-    showMessage(message, saveMessage=true) {
+    showMessage(message, duration=3000, saveMessage=true) {
         if (!this.isTopFrame()) {
             this._port.postMessage(
-                { command: "showMessage", message, saveMessage, fixed: false });
+                { command: "showMessage", message, duration, saveMessage });
             return;
         }
         if (!this._consoleFrame) {
             return;
         }
         const CLASS_NAME = "wimpulation-show-console";
-        if (saveMessage) {
+        if (duration === 0) {
+            this._fixedMessage = message;
+        }
+        else if (saveMessage) {
             this._lastMessage = message;
         }
-        this._sendConsoleMessage({ command: "setMessage", message })
-            .then((result) => {
-                if (this._consoleTimerId !== 0) {
-                    clearTimeout(this._consoleTimerId);
-                }
-                this._consoleFrame.classList.add(CLASS_NAME);
+        const msg = { command: "setMessage", message };
+        this._sendConsoleMessage(msg).then((result) => {
+            if (this._consoleTimerId !== 0) {
+                clearTimeout(this._consoleTimerId);
+                this._consoleTimerId = 0;
+            }
+            this._consoleFrame.classList.add(CLASS_NAME);
+            if (duration !== 0) {
                 this._consoleTimerId = setTimeout(() => {
                     if (this._consoleTimerId !== 0) {
                         this._consoleTimerId = 0;
                         if (this._fixedMessage) {
-                            this.showFixedMessage(this._fixedMessage);
+                            this.showMessage(this._fixedMessage, 0);
                         }
                         else {
                             this._consoleFrame.classList.remove(CLASS_NAME);
                         }
                     }
-                }, 3000);
-            });
+                }, duration);
+            }
+        });
     }
-    showFixedMessage(message) {
-        if (!this.isTopFrame()) {
-            this._port.postMessage(
-                { command: "showMessage", message, fixed: true });
-            return;
-        }
-        if (!this._consoleFrame) {
-            return;
-        }
-        const CLASS_NAME = "wimpulation-show-console";
-        this._fixedMessage = message;
-        this._sendConsoleMessage({ command: "setMessage", message })
-            .then((result) => {
-                if (this._consoleTimerId !== 0) {
-                    clearTimeout(this._consoleTimerId);
-                    this._consoleTimerId = 0;
-                }
-                this._consoleFrame.classList.add(CLASS_NAME);
-            });
-    }
-    showLastMessage() {
+    showLastMessage(duration) {
         if (this._lastMessage !== "") {
-            this.showMessage(this._lastMessage);
+            this.showMessage(this._lastMessage, duration);
         }
     }
     hideConsole() {

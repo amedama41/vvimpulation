@@ -362,7 +362,7 @@ CurrentTime: ${video.currentTime}
 Volume: ${video.volume}
 Loop: ${video.loop}`
         );
-        frameInfo.showMessage(msg);
+        frameInfo.showMessage(msg, (count === 0 ? 3000 : count * 1000));
     }
 
     /**
@@ -734,7 +734,8 @@ Loop: ${video.loop}`
             infoList.push("Referring URL: " + document.referrer);
         }
         infoList.push("Modified: " + document.lastModified);
-        frameInfo.showMessage(infoList.join("\n"));
+        const duration = (count === 0 ? 3000 : count * 1000);
+        frameInfo.showMessage(infoList.join("\n"), duration);
     }
     static smartOpen(count, frameInfo) {
         smartOpenImpl(count, frameInfo, { command: 'openLink' });
@@ -770,7 +771,7 @@ Loop: ${video.loop}`
             });
     }
     static showLastMessage(count, frameInfo) {
-        frameInfo.showLastMessage();
+        frameInfo.showLastMessage(count === 0 ? 3000 : count * 1000);
     }
     static ignore(count, frameInfo) {
         return true;

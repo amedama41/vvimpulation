@@ -107,9 +107,9 @@ class TabInfo {
         }
         return forwardModeCommand(port, mode, data);
     }
-    showMessage(message, saveMessage, fixed) {
+    showMessage(message, duration, saveMessage) {
         this.sendMessage(
-            0, { command: "showMessage", message, saveMessage, fixed });
+            0, { command: "showMessage", message, duration, saveMessage });
     }
     setConsolePort(port) {
         this.consolePort = port;
@@ -222,7 +222,7 @@ class HintMode {
     toggleAutoFocus(tabInfo) {
         this.autoFocus = !this.autoFocus;
         const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
-        tabInfo.showMessage(message, false, false);
+        tabInfo.showMessage(message, 3000, false);
     }
 
     _fixFilter(tabInfo) {
@@ -325,7 +325,7 @@ function handleError(tabInfo, func, error) {
     console.error(`${func}: ${Utils.errorString(error)}`);
     tabInfo.showMessage(
         `${func} error (${(error || "some error occured").toString()})`,
-        true, false);
+        3000, true);
 }
 
 function selectTab(tabInfo, getIndex) {
@@ -414,7 +414,7 @@ function continueFind(tabInfo, isNext) {
                 tabInfo.lastSearchInfo[3] = index;
                 if (!result) {
                     const message = "Pattern not found: " + keyword;
-                    tabInfo.showMessage(message, false, false);
+                    tabInfo.showMessage(message, 3000, false);
                 }
             });
     });

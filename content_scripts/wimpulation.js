@@ -120,7 +120,7 @@ class NormalMode {
     startMacro(key, frameInfo) {
         this.isRecordingMacro = true;
         frameInfo.postMessage({ command: "startMacro", key });
-        frameInfo.showFixedMessage("recording @" + key.toLowerCase());
+        frameInfo.showMessage("recording @" + key.toLowerCase(), 0);
     }
     playMacro(key, frameInfo) {
         frameInfo.postMessage({ command: "playMacro", key });
@@ -237,12 +237,7 @@ class MessageCommand {
         HoverKiller.setTabIndex();
     }
     static showMessage(msg) {
-        if (msg.fixed) {
-            gFrameInfo.showFixedMessage(msg.message);
-        }
-        else {
-            gFrameInfo.showMessage(msg.message, msg.saveMessage);
-        }
+        gFrameInfo.showMessage(msg.message, msg.duration, msg.saveMessage);
     }
     static hideFixedMessage(msg) {
         gFrameInfo.hideFixedMessage();

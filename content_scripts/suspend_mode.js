@@ -2,7 +2,7 @@
 
 class SuspendMode {
     constructor(frameInfo) {
-        frameInfo.showFixedMessage(`-- ${this.constructor.getModeName()} --`);
+        frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     static getModeName() {
         return "SUSPEND";

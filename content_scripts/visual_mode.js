@@ -14,7 +14,7 @@ class VisualModeBase {
         this.count = "0";
         this.init(this.selection);
         this.mapper = Utils.makeCommandMapper(keyMap);
-        frameInfo.showFixedMessage(`-- ${this.constructor.getModeName()} --`);
+        frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     getTarget() {
         return selection.anchorNode;
