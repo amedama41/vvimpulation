@@ -261,7 +261,7 @@ return (class Edit {
     }
     static isDisplay(elem) {
         if (elem instanceof HTMLAreaElement) {
-            const rect = node.getBoundingClientRect();
+            const rect = elem.getBoundingClientRect();
             return rect.width !== 0 || rect.height !== 0;
         }
         return elem.getClientRects().length !== 0;
