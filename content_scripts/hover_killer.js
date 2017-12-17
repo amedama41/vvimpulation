@@ -119,7 +119,8 @@ const makeAccessibleSheetList = () => {
             return Promise.resolve(sheet);
         }
         const originalLink = sheet.ownerNode;
-        if (originalLink.href.startsWith("resource://")) {
+        const href = originalLink.href;
+        if (href.startsWith("resource://") || href.startsWith("chrome://")) {
             return Promise.resolve(null);
         }
         return new Promise((resolve, reject) => {
