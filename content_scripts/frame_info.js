@@ -156,6 +156,10 @@ class FrameInfo {
     getChildFrameId(childWindow) {
         return this._frameIdInfo.getChildFrameId(childWindow);
     }
+    getChildFrame(childFrameId) {
+        return Array.from(window.frames).find(
+            (frame) => this.getChildFrameId(frame) === childFrameId);
+    }
 
     // Method related to port.
     postMessage(msg) {

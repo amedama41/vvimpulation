@@ -164,10 +164,23 @@ class FrontendCommand {
         // Suppress scroll when an html element has height 100%.
         DomUtils.fixedFocus(document.documentElement);
     }
-    static focusin(count, frameInfo) {
-        const elem = frameInfo.getTarget();
+    static focusin(count, frameInfo, args) {
+        const elem = (args.length === 0 ?
+            frameInfo.getTarget() :
+            frameInfo.getChildFrame(parseInt(args[0], 10)));
+        if (!elem) {
+            return;
+        }
         try {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.contentWindow) {
+                activeElement.blur();
+            }
             elem.focus();
+            if (!frameInfo.isTopFrame() && !document.hasFocus()) {
+                frameInfo.forwardToParent(
+                    { command: "focusin|" + frameInfo.getSelfFrameId() });
+            }
         }
         catch (e) {
             console.warn(
