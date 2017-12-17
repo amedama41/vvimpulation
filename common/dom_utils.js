@@ -30,6 +30,9 @@ return (class Edit {
         }
     }
     static isEditable(elem) {
+        if (elem.readOnly || elem.disabled) {
+            return false;
+        }
         switch (elem.localName.toUpperCase()) {
             case "INPUT":
                 return Edit.isEditableInputType(elem.type);
