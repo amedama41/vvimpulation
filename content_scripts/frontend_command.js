@@ -161,6 +161,12 @@ class FrontendCommand {
      * Commands for focus manipulation
      */
     static focusTopFrame(count, frameInfo) {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.contentWindow) {
+            // This blur is not necessary in order to focus documentElement,
+            // but is necessary to show a border line of a focus element.
+            activeElement.blur();
+        }
         // Suppress scroll when an html element has height 100%.
         DomUtils.fixedFocus(document.documentElement);
     }
