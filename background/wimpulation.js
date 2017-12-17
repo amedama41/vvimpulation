@@ -277,8 +277,7 @@ class HintMode {
         const nextId = this.idList[nextIndex];
         if (prevId !== nextId) {
             tabInfo.forwardModeCommand(
-                prevId, "HINT",
-                { command: "blurHintLink", autoFocus: this.autoFocus });
+                prevId, "HINT", { command: "blurHintLink", });
         }
         tabInfo.forwardModeCommand(nextId, "HINT", {
             command: "focusHintLink",
