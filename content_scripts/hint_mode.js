@@ -48,7 +48,7 @@ class HintMode {
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
             case 'focusHintLink':
-                return this.focusHintLink(msg);
+                return this.focusHintLink(msg, frameInfo);
             case 'blurHintLink':
                 return this.blurHintLink(msg);
             case 'startFilter':
@@ -69,7 +69,7 @@ class HintMode {
         }
     }
 
-    focusHintLink(msg) {
+    focusHintLink(msg, frameInfo) {
         this._blurImpl(false);
         const localIndex = this.indexMap[msg.index];
         if (localIndex === undefined) {
@@ -78,10 +78,10 @@ class HintMode {
         }
         const [span, elem] = this.hints[localIndex];
         span.id = "wimpulation-hint-active";
-        if (msg.autoFocus) {
-            DomUtils.fixedFocus(elem);
-        }
         this.focusIndex = localIndex;
+        if (msg.autoFocus) {
+            invokeCommand("fixedFocusin", 0, frameInfo);
+        }
     }
     blurHintLink(msg) {
         this._blurImpl(msg.autoFocus);
