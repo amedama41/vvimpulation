@@ -79,6 +79,11 @@ const applyAllHoverRules = (sheet, func) => {
                 }
                 i = func(i, rule, sheet);
                 break;
+            case CSSRule.IMPORT_RULE:
+                if (accessible(rule.styleSheet)) { // TODO
+                    applyAllHoverRules(rule.styleSheet, func);
+                }
+                break;
             case CSSRule.MEDIA_RULE:
             case CSSRule.SUPPORTS_RULE:
             case CSSRule.DOCUMENT_RULE || 13:
