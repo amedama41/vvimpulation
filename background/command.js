@@ -303,12 +303,19 @@ gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
         if (!tab.incognito) {
             dlItems = dlItems.filter((item) => !item.incognito);
         }
+        const estimatedEndTime = (item) => {
+            const time = item.estimatedEndTime;
+            if (item) {
+                return new Date(time).toLocaleString();
+            }
+            return "--";
+        };
         return dlItems.map((item) => {
             let str = item.filename;
             switch (item.state) {
                 case browser.downloads.State.IN_PROGRESS:
                 case browser.downloads.State.INTERRUPTED:
-                    str += ` ${item.estimatedEndTime || "--"}`;
+                    str += ` ${estimatedEndTime(item)}`;
                     str += ` ${item.bytesReceived}`;
                     str += `/${item.totalBytes || "--"}`;
                     break;
@@ -324,12 +331,19 @@ gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
         if (!tab.incognito) {
             dlItems = dlItems.filter((item) => !item.incognito);
         }
+        const estimatedEndTime = (item) => {
+            const time = item.estimatedEndTime;
+            if (item) {
+                return new Date(time).toLocaleString();
+            }
+            return "--";
+        };
         return [0, "string", dlItems.map((item) => {
             let info = "";
             switch (item.state) {
                 case browser.downloads.State.IN_PROGRESS:
                 case browser.downloads.State.INTERRUPTED:
-                    info += `${item.estimatedEndTime || "--"}`;
+                    info += `${estimatedEndTime(item)}`;
                     info += ` ${item.bytesReceived}`;
                     info += `/${item.totalBytes || "--"}`;
                     break;
