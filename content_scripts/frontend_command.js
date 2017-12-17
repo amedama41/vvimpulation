@@ -714,6 +714,29 @@ Loop: ${video.loop}`
     /**
      * Commands for various applications
      **/
+    static showPageInfo(count, frameInfo) {
+        const renderMode = (mode) => {
+            switch (mode) {
+                case "CSS1Compat":
+                    return "Standards compliance mode";
+                case "BackCompat":
+                    return "Quirks mode";
+                default:
+                    return mode;
+            }
+        };
+        const infoList = [];
+        infoList.push("Title: " + document.title);
+        infoList.push("Address: " + document.documentURI);
+        infoList.push("Type: " + document.contentType);
+        infoList.push("Render Mode: " + renderMode(document.compatMode));
+        infoList.push("Text Encoding: " + document.characterSet);
+        if (document.referrer) {
+            infoList.push("Referring URL: " + document.referrer);
+        }
+        infoList.push("Modified: " + document.lastModified);
+        frameInfo.showMessage(infoList.join("\n"));
+    }
     static smartOpen(count, frameInfo) {
         smartOpenImpl(count, frameInfo, { command: 'openLink' });
     }

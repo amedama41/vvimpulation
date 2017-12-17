@@ -158,6 +158,7 @@ const COMMAND_DESCRIPTIONS = {
     deleteElement: { description: "Delete the target" },
 
     /** Commands for various applications **/
+    showPageInfo: { topFrame: true, description: "Show the current page information" },
     smartOpen: { description: "Open the target in the current page or click the target" },
     smartOpenInTab: { description: "Open the target in a new page or click the target" },
     yankCurrentURL: { topFrame: true, description: "Yank the current page URL" },

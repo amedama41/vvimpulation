@@ -24,6 +24,7 @@ const DEFAULT_OPTIONS = {
             "/": "toSearchMode",
             "?": "toBackwardSearchMode",
             "g<": "showLastMessage",
+            "<C-G>": "showPageInfo",
             "o": "smartOpen",
             "O": "smartOpenInTab",
             "gf": "openSource",
