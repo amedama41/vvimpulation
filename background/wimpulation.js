@@ -941,8 +941,7 @@ browser.storage.local.get({
     gOptions.keyMapping = options["keyMapping"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping = Utils.toPreparedCmdMap(options.keyMapping.hint);
-    gSearchCommand.setEngine(options["searchEngine"]);
-    gTabSearchCommand.setEngine(options["searchEngine"]);
+    setEngine(gEngineMap, options["searchEngine"]);
 
     browser.storage.onChanged.addListener((changes, areaName) => {
         if (!changes["options"]) {
@@ -956,8 +955,7 @@ browser.storage.local.get({
         postAllFrame({
             command: "updateKeyMapping", keyMapping: gOptions.keyMapping
         });
-        gSearchCommand.setEngine(options["searchEngine"]);
-        gTabSearchCommand.setEngine(options["searchEngine"]);
+        setEngine(gEngineMap, options["searchEngine"]);
     });
 
     browser.runtime.onConnect.addListener((port) => {

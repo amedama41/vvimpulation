@@ -3,6 +3,7 @@
 class CommandMap {
     constructor() {
         this.map = new Map();
+        this.defaultCommand = "";
     }
     clear() {
         this.map.clear();
@@ -10,7 +11,10 @@ class CommandMap {
     set(name, cmd) {
         this.map.set(name, cmd);
     }
-    getCommand(name, defaultCmdName="") {
+    setDefault(cmdName) {
+        this.defaultCommand = cmdName;
+    }
+    getCommand(name) {
         const cmd = this.map.get(name);
         if (cmd) {
             return [cmd, ""];
@@ -22,8 +26,8 @@ class CommandMap {
         if (cmdList.length > 1) {
             return [null, `${name} is ambiguous (${cmdList.join(",")})`];
         }
-        if (defaultCmdName) {
-            return [this.map.get(defaultCmdName), "use default command"];
+        if (this.defaultCommand) {
+            return [this.map.get(this.defaultCommand), "use default command"];
         }
         return [null, `${name} is unknown`];
     }
@@ -32,6 +36,9 @@ class CommandMap {
         if (match[3].length === 0) { // no arguments
             const namePrefix = match[2];
             const cmdList = CommandMap._filter(namePrefix, this.map);
+            if (cmdList.length === 0 && this.defaultCommand) {
+                return [this.map.get(this.defaultCommand), 0];
+            }
             return [cmdList, match[1].length];
         }
         else {
@@ -40,7 +47,7 @@ class CommandMap {
             if (cmd === null) {
                 return [[], 0];
             }
-            return [cmd, match[0].length];
+            return [cmd, (reason === "" ? match[0].length : 0)];
         }
     }
     static _filter(prefix, cmdMap) {
@@ -112,6 +119,17 @@ class ExCommandMap {
     }
 }
 const gExCommandMap = new ExCommandMap();
+const gEngineMap = new CommandMap();
+
+function setEngine(engineMap, searchEngine) {
+    const engines = searchEngine.engines;
+    engineMap.clear();
+    Object.keys(engines).forEach((keyword) => {
+        engineMap.set(
+            keyword, Object.assign({ name: keyword }, engines[keyword]));
+    });
+    engineMap.setDefault(searchEngine.defaultEngine);
+}
 
 function getHistoryAndBookmark(value, tab) {
     return Promise.all([
@@ -163,28 +181,17 @@ gExCommandMap.makeCommand("private", "Open link in private window", (args, tab) 
     return Promise.resolve(false); // always reject to avoid adding to history
 }, getHistoryAndBookmark);
 class SearchCommand {
-    constructor(name, description, useNewTab) {
+    constructor(name, description, kind, engineMap) {
         this.name = name;
         this.description = description;
-        this.useNewTab = useNewTab;
-        this.engineMap = new CommandMap();
-        this.defaultEngineName = null;
-    }
-    setEngine(searchEngine) {
-        const engines = searchEngine.engines;
-        this.engineMap.clear();
-        Object.keys(engines).forEach((keyword) => {
-            this.engineMap.set(
-                keyword, Object.assign({ name: keyword }, engines[keyword]));
-        });
-        this.defaultEngineName = searchEngine.defaultEngine;
+        this.kind = kind;
+        this.engineMap = engineMap;
     }
     invoke(args, tab) {
         if (args.length === 0) {
             return Promise.reject("no subcommand");
         }
-        const [engine, reason] =
-            this.engineMap.getCommand(args[0], this.defaultEngineName);
+        const [engine, reason] = this.engineMap.getCommand(args[0]);
         if (!engine) {
             return Promise.reject(reason);
         }
@@ -193,45 +200,36 @@ class SearchCommand {
         }
         const url = engine.searchUrl.replace(
             "%s", encodeURIComponent(args.join(" ")));
-        if (this.useNewTab) {
-            browser.tabs.create(
-                { url: url, index: tab.index + 1, active: true });
-        }
-        else {
-            browser.tabs.update(tab.id, { url: url });
+        switch (this.kind) {
+            case "tab":
+                browser.tabs.create(
+                    { url: url, index: tab.index + 1, active: true });
+                break;
+            case "private":
+                browser.windows.create({ url: url, incognito: true });
+                break;
+            default:
+                browser.tabs.update(tab.id, { url: url });
+                break;
         }
         return Promise.resolve(true);
     }
     complete(value, tab) {
-        let suggest = undefined;
-        let argStart = 0;
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
         if (Array.isArray(engineList)) {
-            if (engineList.length !== 0) {
-                return [
-                    0, "string",
-                    engineList.map((engine) => [engine.name, engine.searchUrl])
-                ];
-            }
-            if (!this.defaultEngineName) {
-                return [0, "string", []];
-            }
-            const [engine, reason] =
-                this.engineMap.getCommand(this.defaultEngineName)
-            suggest = engine.suggest;
-            argStart = 0;
-        }
-        else {
-            suggest = engineList.suggest;
-            argStart = fixedLen;
+            return [
+                0, "string",
+                engineList.map((engine) => [engine.name, engine.searchUrl])
+            ];
         }
 
+        const suggest = engineList.suggest;
         if (!suggest) {
             return [0, "string", []];
         }
 
         const url = suggest.url.replace(
-            "%s", encodeURIComponent(value.substr(argStart)));
+            "%s", encodeURIComponent(value.substr(fixedLen)));
         const headers = new Headers();
         switch (suggest.type) {
             case "json":
@@ -259,7 +257,7 @@ class SearchCommand {
                         });
                 }
             })
-            .then((result) => [argStart, "noinfo", result.map((e) => [e, ""])]);
+            .then((result) => [fixedLen, "noinfo", result.map((e) => [e, ""])]);
     }
     static _getJSONSuggests(json, path, decode) {
         // TODO
@@ -273,12 +271,15 @@ class SearchCommand {
             (e) => decode ? decodeURIComponent(e.textContent) : e.textContent);
     }
 }
-const gSearchCommand =
-    new SearchCommand("search", "Search keyword in current tab", false);
-const gTabSearchCommand =
-    new SearchCommand("tabsearch", "Search keyword in new tab", true);
-gExCommandMap.addCommand(gSearchCommand);
-gExCommandMap.addCommand(gTabSearchCommand);
+gExCommandMap.addCommand(
+    new SearchCommand(
+        "search", "Search keyword in current tab", "", gEngineMap));
+gExCommandMap.addCommand(
+    new SearchCommand(
+        "tabsearch", "Search keyword in new tab", "tab", gEngineMap));
+gExCommandMap.addCommand(
+    new SearchCommand(
+        "psearch", "Search keyword in private window", "private", gEngineMap));
 gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
