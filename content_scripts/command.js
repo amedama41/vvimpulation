@@ -98,7 +98,7 @@ const COMMAND_DESCRIPTIONS = {
     yankFrameURL: { description: "Yank the current frame URL" },
     yankFrameHost: { description: "Yank the current frame host" },
     yankFrameTitle: { description: "Yank the current frame title" },
-    showFrameURL: { description: "Show information of the current frame" },
+    showFrameInfo: { description: "Show information of the current frame" },
 
     /** Commands for page zoom manipulation **/
     zoomIn: { background: true, description: "Zoom in" },

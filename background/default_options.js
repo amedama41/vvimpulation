@@ -109,7 +109,7 @@ const DEFAULT_OPTIONS = {
             "wyy": "yankFrameURL",
             "wyh": "yankFrameHost",
             "wyt": "yankFrameTitle",
-            "w<C-G>": "showFrameURL",
+            "w<C-G>": "showFrameInfo",
             "<Space><Space>": "playOrPause",
             "<Space>j": "volumeDown",
             "<Space>k": "volumeUp",

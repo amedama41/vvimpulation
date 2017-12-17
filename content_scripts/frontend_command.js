@@ -415,9 +415,8 @@ Loop: ${video.loop}`
             frameInfo.showMessage("Yank current frame title");
         }
     }
-    static showFrameURL(count, frameInfo) {
-        frameInfo.showMessage(
-            "Title: " + document.title + "\n" + "URL: " + location.href);
+    static showFrameInfo(count, frameInfo) {
+        FrontendCommand.showPageInfo(count, frameInfo);
     }
 
     /**
