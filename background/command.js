@@ -204,15 +204,14 @@ class SearchCommand {
             case "tab":
                 browser.tabs.create(
                     { url: url, index: tab.index + 1, active: true });
-                break;
+                return Promise.resolve(true);
             case "private":
                 browser.windows.create({ url: url, incognito: true });
-                break;
+                return Promise.resolve(false);
             default:
                 browser.tabs.update(tab.id, { url: url });
-                break;
+                return Promise.resolve(true);
         }
-        return Promise.resolve(true);
     }
     complete(value, tab) {
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
