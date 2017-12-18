@@ -13,6 +13,7 @@ class Options {
         this.keyMapping = new KeyMapping();
         this.hintPattern = new HintPattern();
         this.searchEngine = new SearchEngine();
+        this.miscellaneous = new Miscellaneous();
         document.getElementById("import-button")
             .addEventListener("click", (e) => { this.importOptions(); });
         document.getElementById("export-button")
@@ -26,6 +27,7 @@ class Options {
         this.keyMapping.setOptions(options["keyMapping"]);
         this.hintPattern.setOptions(options["hintPattern"]);
         this.searchEngine.setOptions(options["searchEngine"] || {});
+        this.miscellaneous.setOptions(options["miscellaneous"] || {});
         this.options = options;
     }
     saveOptions() {
@@ -34,6 +36,7 @@ class Options {
                 "keyMapping": this.keyMapping.getOptions(),
                 "hintPattern": this.hintPattern.getOptions(),
                 "searchEngine": this.searchEngine.getOptions(),
+                "miscellaneous": this.miscellaneous.getOptions(),
             };
             this.options = options;
             browser.storage.local.set({
@@ -529,6 +532,34 @@ class SearchEngine {
             "click", (e) => this.removeEngine(rowIndex));
         row.appendChild(removeButton);
         return row;
+    }
+}
+
+const MISCELLANEOUS_ID_MAP = {
+    "miscellaneous-overwrite-error-page": "overwriteErrorPage",
+};
+class Miscellaneous {
+    constructor() {
+        this.options = {};
+        Object.keys(MISCELLANEOUS_ID_MAP).forEach((id) => {
+            document.getElementById(id).addEventListener("change", (e) => {
+                const target = e.target;
+                this.options[MISCELLANEOUS_ID_MAP[target.id]] = target.checked;
+            });
+        });
+    }
+    getOptions() {
+        return Object.assign({}, this.options);
+    }
+    setOptions(miscellaneous) {
+        this.options = Object.assign({}, miscellaneous);
+        this._updateMiscellaneousSection();
+    }
+    _updateMiscellaneousSection() {
+        Object.keys(MISCELLANEOUS_ID_MAP).forEach((id) => {
+            const checkbox = document.getElementById(id);
+            checkbox.checked = this.options[MISCELLANEOUS_ID_MAP[id]];
+        });
     }
 }
 

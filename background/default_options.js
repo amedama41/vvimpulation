@@ -289,6 +289,10 @@ const DEFAULT_OPTIONS = {
                 "searchUrl": "https://twitter.com/search?q=%s"
             }
         }
+    },
+
+    "miscellaneous": {
+        "overwriteErrorPage": true
     }
 };
 

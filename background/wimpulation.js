@@ -914,7 +914,7 @@ browser.tabs.onAttached.addListener((tabId, attachInfo) => {
     }
     tabInfo.windowId = attachInfo.newWindowId;
 });
-browser.webNavigation.onErrorOccurred.addListener((details) => {
+function overwriteErrorPage(details) {
     if (details.frameId !== 0) {
         return;
     }
@@ -933,29 +933,45 @@ browser.webNavigation.onErrorOccurred.addListener((details) => {
             loadReplace: true
         });
     });
-}, { url: [{ schemes: ["http", "https"] }] });
+}
+function setOverwriteErrorPageListener() {
+    const onErrorOccurred = browser.webNavigation.onErrorOccurred;
+    if (!onErrorOccurred.hasListener(overwriteErrorPage)) {
+        onErrorOccurred.addListener(
+            overwriteErrorPage, { url: [{ schemes: ["http", "https"] }] });
+    }
+}
+function removeOverwriteErrorPageListener() {
+    const onErrorOccurred = browser.webNavigation.onErrorOccurred;
+    if (onErrorOccurred.hasListener(overwriteErrorPage)) {
+        onErrorOccurred.removeListener(overwriteErrorPage);
+    }
+}
 
-browser.storage.local.get({
-    options: DEFAULT_OPTIONS
-}).then(({ options }) => {
+function setOptions(options) {
     gOptions.keyMapping = options["keyMapping"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping = Utils.toPreparedCmdMap(options.keyMapping.hint);
     setEngine(gEngineMap, options["searchEngine"]);
+    if (options["miscellaneous"].overwriteErrorPage) {
+        setOverwriteErrorPageListener();
+    }
+    else {
+        removeOverwriteErrorPageListener();
+    }
+}
+
+browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
+    setOptions(options);
 
     browser.storage.onChanged.addListener((changes, areaName) => {
         if (!changes["options"]) {
             return;
         }
-        const options = changes["options"].newValue;
-        gOptions.keyMapping = options["keyMapping"];
-        gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
-        gOptions.hintKeyMapping =
-            Utils.toPreparedCmdMap(options.keyMapping.hint);
+        setOptions(changes["options"].newValue);
         postAllFrame({
             command: "updateKeyMapping", keyMapping: gOptions.keyMapping
         });
-        setEngine(gEngineMap, options["searchEngine"]);
     });
 
     browser.runtime.onConnect.addListener((port) => {
