@@ -400,14 +400,15 @@ function findAllFrame(
     return findFrame(0);
 }
 
-function continueFind(tabInfo, isNext) {
+function continueFind(tabInfo, frameId, isNext) {
     const [keyword, caseSensitive, backward, index] = tabInfo.lastSearchInfo;
     if (keyword === "") {
         return Promise.resolve();
     }
     return tabInfo.frameIdList((frameIdList) => {
+        const frameIndex = frameIdList.indexOf(frameId);
         return findAllFrame(
-            tabInfo, keyword, index, frameIdList,
+            tabInfo, keyword, frameIndex, frameIdList,
             caseSensitive, (isNext ? backward : !backward))
             .then(([result, index]) => {
                 tabInfo.lastSearchInfo[3] = index;
@@ -447,12 +448,12 @@ class Command {
         });
     }
     static findNext(msg, sender, tabInfo) {
-        continueFind(tabInfo, true).catch((e) => {
+        continueFind(tabInfo, sender.frameId, true).catch((e) => {
             handleError(tabInfo, "findNext", e);
         });
     }
     static findPrevious(msg, sender, tabInfo) {
-        continueFind(tabInfo, false).catch((e) => {
+        continueFind(tabInfo, sender.frameId, false).catch((e) => {
             handleError(tabInfo, "findPrevious", e);
         });
     }
