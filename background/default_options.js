@@ -292,6 +292,7 @@ const DEFAULT_OPTIONS = {
     },
 
     "miscellaneous": {
+        "autoFocus": true,
         "overwriteErrorPage": true
     }
 };

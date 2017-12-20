@@ -536,6 +536,7 @@ class SearchEngine {
 }
 
 const MISCELLANEOUS_ID_MAP = {
+    "miscellaneous-auto-focus": "autoFocus",
     "miscellaneous-overwrite-error-page": "overwriteErrorPage",
 };
 class Miscellaneous {

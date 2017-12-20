@@ -144,13 +144,13 @@ const gOptions = {
 };
 
 class HintMode {
-    constructor(type) {
+    constructor(type, autoFocus) {
         this.type = type;
         this.filter = "";
         this.filterIndexMap = []; // displayed index => global index
         this.idList = []; // global index => frame id
         this.currentIndex = 0; // current displayed index
-        this.autoFocus = true;
+        this.autoFocus = autoFocus;
         this.mapper = Utils.makeCommandMapper(gOptions.hintKeyMapping);
     }
     handle(key, sender, tabInfo) {
@@ -638,7 +638,8 @@ class Command {
             type: type,
             pattern: HintMode._makePattern(type, sender.tab.url),
         }).then((hintsInfoList) => {
-            changeHintMode(tabInfo, hintsInfoList, new HintMode(type))
+            changeHintMode(
+                tabInfo, hintsInfoList, new HintMode(type, gOptions.autoFocus))
         }).catch((e) => {
             handleError(tabInfo, "toHintMode", e);
         });
@@ -960,6 +961,7 @@ function setOptions(options) {
     else {
         removeOverwriteErrorPageListener();
     }
+    gOptions.autoFocus = options["miscellaneous"].autoFocus;
 }
 
 browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
