@@ -140,6 +140,7 @@ class FrameInfo {
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+        this.changeModeNow("NORMAL");
     }
     completeChildRegistration(msg) {
         this._frameIdInfo.stopRegistration();
