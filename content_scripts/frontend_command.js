@@ -777,6 +777,11 @@ Loop: ${video.loop}`
             frameInfo.showMessage("Yank current page title");
         }
     }
+    static compose(count, frameInfo, args) {
+        args.forEach((command) => {
+            invokeCommand(command, count, frameInfo);
+        });
+    }
     static repeatLastCommand(count, frameInfo) {
         frameInfo.sendMessage({ command: "getLastCommand" })
             .then(([cmdName, lastCount]) => {
