@@ -226,7 +226,8 @@ class FrontendCommand {
             return;
         }
         frameInfo.postMessage({
-            command: "find", keyword: selection.toString(), backward: false
+            command: "find", keyword: selection.toString(), backward: false,
+            frameId: frameInfo.getSelfFrameId()
         });
     }
     static findSelectionBackward(count, frameInfo) {
@@ -235,7 +236,8 @@ class FrontendCommand {
             return;
         }
         frameInfo.postMessage({
-            command: "find", keyword: selection.toString(), backward: true
+            command: "find", keyword: selection.toString(), backward: true,
+            frameId: frameInfo.getSelfFrameId()
         });
     }
     static findNextPage(count, frameInfo) {

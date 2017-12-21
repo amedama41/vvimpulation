@@ -377,20 +377,21 @@ function moveTabToWindow(tabInfo, distance) {
 }
 
 function findAllFrame(
-    tabInfo, keyword, startIndex, frameIdList, caseSensitive, backward) {
+    tabInfo, keyword, frameId, frameIdList, caseSensitive, backward) {
     const msg = { command: "find", keyword, caseSensitive, backward };
     const diff = (backward ? -1 : 1);
     const length = frameIdList.length;
+    const startIndex = Math.max(frameIdList.indexOf(frameId), 0);
     const findFrame = (i) => {
         const index = (startIndex + i * diff + length) % length;
         msg.reset = (i !== 0);
         return tabInfo.sendMessage(frameIdList[index], msg)
             .then((result) => {
                 if (result) {
-                    return [true, index];
+                    return true;
                 }
                 if (i === length) {
-                    return [false, 0];
+                    return false;
                 }
                 else {
                     return findFrame(i + 1);
@@ -401,17 +402,15 @@ function findAllFrame(
 }
 
 function continueFind(tabInfo, frameId, isNext) {
-    const [keyword, caseSensitive, backward, index] = tabInfo.lastSearchInfo;
+    const [keyword, caseSensitive, backward] = tabInfo.lastSearchInfo;
     if (keyword === "") {
         return Promise.resolve();
     }
     return tabInfo.frameIdList((frameIdList) => {
-        const frameIndex = frameIdList.indexOf(frameId);
         return findAllFrame(
-            tabInfo, keyword, frameIndex, frameIdList,
+            tabInfo, keyword, frameId, frameIdList,
             caseSensitive, (isNext ? backward : !backward))
-            .then(([result, index]) => {
-                tabInfo.lastSearchInfo[3] = index;
+            .then((result) => {
                 if (!result) {
                     const message = "Pattern not found: " + keyword;
                     tabInfo.showMessage(message, 3000, false);
@@ -434,15 +433,13 @@ class Command {
     }
     static find(msg, sender, tabInfo) {
         return tabInfo.frameIdList((frameIdList) => {
-            const [keyword, cs, bw, index] = tabInfo.lastSearchInfo;
             const caseSensitive = /[A-Z]/.test(msg.keyword);
-            const startIndex = (keyword === msg.keyword ? index : 0);
             return findAllFrame(
-                tabInfo, msg.keyword, startIndex, frameIdList,
+                tabInfo, msg.keyword, msg.frameId, frameIdList,
                 caseSensitive, msg.backward)
-                .then(([result, lastIndex]) => {
+                .then((result) => {
                     tabInfo.lastSearchInfo =
-                        [msg.keyword, caseSensitive, msg.backward, lastIndex];
+                        [msg.keyword, caseSensitive, msg.backward];
                     return result;
                 });
         });
