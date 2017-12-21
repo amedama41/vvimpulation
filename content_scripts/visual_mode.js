@@ -28,14 +28,6 @@ class VisualModeBase {
     }
     onReset(frameInfo) {
         frameInfo.hideFixedMessage();
-        if (this.selection) {
-            try {
-                this.destroy(this.selection);
-            }
-            catch (e) {
-                console.error('visual mode reset error:', Utils.errorString(e));
-            }
-        }
     }
     onInvoking(cmd, frameInfo) {
         const count = parseInt(this.count, 10);
@@ -70,9 +62,6 @@ class VisualMode extends VisualModeBase {
         return "VISUAL";
     }
     init(selection) {}
-    destroy(selection) {
-        selection.collapseToEnd();
-    }
     selectionModify(selection, direction, granularity) {
         selection.modify("extend", direction, granularity);
     }
@@ -87,9 +76,6 @@ class CaretMode extends VisualModeBase {
         const offset = this.selection.focusOffset;
         selection.setBaseAndExtent(node, offset, node, offset);
         selection.modify("extend", "forward", "character");
-    }
-    destroy(selection) {
-        selection.collapseToStart();
     }
     selectionModify(selection, direction, granularity) {
         selection.collapseToStart();
