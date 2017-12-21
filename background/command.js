@@ -454,7 +454,7 @@ class DownloadManager {
         if (!time) {
             return "-";
         }
-        let elapsed = (new Date(time).getTime() - new Date().getTime()) / 1000;
+        let elapsed = (new Date(time).getTime() - Date.now()) / 1000;
         const elapsedList = [];
         if (elapsed > 24 * 60 * 60) {
             elapsedList.push(Math.floor(elapsed / (24 * 60 * 60)) + "D");
