@@ -411,6 +411,9 @@ class DownloadManager {
         if (url.startsWith("blob:")) {
             return "blob resource";
         }
+        if (url.startsWith("data:")) {
+            return "data resource";
+        }
         try {
             return new URL(url).hostname;
         }
