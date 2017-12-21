@@ -298,63 +298,184 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
             ([index, title]) => filter.match(title))
     ]);
 });
-gExCommandMap.makeCommand("download", "Show download items", (args, tab) => {
-    return browser.downloads.search({}).then((dlItems) => {
-        if (!tab.incognito) {
-            dlItems = dlItems.filter((item) => !item.incognito);
+class DownloadManager {
+    constructor() {
+        this.name = "download";
+        this.description = "Manage download items";
+        this.cmdMap = new CommandMap();
+        const State = browser.downloads.State;
+        const cmdList = [
+            new ExCommand(
+                "show", "Show all download item",
+                (args, tab) => {
+                    return DownloadManager._getItemList(null, args, tab)
+                        .then((items) => items.map(([id, info]) => info));
+                },
+                DownloadManager._getItemList.bind(null, null)),
+            new ExCommand(
+                "pause", "Pause download",
+                DownloadManager._invokeCommand.bind(
+                    null, (id) => browser.downloads.pause(id)),
+                DownloadManager._getItemList.bind(null, State.IN_PROGRESS)),
+            new ExCommand(
+                "resume", "Resume download",
+                DownloadManager._invokeCommand.bind(
+                    null, (id) => browser.downloads.resume(id)),
+                DownloadManager._getItemList.bind(null, State.INTERRUPTED)),
+            new ExCommand(
+                "cancel", "Cancel download",
+                DownloadManager._invokeCommand.bind(
+                    null, (id) => browser.downloads.cancel(id)),
+                DownloadManager._getItemList.bind(null, State.IN_PROGRESS)),
+            new ExCommand(
+                "erase", "Erase download items from history",
+                DownloadManager._invokeCommand.bind(
+                    null, (id) => browser.downloads.erase({ id })),
+                DownloadManager._getItemList.bind(null, null)),
+        ];
+        cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
+        this.cmdMap.setDefault("show");
+    }
+    invoke(args, tab) {
+        if (args.length === 0) {
+            args.push("show");
         }
-        const estimatedEndTime = (item) => {
-            const time = item.estimatedEndTime;
-            if (item) {
-                return new Date(time).toLocaleString();
-            }
-            return "--";
-        };
-        return dlItems.map((item) => {
-            let str = item.filename;
-            switch (item.state) {
-                case browser.downloads.State.IN_PROGRESS:
-                case browser.downloads.State.INTERRUPTED:
-                    str += ` ${estimatedEndTime(item)}`;
-                    str += ` ${item.bytesReceived}`;
-                    str += `/${item.totalBytes || "--"}`;
-                    break;
-                case browser.downloads.State.COMPLETE:
-                    str += " complete";
-                    break;
-            }
-            return str;
+        const [subcmd, reason] = this.cmdMap.getCommand(args[0]);
+        if (!subcmd) {
+            return Promise.reject(reason);
+        }
+        if (!reason) { // if reason is null, head of args is command
+            args.shift();
+        }
+        return subcmd.invoke(args, tab);
+    }
+    complete(value, tab) {
+        const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
+        if (Array.isArray(subcmdList)) {
+            return [
+                0, "string",
+                subcmdList.map((cmd) => [cmd.name, cmd.description])
+            ];
+        }
+        const query = value.substr(fixedLen).trim().split(/\s+/);
+        return subcmdList.complete(query, tab)
+            .then((result) => [fixedLen, "number", result]);
+    }
+    static _invokeCommand(func, args, tab) {
+        const ids = args
+            .map((arg) => parseInt(arg, 10))
+            .filter((id) => !Number.isNaN(id));
+        if (ids.length === 0) {
+            return Promise.reject("No arguments");
+        }
+        const promiseList =
+            ids.map((id) => func(id).then(() => "").catch((error) => error));
+        return Promise.all(promiseList).then((errors) => {
+            errors = errors.filter((error) => error);
+            return (errors.length ? Promise.reject(errors.join("\n")) : true);
         });
-    });
-}, (value, tab) => {
-    return browser.downloads.search({}).then((dlItems) => {
-        if (!tab.incognito) {
-            dlItems = dlItems.filter((item) => !item.incognito);
+    }
+    static _getItemList(state, query, tab) {
+        return browser.downloads.search({ query, state }).then((dlItems) => {
+            if (!tab.incognito) {
+                dlItems = dlItems.filter((item) => !item.incognito);
+            }
+            return dlItems.map((item) => {
+                const infoList = [];
+                switch (item.state) {
+                    case browser.downloads.State.IN_PROGRESS:
+                        infoList.push(DownloadManager._elapsedTime(item));
+                        infoList.push(DownloadManager._bytesReceived(item));
+                        break;
+                    case browser.downloads.State.INTERRUPTED:
+                        infoList.push(item.error);
+                        infoList.push(DownloadManager._bytesReceived(item));
+                        break;
+                    case browser.downloads.State.COMPLETE:
+                        infoList.push(DownloadManager._fileSize(item));
+                        infoList.push(DownloadManager._hostname(item.url));
+                        break;
+                }
+                return [item.id, item.filename + ": " + infoList.join(" -- ")];
+            });
+        });
+    }
+    static _fileSize(item) {
+        if (!item.exists) {
+            return "File moved or missing";
         }
-        const estimatedEndTime = (item) => {
-            const time = item.estimatedEndTime;
-            if (item) {
-                return new Date(time).toLocaleString();
+        const [fileSize, unit] = DownloadManager._adjustBytes(item.fileSize);
+        return `${fileSize} ${unit}`;
+    }
+    static _hostname(url) {
+        if (url.startsWith("blob:")) {
+            return "blob resource";
+        }
+        try {
+            return new URL(url).hostname;
+        }
+        catch (e) {
+            return url;
+        }
+    }
+    static _adjustBytes(bytes) {
+        if (bytes > 1024 * 1024 * 1024) {
+            return [(bytes / (1024 * 1024 * 1024)).toFixed(1), "GB"];
+        }
+        else if (bytes > 1024 * 1024) {
+            return [(bytes / (1024 * 1024)).toFixed(1), "MB"];
+        }
+        else if (bytes > 1024) {
+            return [(bytes / 1024).toFixed(1), "KB"];
+        }
+        else {
+            return [bytes, "B"];
+        }
+    }
+    static _bytesReceived(item) {
+        const [bytesReceived, rUnit] =
+            DownloadManager._adjustBytes(item.bytesReceived);
+        if (item.totalBytes !== -1) {
+            const [totalBytes, tUnit] =
+                DownloadManager._adjustBytes(item.totalBytes);
+            if (rUnit === tUnit) {
+                return `${bytesReceived} of ${totalBytes} ${tUnit}`;
             }
-            return "--";
-        };
-        return [0, "string", dlItems.map((item) => {
-            let info = "";
-            switch (item.state) {
-                case browser.downloads.State.IN_PROGRESS:
-                case browser.downloads.State.INTERRUPTED:
-                    info += `${estimatedEndTime(item)}`;
-                    info += ` ${item.bytesReceived}`;
-                    info += `/${item.totalBytes || "--"}`;
-                    break;
-                case browser.downloads.State.COMPLETE:
-                    info += "complete";
-                    break;
+            else {
+                return `${bytesReceived} ${rUnit} of ${totalBytes} ${tUnit}`;
             }
-            return [item.filename, info];
-        })];
-    });
-});
+        }
+        else {
+            return `${bytesReceived} ${rUnit}`;
+        }
+    }
+    static _elapsedTime(item) {
+        const time = item.estimatedEndTime;
+        if (!time) {
+            return "-";
+        }
+        let elapsed = (new Date(time).getTime() - new Date().getTime()) / 1000;
+        const elapsedList = [];
+        if (elapsed > 24 * 60 * 60) {
+            elapsedList.push(Math.floor(elapsed / (24 * 60 * 60)) + "D");
+            elapsed = elapsed % (24 * 60 * 60);
+        }
+        if (elapsed > 60 * 60) {
+            elapsedList.push(Math.floor(elapsed / (60 * 60)) + "h");
+            elapsed = elapsed % (60 * 60);
+        }
+        if (elapsed > 60) {
+            elapsedList.push(Math.floor(elapsed / 60) + "m");
+            elapsed = elapsed % 60;
+        }
+        if (elapsedList.length === 0) {
+            elapsedList.push(elapsed + "s");
+        }
+        elapsedList.push("left");
+        return elapsedList.join(" ");
+    }
+}
+gExCommandMap.addCommand(new DownloadManager());
 gExCommandMap.makeCommand("history", "Show history items", (args, tab) => {
     return Promise.resolve(true);
 }, (value, tab) => {
