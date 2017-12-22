@@ -10,6 +10,7 @@ const DEFAULT_OPTIONS = {
             "f": "toHintMode",
             "F": "toHintFocusMode",
             "t": "toHintMediaMode",
+            "T": "toHintCodeMode",
             "i": "toInsertMode",
             "I": "toInsertModeOnFirstElement",
             "A": "toInsertModeOnLastElement",
@@ -262,7 +263,8 @@ const DEFAULT_OPTIONS = {
         "global": {
             "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], *[role='radio'], *[role='option'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area, summary, *[tabindex]:not([tabindex='-1'])",
             "focus": "body *",
-            "media": "img, canvas, video, object, embed"
+            "media": "img, canvas, video, object, embed",
+            "code": "pre, code, textarea[readonly]"
         },
         "local": {
             "twitter.com": {

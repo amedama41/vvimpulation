@@ -183,6 +183,7 @@ const COMMAND_DESCRIPTIONS = {
     toHintMode: { description: "Change link hint mode" },
     toHintFocusMode: { description: "Change focus hint mode" },
     toHintMediaMode: { description: "Change media hint mode" },
+    toHintCodeMode: { description: "Change code hint mode" },
     toVisualMode: { description: "Change visual mode" },
     toVisualModeWithCurrentSelection: { description: "Change visual mode with current selection" },
     toCaretMode: { description: "Change caret mode" },

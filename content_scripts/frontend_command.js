@@ -843,7 +843,7 @@ Loop: ${video.loop}`
     }
     static toHintMode(count, frameInfo) {
         // TODO: slot 3, 4
-        const TYPE_LIST = ["link", "focus", "media", "link", "link"];
+        const TYPE_LIST = ["link", "focus", "media", "code", "link"];
         const type = TYPE_LIST[count % TYPE_LIST.length];
         frameInfo.postMessage({ command: "toHintMode", type });
     }
@@ -852,6 +852,9 @@ Loop: ${video.loop}`
     }
     static toHintMediaMode(count, frameInfo) {
         FrontendCommand.toHintMode(2, frameInfo);
+    }
+    static toHintCodeMode(count, frameInfo) {
+        FrontendCommand.toHintMode(3, frameInfo);
     }
     static toVisualMode(count, frameInfo) {
         const point = document.caretPositionFromPoint(0, 0);

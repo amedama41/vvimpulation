@@ -157,12 +157,11 @@ class KeyMapping {
     }
 }
 
+const HINT_PATTERN_TYPES = ["link", "focus", "media", "code"];
 class HintPattern {
     constructor() {
-        this.options = {
-            "global": { "link": "", "focus": "", "media": "" },
-            "local": {}
-        };
+        this.options = { "global": {}, "local": {} };
+        HINT_PATTERN_TYPES.forEach((type) => this.options["global"][type] = "");
         this.currentHost = null;
         this.currentKind = "link";
 
@@ -202,7 +201,7 @@ class HintPattern {
     setGlobalPattern(kind, pattern) {
         this.options["global"][kind] = pattern;
         const errorMessageList = [];
-        for (const kind of ["link", "focus", "media"]) {
+        for (const kind of HINT_PATTERN_TYPES) {
             try {
                 if (this.options["global"][kind] !== "") {
                     document.querySelector(this.options["global"][kind]);
@@ -270,7 +269,7 @@ class HintPattern {
             const options = { "global": {}, "local": {} };
 
             const global = this.options["global"];
-            for (const kind of ["link", "focus", "media"]) {
+            for (const kind of HINT_PATTERN_TYPES) {
                 if (global[kind] !== "") {
                     document.querySelector(global[kind]);
                 }
@@ -280,7 +279,7 @@ class HintPattern {
             const local = this.options["local"];
             Object.keys(local).forEach((host) => {
                 const hostPattern = {};
-                for (const kind of ["link", "focus", "media"]) {
+                for (const kind of HINT_PATTERN_TYPES) {
                     const patternList = (local[host][kind] || [])
                         .map(([sel, desc]) => [sel.trim(), desc.trim()])
                         .filter(([selector, desc]) => selector !== "");
@@ -305,7 +304,7 @@ class HintPattern {
     setOptions(hintPattern) {
         this.options = hintPattern;
 
-        for (const kind of ["link", "focus", "media"]) {
+        for (const kind of HINT_PATTERN_TYPES) {
             const textarea = document.getElementById("hint-pattern-" + kind);
             textarea.value = hintPattern["global"][kind];
         }
