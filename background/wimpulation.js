@@ -462,7 +462,7 @@ class Command {
             tabInfo,
             (count === 0
                 ? (index, tabLen) => (index + 1) % tabLen
-                : (index, tabLen) => (count < tabLen) ?  count : index)
+                : (index, tabLen) => (count < tabLen) ?  count - 1 : index)
         ).catch((e) => {
             handleError(tabInfo, "nextTab", e);
         });
