@@ -90,7 +90,7 @@ class ExCommandMap {
         this.addCommand(new ExCommand(name, description, proc, completion));
     }
     execCommand(inputCmd, tab) {
-        const args = inputCmd.trim().split(/\s/);
+        const args = inputCmd.trim().split(/\s+/);
         const cmdName = args.shift();
         const [cmd, reason] = this.cmdMap.getCommand(cmdName);
         if (!cmd) {
