@@ -764,6 +764,16 @@ Loop: ${video.loop}`
         smartOpenImpl(
             count, frameInfo, { command: 'openLinkInTab', active: !shift });
     }
+    static smartYank(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        if (elem.value) {
+            return FrontendCommand.yankValue(count, frameInfo);
+        }
+        if (getSource(elem)) {
+            return FrontendCommand.yankLink(count, frameInfo);
+        }
+        return FrontendCommand.yankInnerText(count, frameInfo);
+    }
     static yankCurrentURL(count, frameInfo) {
         if (DomUtils.setToClipboard(location.href)) {
             frameInfo.showMessage("Yank current page URL");

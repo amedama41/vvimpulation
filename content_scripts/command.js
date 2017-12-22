@@ -163,6 +163,7 @@ const COMMAND_DESCRIPTIONS = {
     showPageInfo: { topFrame: true, description: "Show the current page information" },
     smartOpen: { description: "Open the target in the current page or click the target" },
     smartOpenInTab: { description: "Open the target in a new page or click the target" },
+    smartYank: { description: "Yank the target value or link or text" },
     yankCurrentURL: { topFrame: true, description: "Yank the current page URL" },
     yankPageHost: { topFrame: true, description: "Yank the current page host" },
     yankPageTitle: { topFrame: true, description: "Yank the current page title" },
