@@ -183,14 +183,13 @@ class MessageCommand {
             [ gFrameInfo.getSelfFrameId() ]));
     }
     static focusFrame(msg) {
-        window.focus();
         // Keep focus in this frame, not in a child frame.
         const activeElement = document.activeElement;
-        if (activeElement instanceof HTMLIFrameElement
-            || activeElement instanceof HTMLFrameElement
-            || activeElement instanceof HTMLObjectElement) {
-            DomUtils.fixedFocus(document.documentElement);
+        if (activeElement && activeElement.contentWindow) {
+            activeElement.blur();
         }
+        gFrameInfo.forwardToParent(
+            { command: "focusin|" + gFrameInfo.getSelfFrameId() });
     }
     static find(msg) {
         const { keyword, caseSensitive, backward, reset } = msg;
