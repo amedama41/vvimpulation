@@ -253,10 +253,19 @@ return (class Edit {
         const walker = Edit.createFocusNodeWalker(elem);
         return walker.firstChild() !== null;
     }
+    static isValidURL(href) {
+        try {
+            new URL(href);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    }
     static isNonFocusableAnchor(elem) {
-        // Anchor elements without href can not be focused.
+        // Anchor elements with invalid URL can not be focused.
         return (elem instanceof HTMLAnchorElement &&
-            !elem.hasAttribute("href") &&
+            !Edit.isValidURL(elem.href) &&
             !elem.hasAttribute("tabindex"));
     }
     static isDisplay(elem) {
