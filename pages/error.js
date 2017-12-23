@@ -4,5 +4,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
     document.title = `Error: ${errorURL}`;
     const iframe = document.getElementById("errorURL");
     iframe.src = errorURL;
+    const div = document.getElementById("errorCode");
+    div.innerText = decodeURI(params.get("errorCode"));
 });
 
