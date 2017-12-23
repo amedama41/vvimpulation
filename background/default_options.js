@@ -255,6 +255,8 @@ const DEFAULT_OPTIONS = {
             "<C-I>": "console.getCandidate",
             "<Tab>": "console.selectNextHistoryOrCandidate",
             "<S-Tab>": "console.selectPreviousHistoryOrCandidate",
+            "<Down>": "console.selectNextHistoryOrCandidate",
+            "<Up>": "console.selectPreviousHistoryOrCandidate",
             "<C-C>": "console.closeConsoleMode",
             "<Esc>": "console.closeConsoleMode",
             "<C-[>": "console.closeConsoleMode",
