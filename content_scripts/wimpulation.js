@@ -286,18 +286,32 @@ function init() {
     connectToBackGround(reconnectTimeout);
 }
 
+function addEventListenersJustOnce() {
+    if (addEventListenersJustOnce.done) {
+        return;
+    }
+    window.addEventListener(
+        "keydown", (e) => gFrameInfo.handleKeydown(e), true);
+    window.addEventListener("pageshow", (e) => {
+        if (!gFrameInfo && e.persisted) {
+            init();
+        }
+    }, true);
+    window.addEventListener("pagehide", (e) => {
+        console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
+        gFrameInfo.reset();
+        gFrameInfo = null;
+    }, true);
+    addEventListenersJustOnce.done = true;
+}
+
 function connectToBackGround(reconnectTimeout) {
     const port = new Port(browser.runtime.connect({ name: "wimpulation" }));
     const handleNotification = (msg) => {
         if (msg.command === "initFrame") {
             gFrameInfo = new FrameInfo(
                 msg.frameId, port, msg.mode, msg.keyMapping);
-            window.addEventListener(
-                "keydown", (e) => gFrameInfo.handleKeydown(e), true);
-            window.addEventListener("unload", (evt) => {
-                console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
-                gFrameInfo.reset();
-            }, { capture: true, once : true });
+            addEventListenersJustOnce();
         }
         else if (msg.command === "changeMode") {
             gFrameInfo.changeModeNow(msg.mode, msg.data);

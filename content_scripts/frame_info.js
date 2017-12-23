@@ -8,11 +8,17 @@ class FrameIdInfo {
         this._registerIntervalId = 0;
 
         this._startRegistration();
-        setTimeout(() => {
+        this._timerId = setTimeout(() => {
             // Don't use unload event because removing iframes can not occur
             // the unload event.
-            setInterval(() => this._checkClosedFrame(), 60000);
+            this._timerId = setInterval(() => this._checkClosedFrame(), 60000);
         }, Math.floor(Math.random() * 30000));
+    }
+    reset() {
+        window.clearInterval(this._timerId);
+        if (this._registerIntervalId !== 0) {
+            window.clearInterval(this._registerIntervalId);
+        }
     }
     getSelfFrameId() {
         return this._selfFrameId;
@@ -94,13 +100,20 @@ class FrameInfo {
         if (this.isTopFrame()) {
             this._createConsoleFrame();
         }
-        window.addEventListener("message", (msgEvent) => {
+        this._messageHandler = (msgEvent) => {
             this._frameIdInfo.handleFrameMessage(msgEvent, this._port);
-        }, true);
+        };
+        window.addEventListener("message", this._messageHandler, true);
     }
     reset() {
         this._resetMode();
         this._port.disconnect();
+        window.removeEventListener("message", this._messageHandler, true);
+        this._messageHandler = null; // Avoid circular reference
+        this._frameIdInfo.reset();
+        if (this._consoleTimerId !== 0) {
+            clearTimeout(this._consoleTimerId);
+        }
     }
     handleKeydown(keyEvent) {
         const key = Utils.getRegulatedKey(keyEvent);
