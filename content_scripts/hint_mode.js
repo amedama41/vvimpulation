@@ -145,10 +145,6 @@ function isOutOfArea(rect, winArea) {
         || rect.left > winArea.right
         || rect.right < winArea.left);
 }
-function hasSpaceInParent(style) {
-    return ((style.position !== "absolute" && style.position !== "fixed")
-        && style.float === "none");
-}
 function getRectsInAncestorVisibleArea(elem, rectList, style) {
     const root = document.documentElement;
     const body = document.body;
@@ -157,13 +153,21 @@ function getRectsInAncestorVisibleArea(elem, rectList, style) {
     if (elem === root || elem === body) {
         return rectList;
     }
+    let isAbsolute = false;
     for (let ancestor = elem.parentNode;
-        ancestor !== root && ancestor !== body && hasSpaceInParent(style);
+        ancestor !== root && ancestor !== body && style.position !== "fixed";
         ancestor = ancestor.parentNode) {
+        if (style.position === "absolute") {
+            isAbsolute = true;
+        }
         style = window.getComputedStyle(ancestor, null);
         if (style.overflow === "visible") {
             continue;
         }
+        if (isAbsolute && style.position !== "relative") {
+            continue;
+        }
+        isAbsolute = false;
         rectList = getRectsInArea(rectList, ancestor.getBoundingClientRect());
         if (rectList.length === 0) {
             return [];
