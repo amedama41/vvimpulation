@@ -479,17 +479,68 @@ class DownloadManager {
     }
 }
 gExCommandMap.addCommand(new DownloadManager());
-gExCommandMap.makeCommand("history", "Show history items", (args, tab) => {
-    return Promise.resolve(true);
-}, (value, tab) => {
-    return browser.history.search({
-        text: value, maxResults: 1000, startTime: 0
-    }).then((historyItems) => {
-        return [
-            0, "string", historyItems.map((item) => [item.url, item.title])
+class HistoryManager {
+    constructor() {
+        this.name = "history";
+        this.description = "Manage browser history items";
+        this.cmdMap = new CommandMap();
+        const cmdList = [
+            new ExCommand(
+                "open", "Open history",
+                (args, tab) => browser.tabs.update(tab.id, { url: args[0] }),
+                HistoryManager._getItemList),
+            new ExCommand(
+                "delete", "Delete hitory items with the URL",
+                (args, tab) => browser.history.deleteUrl({ url : args[0] }),
+                HistoryManager._getItemList),
+            new ExCommand(
+                "deleteFrom", "Delete history items created after N hour ago",
+                (args, tab) => {
+                    const n = parseFloat(args[0]);
+                    if (Number.isNaN(n)) {
+                        return Promise.reject("Must be number");
+                    }
+                    const endTime = Date.now();
+                    const startTime = endTime - Math.floor(n * 60 * 60 * 1000);
+                    return browser.history.deleteRange({ startTime, endTime });
+                }),
         ];
-    });
-});
+        cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
+    }
+    invoke(args, tab) {
+        if (args.length === 0) {
+            return Promise.reject("No subcommand");
+        }
+        const [subcmd, reason] = this.cmdMap.getCommand(args[0]);
+        if (!subcmd) {
+            return Promise.reject(reason);
+        }
+        if (!reason) { // if reason is null, head of args is command
+            args.shift();
+        }
+        if (args.length === 0) {
+            return Promise.reject("No arguments");
+        }
+        return subcmd.invoke(args, tab).then(() => true);
+    }
+    complete(value, tab) {
+        const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
+        if (Array.isArray(subcmdList)) {
+            return [
+                0, "string",
+                subcmdList.map((cmd) => [cmd.name, cmd.description])
+            ];
+        }
+        return subcmdList.complete(value.substr(fixedLen), tab)
+            .then((result) => [fixedLen, "string", result]);
+    }
+    static _getItemList(text) {
+        return browser.history.search({
+            text, startTime: 0, maxResults: 1000
+        }).then((itemList) => itemList.map((item) => [item.url, item.title]));
+    }
+}
+gExCommandMap.addCommand(new HistoryManager());
 gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
     (args, tab) => {
         const index = parseInt(args[0], 10);
