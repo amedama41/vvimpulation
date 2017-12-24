@@ -116,6 +116,9 @@ class FrameInfo {
         }
     }
     handleKeydown(keyEvent) {
+        if (!keyEvent.isTrusted) {
+            return;
+        }
         const key = Utils.getRegulatedKey(keyEvent);
         if (!key) {
             return;
