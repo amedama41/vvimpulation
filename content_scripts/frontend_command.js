@@ -552,12 +552,13 @@ Loop: ${video.loop}`
     static mousemove(count, frameInfo) {
         const elem = frameInfo.getTarget();
         count = Math.max(count, 1);
-        const timerId = setInterval(() => {
+        const move = () => {
             emulateMouseEvent(elem, "mousemove", 0, false, false, false, false);
-            if (--count === 0) {
-                clearInterval(timerId);
+            if (--count !== 0) {
+                setTimeout(move, 1000);
             }
-        }, 1000);
+        };
+        move();
     }
 
     /**
@@ -1039,10 +1040,13 @@ function emulateMouseEvent(
     const mouseEvent = new MouseEvent(type, {
         bubbles: true,
         cancelable: true,
+        view: window,
         screenX: x + (window.mozInnerScreenX || window.screenX),
         screenY: y + (window.mozInnerScreenY || window.screenY),
         clientX: x,
         clientY: y,
+        movementX: 10,
+        movementY: 10,
         ctrlKey: ctrl,
         shiftKey: shift,
         altKey: alt,
