@@ -131,56 +131,7 @@ function setEngine(engineMap, searchEngine) {
     engineMap.setDefault(searchEngine.defaultEngine);
 }
 
-function getHistoryAndBookmark(value, tab) {
-    return Promise.all([
-        browser.history.search({
-            text: value, maxResults: 40,
-            startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
-        }).then((historyItems) => {
-            return historyItems.map((item) => [item.url, "H:" + item.title])
-        }),
-        browser.bookmarks.search({ query: value }).then((treeNodeList) => {
-            return treeNodeList
-                .filter((node) => (node.type === "bookmark" &&
-                    !node.url.startsWith("place:")))
-                .map((node) => [node.url, "B:" + node.title]);
-        })
-    ]).then(([history, bookmark]) => [0, "string", history.concat(bookmark)]);
-}
-gExCommandMap.makeCommand("open", "Open link in current tab", (args, tab) => {
-    if (args.length === 0) {
-        return Promise.reject("no argument");
-    }
-    let url = args.join(' ');
-    if (!/^(https?|file|ftp|app|about):/.test(url)) {
-        url = "http://" + url;
-    }
-    browser.tabs.update(tab.id, { url: url });
-    return Promise.resolve(true);
-}, getHistoryAndBookmark);
-gExCommandMap.makeCommand("tabopen", "Open link in new tab", (args, tab) => {
-    if (args.length === 0) {
-        return Promise.reject("no argument");
-    }
-    let url = args.join(' ');
-    if (!/^(https?|file|ftp|app|about):/.test(url)) {
-        url = "http://" + url;
-    }
-    browser.tabs.create({ url: url, index: tab.index + 1, active: true });
-    return Promise.resolve(true);
-}, getHistoryAndBookmark);
-gExCommandMap.makeCommand("private", "Open link in private window", (args, tab) => {
-    if (args.length === 0) {
-        args.push("about:blank");
-    }
-    let url = args.join(' ');
-    if (!/^(https?|file|ftp|app|about):/.test(url)) {
-        url = "http://" + url;
-    }
-    browser.windows.create({ url: url, incognito: true });
-    return Promise.resolve(false); // always reject to avoid adding to history
-}, getHistoryAndBookmark);
-class SearchCommand {
+class OpenCommand {
     constructor(name, description, kind, engineMap) {
         this.name = name;
         this.description = description;
@@ -189,39 +140,41 @@ class SearchCommand {
     }
     invoke(args, tab) {
         if (args.length === 0) {
-            return Promise.reject("no subcommand");
+            return OpenCommand._open("about:blank", tab, this.kind);
         }
         const [engine, reason] = this.engineMap.getCommand(args[0]);
         if (!engine) {
             return Promise.reject(reason);
         }
-        if (!reason) { // if reason is null, head of args is command
+        if (reason) { // Select the default engine, but args may be URL.
+            const url = OpenCommand._createURL(args.join(" "));
+            if (url) {
+                return OpenCommand._open(url, tab, this.kind);
+            }
+        }
+        else { // If reason is null, the head of args is a search engigne name.
             args.shift();
         }
         const url = engine.searchUrl.replace(
             "%s", encodeURIComponent(args.join(" ")));
-        switch (this.kind) {
-            case "tab":
-                browser.tabs.create(
-                    { url: url, index: tab.index + 1, active: true });
-                return Promise.resolve(true);
-            case "private":
-                browser.windows.create({ url: url, incognito: true });
-                return Promise.resolve(false);
-            default:
-                browser.tabs.update(tab.id, { url: url });
-                return Promise.resolve(true);
-        }
+        return OpenCommand._open(url, tab, this.kind);
     }
     complete(value, tab) {
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
         if (Array.isArray(engineList)) {
-            return [
-                0, "string",
-                engineList.map((engine) => [engine.name, engine.searchUrl])
-            ];
+            return OpenCommand._getHistoryAndBookmark(value).then((result) => {
+                const engines =
+                    engineList.map((engine) => [engine.name, engine.searchUrl]);
+                return [0, "string", engines.concat(result)];
+            });
+        }
+        if (fixedLen === 0) { // Select the default engine
+            return OpenCommand._getHistoryAndBookmark(value).then((result) => {
+                return [0, "string", result];
+            });
         }
 
+        // Suggest only if the user specify a engine name.
         const suggest = engineList.suggest;
         if (!suggest) {
             return [0, "string", []];
@@ -246,12 +199,12 @@ class SearchCommand {
                 switch (suggest.type) {
                     case "json":
                         return response.json().then((json) => {
-                            return SearchCommand._getJSONSuggests(
+                            return OpenCommand._getJSONSuggests(
                                 json, suggest.path, suggest.decode);
                         });
                     case "xml":
                         return response.text().then((text) => {
-                            return SearchCommand._getXMLSuggests(
+                            return OpenCommand._getXMLSuggests(
                                 text, suggest.path, suggest.decode);
                         });
                 }
@@ -269,16 +222,71 @@ class SearchCommand {
         return suggests.map(
             (e) => decode ? decodeURIComponent(e.textContent) : e.textContent);
     }
+    static _createURL(maybeURL) {
+        if (!/^([a-z][a-z0-9-]+):/i.test(maybeURL)) {
+            maybeURL = "http://" + maybeURL;
+        }
+        try {
+            const url = new URL(maybeURL);
+            if (!/^https?:/.test(url.protocol)) {
+                return url.href;
+            }
+            const hostname = url.hostname;
+            if ((hostname.includes(".") && !hostname.startsWith("."))
+                || hostname.startsWith("[") // IPv6
+                || hostname === "localhost") {
+                return url.href;
+            }
+            else {
+                return null;
+            }
+        }
+        catch (e) {
+            return null;
+        }
+    }
+    static _open(url, tab, kind) {
+        return (() => {
+            switch (kind) {
+                case "tab":
+                    return browser.tabs.create({
+                        url, index: tab.index + 1, active: true
+                    }).then(() => true);
+                case "private":
+                    return browser.windows.create({ url, incognito: true })
+                        .then(() => false);
+                default:
+                    return browser.tabs.update(tab.id, { url })
+                        .then(() => true);
+            }
+        })().catch((e) => (e || "Some error occurred").toString());
+    }
+    static _getHistoryAndBookmark(value) {
+        return Promise.all([
+            browser.history.search({
+                text: value, maxResults: 40,
+                startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
+            }).then((historyItems) => {
+                return historyItems.map((item) => [item.url, "H:" + item.title])
+            }),
+            browser.bookmarks.search({ query: value }).then((treeNodeList) => {
+                return treeNodeList
+                    .filter((node) => (node.type === "bookmark" &&
+                        !node.url.startsWith("place:")))
+                    .map((node) => [node.url, "B:" + node.title]);
+            })
+        ]).then(([history, bookmark]) => history.concat(bookmark));
+    }
 }
 gExCommandMap.addCommand(
-    new SearchCommand(
-        "search", "Search keyword in current tab", "", gEngineMap));
+    new OpenCommand(
+        "open", "Open or search in current tab", "", gEngineMap));
 gExCommandMap.addCommand(
-    new SearchCommand(
-        "tabsearch", "Search keyword in new tab", "tab", gEngineMap));
+    new OpenCommand(
+        "tabopen", "Open or search in new tab", "tab", gEngineMap));
 gExCommandMap.addCommand(
-    new SearchCommand(
-        "psearch", "Search keyword in private window", "private", gEngineMap));
+    new OpenCommand(
+        "private", "Open or search in private window", "private", gEngineMap));
 gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
