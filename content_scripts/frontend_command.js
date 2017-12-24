@@ -520,6 +520,8 @@ Loop: ${video.loop}`
         const coord = getRandomCoord(elem);
         emulateMouseEvent(
             elem, "mouseover", coord, false, false, false, false, body);
+        emulateMouseEvent(
+            elem, "mouseenter", coord, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseinFrom(count, frameInfo) {
@@ -529,6 +531,8 @@ Loop: ${video.loop}`
         const coord = getRandomCoord(body);
         emulateMouseEvent(
             body, "mouseover", coord, false, false, false, false, elem);
+        emulateMouseEvent(
+            body, "mouseenter", coord, false, false, false, false, elem);
         emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseoutTo(count, frameInfo) {
@@ -538,6 +542,8 @@ Loop: ${video.loop}`
         const coord = getRandomCoord(elem);
         emulateMouseEvent(
             body, "mouseout", coord, false, false, false, false, elem);
+        emulateMouseEvent(
+            body, "mouseleave", coord, false, false, false, false, elem);
         emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mouseoutFrom(count, frameInfo) {
@@ -547,6 +553,8 @@ Loop: ${video.loop}`
         const coord = getRandomCoord(body);
         emulateMouseEvent(
             elem, "mouseout", coord, false, false, false, false, body);
+        emulateMouseEvent(
+            elem, "mouseleave", coord, false, false, false, false, body);
         emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
     }
     static mousemove(count, frameInfo) {
