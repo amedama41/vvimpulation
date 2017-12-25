@@ -151,6 +151,7 @@ class HintMode {
         this.idList = []; // global index => frame id
         this.currentIndex = 0; // current displayed index
         this.autoFocus = autoFocus;
+        this.overlap = false;
         this.mapper = Utils.makeCommandMapper(gOptions.hintKeyMapping);
     }
     handle(key, sender, tabInfo) {
@@ -168,6 +169,9 @@ class HintMode {
         else if (!consumed) {
             changeNormalMode(tabInfo, sender.frameId, [key]);
         }
+    }
+    getOverlap() {
+        return this.overlap;
     }
     setIdList(idList) {
         this.idList = idList;
@@ -218,6 +222,15 @@ class HintMode {
     startFilter(tabInfo) {
         tabInfo.forwardModeCommand(
             0, "HINT", { command: "startFilter", filter: this.filter });
+    }
+    toggleOverlap(tabInfo) {
+        this.overlap = !this.overlap;
+        const msg = { command: (this.overlap ? "setZIndex" : "clearZIndex") };
+        tabInfo.forEachPort((port, id) => {
+            forwardModeCommand(port, "HINT", msg);
+        });
+        const message = "Overlapping " + (this.overlap ? "ON" : "OFF");
+        tabInfo.showMessage(message, 3000, false);
     }
     toggleAutoFocus(tabInfo) {
         this.autoFocus = !this.autoFocus;
@@ -860,10 +873,12 @@ function changeHintMode(tabInfo, idList, hintMode) {
     });
     hintMode.setIdList(idList);
     tabInfo.setMode(mode, hintMode);
+    const setZIndex = hintMode.getOverlap();
     tabInfo.forEachPort((port, id) => {
         const labelList = labelMap[id] || [];
-        port.postMessage(
-            { command: "changeMode", mode: mode, data: labelList });
+        port.postMessage({
+            command: "changeMode", mode: mode, data: { labelList, setZIndex }
+        });
     });
 }
 

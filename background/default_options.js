@@ -201,6 +201,7 @@ const DEFAULT_OPTIONS = {
             ";": { command: "hint.nextHint" },
             ",": { command: "hint.previousHint" },
             "/": { command: "hint.startFilter" },
+            "zz": { command: "hint.toggleOverlap" },
             "ff": { command: "hint.toggleAutoFocus" },
             "fi": { command: "focusin", count: 0 },
             "fo": { command: "focusout", count: 0 },

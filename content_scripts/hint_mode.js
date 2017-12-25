@@ -3,10 +3,11 @@
 var gHintElementList = [];
 
 class HintMode {
-    constructor(frameInfo, labelList) {
+    constructor(frameInfo, data) {
         this.hints = gHintElementList;
         gHintElementList = [];
         this.focusIndex = undefined;
+        const labelList = data.labelList;
 
         const container = document.createElement("div");
         const indexMap = {};
@@ -19,6 +20,9 @@ class HintMode {
         const target = document.documentElement;
         target.appendChild(container);
         this.indexMap = indexMap;
+        if (data.setZIndex) {
+            this._setZIndex();
+        }
     }
     static getModeName() {
         return "HINT";
@@ -61,6 +65,10 @@ class HintMode {
                 return this._getFilterResult(msg, frameInfo);
             case "setHintLabel":
                 return this._setHintLabel(msg, frameInfo);
+            case "setZIndex":
+                return this._setZIndex(msg, frameInfo);
+            case "clearZIndex":
+                return this._clearZIndex(msg, frameInfo);
             case "invoke":
                 return invokeCommand(msg.commandName, msg.count, frameInfo);
             default:
@@ -132,6 +140,25 @@ class HintMode {
         });
         this._blurImpl();
         this.focusIndex = undefined;
+    }
+    _setZIndex() {
+        const getZIndex = (elem, zIndex) => {
+            if (!elem) {
+                return zIndex;
+            }
+            const style = window.getComputedStyle(elem, null);
+            return getZIndex(
+                elem.parentElement,
+                style.zIndex !== "auto" ? style.zIndex : zIndex);
+        };
+        this.hints.forEach(([span, elem], index) => {
+            span.style.zIndex = getZIndex(elem, "auto");
+        });
+    }
+    _clearZIndex() {
+        this.hints.forEach(([span, elem], index) => {
+            span.style.removeProperty("z-index");
+        });
     }
 }
 
