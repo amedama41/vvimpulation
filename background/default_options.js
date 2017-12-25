@@ -238,6 +238,7 @@ const DEFAULT_OPTIONS = {
             "s": { command: "downloadLink", count: 0 },
             "v": { command: "selectElement", count: 0 },
             "dat": { command: "deleteElement", count: 0 },
+            "dit": { command: "deleteChildElements", count: 0 },
             "<C-C>": { command: "toNormalMode", count: 0 },
             "<C-[>": { command: "toNormalMode", count: 0 },
             "<Esc>": { command: "toNormalMode", count: 0 },

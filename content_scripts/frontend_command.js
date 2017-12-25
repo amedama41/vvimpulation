@@ -737,6 +737,12 @@ Loop: ${video.loop}`
         const target = frameInfo.getTarget();
         target.parentNode.removeChild(target);
     }
+    static deleteChildElements(count, frameInfo) {
+        const target = frameInfo.getTarget();
+        for (let i = target.children.length; i > 0; --i) {
+            target.removeChild(target.children[i - 1]);
+        }
+    }
 
     /**
      * Commands for various applications

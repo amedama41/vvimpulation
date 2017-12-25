@@ -158,6 +158,7 @@ const COMMAND_DESCRIPTIONS = {
     yankInnerHTML: { description: "Yank inner HTML of the target" },
     yankOuterHTML: { description: "Yank outer HTML of the target" },
     deleteElement: { description: "Delete the target" },
+    deleteChildElements: { description: "Delete the child elements of the target" },
 
     /** Commands for various applications **/
     showPageInfo: { topFrame: true, description: "Show the current page information" },
