@@ -23,6 +23,11 @@ class HintMode {
         if (data.setZIndex) {
             this._setZIndex();
         }
+        if (data.initIndex !== undefined) {
+            const [span, elem] = this.hints[data.initIndex];
+            span.id = "wimpulation-hint-active";
+            this.focusIndex = data.initIndex;
+        }
     }
     static getModeName() {
         return "HINT";
@@ -69,6 +74,8 @@ class HintMode {
                 return this._setZIndex(msg, frameInfo);
             case "clearZIndex":
                 return this._clearZIndex(msg, frameInfo);
+            case "getTargetIndex":
+                return this._getTargetIndex(msg, frameInfo);
             case "invoke":
                 return invokeCommand(msg.commandName, msg.count, frameInfo);
             default:
@@ -159,6 +166,17 @@ class HintMode {
         this.hints.forEach(([span, elem], index) => {
             span.style.removeProperty("z-index");
         });
+    }
+    _getTargetIndex() {
+        if (this.focusIndex === undefined) {
+            return null;
+        }
+        const [span, elem] = this.hints[this.focusIndex];
+        const index = gHintElementList.findIndex((e) => e[1] === elem);
+        if (index === -1) {
+            return null;
+        }
+        return index;
     }
 }
 

@@ -173,11 +173,11 @@ class HintMode {
     getOverlap() {
         return this.overlap;
     }
-    setIdList(idList) {
+    setIdList(idList, index) {
         this.idList = idList;
         this.filterIndexMap = this.idList.map((id, index) => index);
         this.filter = "";
-        this.currentIndex = 0;
+        this.currentIndex = index;
         this.mapper.reset();
     }
     applyFilter(filter, sender, tabInfo) {
@@ -214,7 +214,13 @@ class HintMode {
             type: type,
             pattern: HintMode._makePattern(type, tabInfo.tab.url),
         }).then((hintsInfoList) => {
-            changeHintMode(tabInfo, hintsInfoList, this);
+            const targetId =
+                this.idList[this.filterIndexMap[this.currentIndex]];
+            return tabInfo.forwardModeCommand(targetId, "HINT", {
+                command: "getTargetIndex"
+            }).then((targetIndex) => [hintsInfoList, targetId, targetIndex]);
+        }).then(([hintsInfoList, targetId, targetIndex]) => {
+            changeHintMode(tabInfo, hintsInfoList, this, targetId, targetIndex);
         }).catch((e) => {
             handleError(tabInfo, "reconstruct", e);
         });
@@ -858,27 +864,33 @@ class MacroManager {
 }
 const gMacro = new MacroManager();
 
-function changeHintMode(tabInfo, idList, hintMode) {
+function changeHintMode(tabInfo, idList, hintMode, targetId, targetIndex) {
     if (idList.length === 0) {
         changeNormalMode(tabInfo);
         return;
     }
     const mode = "HINT";
     let labelMap = {};
+    let globalTargetIndex = 0;
+    let counter = 0;
     idList.forEach((id, index) => {
         if (!labelMap[id]) {
             labelMap[id] = [];
         }
         labelMap[id].push(index);
+        if (id === targetId && counter++ === targetIndex) {
+            globalTargetIndex = index;
+        }
     });
-    hintMode.setIdList(idList);
+    hintMode.setIdList(idList, globalTargetIndex);
     tabInfo.setMode(mode, hintMode);
     const setZIndex = hintMode.getOverlap();
     tabInfo.forEachPort((port, id) => {
-        const labelList = labelMap[id] || [];
-        port.postMessage({
-            command: "changeMode", mode: mode, data: { labelList, setZIndex }
-        });
+        const data = { labelList: (labelMap[id] || []), setZIndex };
+        if (id === targetId) {
+            data.initIndex = targetIndex;
+        }
+        port.postMessage({ command: "changeMode", mode: mode, data });
     });
 }
 
