@@ -6,5 +6,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
     iframe.src = errorURL;
     const div = document.getElementById("errorCode");
     div.innerText = decodeURI(params.get("errorCode"));
+    const button = document.getElementById("tryAgainButton");
+    button.onclick = () => location.replace(errorURL);
 });
 

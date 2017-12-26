@@ -2,11 +2,18 @@ body {
     margin: 0px;
 }
 
-#errorCode {
+#errorInfo {
     box-sizing: border-box;
-    padding: 3px;
+    padding: 2px;
     margin: 0px;
     height: calc(1em + 6px);
+}
+
+#tryAgainButton {
+    color: white;
+    background-color: dodgerblue;
+    border: unset;
+    padding: 1px 1.5em;
 }
 
 #errorURL {
