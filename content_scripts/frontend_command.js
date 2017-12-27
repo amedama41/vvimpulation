@@ -11,7 +11,12 @@ class FrontendCommand {
             elem.scrollTop = 0;
             return;
         }
-        window.scrollTo(window.scrollX, 0);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollTop", count });
+        }
+        else {
+            window.scrollTo(window.scrollX, 0);
+        }
     }
     static scrollBottom(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -20,7 +25,12 @@ class FrontendCommand {
             elem.scrollTop = elem.scrollHeight - elem.clientHeight;
             return;
         }
-        window.scrollTo(window.scrollX, window.scrollMaxY);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollBottom", count });
+        }
+        else {
+            window.scrollTo(window.scrollX, window.scrollMaxY);
+        }
     }
     static scrollUp(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -29,7 +39,12 @@ class FrontendCommand {
             elem.scrollTop -= Math.max(count, 20);
             return;
         }
-        window.scrollByLines(Math.max(count, 4) * -1);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollUp", count });
+        }
+        else {
+            window.scrollByLines(Math.max(count, 4) * -1);
+        }
     }
     static scrollDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -38,7 +53,12 @@ class FrontendCommand {
             elem.scrollTop += Math.max(count, 20);
             return;
         }
-        window.scrollByLines(Math.max(count, 4) * 1);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollDown", count });
+        }
+        else {
+            window.scrollByLines(Math.max(count, 4) * 1);
+        }
     }
     static scrollLineUp(count, frameInfo) {
         window.scrollByLines(Math.max(count, 1) * -1);
@@ -53,7 +73,12 @@ class FrontendCommand {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
-        window.scrollBy(0, Math.max(count, 1) * -window.innerHeight / 2);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "moveHalfPageUp", count });
+        }
+        else {
+            window.scrollBy(0, Math.max(count, 1) * -window.innerHeight / 2);
+        }
     }
     static moveHalfPageDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -62,7 +87,12 @@ class FrontendCommand {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight / 2;
             return;
         }
-        window.scrollBy(0, Math.max(count, 1) * window.innerHeight / 2);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "moveHalfPageDown", count });
+        }
+        else {
+            window.scrollBy(0, Math.max(count, 1) * window.innerHeight / 2);
+        }
     }
     static movePageUp(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -71,7 +101,12 @@ class FrontendCommand {
             elem.scrollTop -= Math.max(count, 1) * elem.clientHeight;
             return;
         }
-        window.scrollByPages(Math.max(count, 1) * -1);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "movePageUp", count });
+        }
+        else {
+            window.scrollByPages(Math.max(count, 1) * -1);
+        }
     }
     static movePageDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -80,7 +115,12 @@ class FrontendCommand {
             elem.scrollTop += Math.max(count, 1) * elem.clientHeight;
             return;
         }
-        window.scrollByPages(Math.max(count, 1) * 1);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "movePageDown", count });
+        }
+        else {
+            window.scrollByPages(Math.max(count, 1) * 1);
+        }
     }
     static scrollVerticalMiddle(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -89,7 +129,13 @@ class FrontendCommand {
             elem.scrollTop = elem.scrollTopMax / 2;
             return;
         }
-        window.scrollTo(window.scrollX, window.scrollMaxY / 2);
+        if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent(
+                { command: "scrollVerticalMiddle", count });
+        }
+        else {
+            window.scrollTo(window.scrollX, window.scrollMaxY / 2);
+        }
     }
     static scrollLeft(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -98,7 +144,12 @@ class FrontendCommand {
             elem.scrollLeft -= Math.max(count, 20);
             return;
         }
-        window.scrollBy(-20, 0);
+        if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollLeft", count });
+        }
+        else {
+            window.scrollBy(-20, 0);
+        }
     }
     static scrollRight(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -107,7 +158,12 @@ class FrontendCommand {
             elem.scrollLeft += Math.max(count, 20);
             return;
         }
-        window.scrollBy(20, 0);
+        if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollRight", count });
+        }
+        else {
+            window.scrollBy(20, 0);
+        }
     }
     static scrollHome(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -116,7 +172,12 @@ class FrontendCommand {
             elem.scrollLeft = 0;
             return;
         }
-        window.scrollTo(0, window.scrollY);
+        if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollHome", count });
+        }
+        else {
+            window.scrollTo(0, window.scrollY);
+        }
     }
     static scrollEnd(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -125,7 +186,12 @@ class FrontendCommand {
             elem.scrollLeft = elem.scrollWidth;
             return;
         }
-        window.scrollTo(window.scrollMaxX, window.scrollY);
+        if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "scrollEnd", count });
+        }
+        else {
+            window.scrollTo(window.scrollMaxX, window.scrollY);
+        }
     }
     static scrollHorizontalMiddle(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
@@ -134,7 +200,13 @@ class FrontendCommand {
             elem.scrollLeft = elem.scrollLeftMax / 2;
             return;
         }
-        window.scrollTo(window.scrollMaxX / 2, window.scrollY);
+        if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent(
+                { command: "scrollHorizontalMiddle", count });
+        }
+        else {
+            window.scrollTo(window.scrollMaxX / 2, window.scrollY);
+        }
     }
     static scrollPercent(count, frameInfo) {
         if (count === 0) {
