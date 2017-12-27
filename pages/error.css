@@ -1,5 +1,6 @@
-body {
+html, body {
     margin: 0px;
+    height: 100%;
 }
 
 #errorInfo {
@@ -21,5 +22,6 @@ body {
     border: none;
     width: 100%;
     height: calc(100% - 1em - 6px);
+    vertical-align: bottom;
 }
 
