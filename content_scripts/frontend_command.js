@@ -1059,6 +1059,12 @@ function getSource(elem) {
     return undefined;
 }
 
+function nonPrivilegedURL(url) {
+    const privilegedProtocols = [
+        "chrome:", "javascript:", "data:", "file:", "about:"
+    ];
+    return !privilegedProtocols.includes(url.protocol);
+}
 function smartOpenImpl(count, frameInfo, openLinkMsg) {
     const elem = frameInfo.getTarget();
     const link = getLink(elem);
@@ -1070,7 +1076,7 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
             // because the target is likely to have some event listners.
             if ((url.host !== loc.host || url.pathname !== loc.pathname
                 || url.search !== loc.search)
-                && url.protocol !== "javascript:") {
+                && nonPrivilegedURL(url)) {
                 openLinkMsg.url = link;
                 frameInfo.postMessage(openLinkMsg);
                 return;
