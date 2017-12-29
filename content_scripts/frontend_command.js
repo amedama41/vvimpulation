@@ -436,24 +436,43 @@ class FrontendCommand {
         if (!video) {
             return;
         }
-        const duration = video.duration;
-        let sec = duration;
-        const hour = Math.floor(sec / 60 / 60);
-        sec -= hour * 60 * 60;
-        const min = Math.floor(sec / 60);
-        sec = Math.floor(sec - min * 60);
-        const pad = (num) => ("0" + num.toString()).substr(-2);
-        const durationStr = `${pad(hour)}:${pad(min)}:${pad(sec)} (${duration}s)`;
 
-        const msg = (
-`Src: ${video.src}
-CurrentSrc: ${video.currentSrc}
-Duration: ${durationStr}
-CurrentTime: ${video.currentTime}
-Volume: ${video.volume}
-Loop: ${video.loop}`
-        );
-        frameInfo.showMessage(msg, (count === 0 ? 3000 : count * 1000));
+        const formatTime = (time) => {
+            let sec = time;
+            const hour = Math.floor(sec / 60 / 60);
+            sec -= hour * 60 * 60;
+            const min = Math.floor(sec / 60);
+            sec = Math.floor(sec - min * 60);
+            const pad = (num) => ("0" + num.toString()).substr(-2);
+            return `${pad(hour)}:${pad(min)}:${pad(sec)}`;
+        };
+        const buffered = (ranges) => {
+            const rangeList = [];
+            for (let i = 0; i < ranges.length; ++i) {
+                const start = formatTime(ranges.start(i));
+                const end = formatTime(ranges.end(i));
+                rangeList.push(start + "-" + end);
+            }
+            return rangeList.join(", ");
+        };
+        const timeInfo = (time) => {
+            const isNaN = Number.isNaN(time);
+            return (isNaN ? "--:--:--" : `${formatTime(time)} (${time}s)`);
+        };
+
+        const infoList = [];
+        infoList.push(`Src: ${video.src}`);
+        infoList.push(`CurrentSrc: ${video.currentSrc}`);
+        infoList.push(`Size: ${video.videoWidth}x${video.videoHeight}`);
+        infoList.push(`Duration: ${timeInfo(video.duration)}`);
+        infoList.push(`Buffered: ${buffered(video.buffered)}`);
+        infoList.push(`CurrentTime: ${timeInfo(video.currentTime)}`);
+        infoList.push(`Volume: ${video.volume}`);
+        infoList.push(`Playback rate: ${video.playbackRate}`);
+        infoList.push(`Loop: ${video.loop ? "ON" : "OFF"}`);
+
+        frameInfo.showMessage(
+            infoList.join("\n"), (count === 0 ? 3000 : count * 1000));
     }
 
     /**
