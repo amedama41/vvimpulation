@@ -475,6 +475,11 @@ return class HoverKillerImpl {
         });
     }
 
+    static killHover() {
+        HoverKillerImpl.insertFocusRule();
+        HoverKillerImpl.setTabIndex();
+    }
+
     static makeParser() {
         return new Parser();
     }

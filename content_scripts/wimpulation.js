@@ -276,11 +276,6 @@ function findSelectedEditableElement(current, key, caseSensitive, backward) {
     });
 }
 
-window.addEventListener("load", (e) => {
-    HoverKiller.insertFocusRule();
-    HoverKiller.setTabIndex();
-}, { once: true });
-
 function init() {
     const reconnectTimeout = 500;
     connectToBackGround(reconnectTimeout);
@@ -305,6 +300,15 @@ function addEventListenersJustOnce() {
     addEventListenersJustOnce.done = true;
 }
 
+function doKillHover() {
+    if (document.readyState === "loading") {
+        window.addEventListener("load", HoverKiller.killHover, { once: true });
+    }
+    else {
+        HoverKiller.killHover();
+    }
+}
+
 function connectToBackGround(reconnectTimeout) {
     const port = new Port(browser.runtime.connect({ name: "wimpulation" }));
     const handleNotification = (msg) => {
@@ -312,6 +316,9 @@ function connectToBackGround(reconnectTimeout) {
             gFrameInfo = new FrameInfo(
                 msg.frameId, port, msg.mode, msg.keyMapping);
             addEventListenersJustOnce();
+            if (msg.autoKillHover) {
+                doKillHover();
+            }
         }
         else if (msg.command === "changeMode") {
             gFrameInfo.changeModeNow(msg.mode, msg.data);

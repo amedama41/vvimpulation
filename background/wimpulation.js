@@ -986,6 +986,7 @@ function setOptions(options) {
         removeOverwriteErrorPageListener();
     }
     gOptions.autoFocus = options["miscellaneous"].autoFocus;
+    gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
 }
 
 browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
@@ -1036,6 +1037,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             command: "initFrame",
             frameId: frameId,
             keyMapping: gOptions.keyMapping,
+            autoKillHover: gOptions.autoKillHover,
             mode: tabInfo.getMode(),
         });
     });
