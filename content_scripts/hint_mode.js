@@ -3,7 +3,7 @@
 var gHintElementList = [];
 
 class HintMode {
-    constructor(frameInfo, data) {
+    constructor(frameInfo, data={ labelList: [], setZIndex: false }) {
         this.hints = gHintElementList;
         gHintElementList = [];
         this.focusIndex = undefined;
