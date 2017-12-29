@@ -1,25 +1,15 @@
 'use strict';
 
 function createCandidateList(candidates) {
-    const margin = document.createTextNode(" ");
-    const sep = document.createElement("span");
-    sep.className = "candidate_separator"
-    sep.textContent = ":";
-    const dataNode = document.createElement("span");
-    dataNode.className = "candidate_data";
-    const infoNode = document.createElement("span");
-    infoNode.className = "candidate_info";
-    const li = document.createElement("li");
-    li.appendChild(margin.cloneNode(false));
-    li.appendChild(dataNode);
-    li.appendChild(sep);
-    li.appendChild(infoNode);
-
-    return candidates.reduce((fragment, [data, info]) => {
-        const item = li.cloneNode(true);
-        item.children[0].textContent = data;
-        item.children[2].textContent = info;
-        fragment.appendChild(item);
+    const template = document.getElementById("candidate_template");
+    const fields = template.content.children[0].children;
+    return candidates.reduce((fragment, [icon, id, data, info], index) => {
+        fields[0].style = `background-image: url(${icon || ""})`;
+        fields[1].textContent = (id !== null ? id : index);
+        fields[2].textContent = data;
+        fields[3].textContent = (info ? ":" : "");
+        fields[4].textContent = info;
+        fragment.appendChild(document.importNode(template.content, true));
         return fragment;
     }, document.createDocumentFragment());
 }
@@ -44,8 +34,7 @@ class Completer {
     }
     setCandidates(candidateInfo) {
         this.candidates = [];
-        let [orgValue, candidateStart, type, candidates] = candidateInfo;
-        this.container.className = type;
+        let [orgValue, candidateStart, index, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
         this.update(orgValue, false);
     }
@@ -59,7 +48,7 @@ class Completer {
         if (this.candidates[this.selectIndex] === value) {
             return;
         }
-        let [orgValue, candidateStart, type, candidates] = this.candidateInfo;
+        let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
         this.container.innerHTML = "";
         if (value.startsWith(orgValue)) {
             const matchCandidates = (needFilter
@@ -69,7 +58,7 @@ class Completer {
                 createCandidateList(matchCandidates));
             const prefix = orgValue.substr(0, candidateStart);
             this.candidates =
-                [ value ].concat(matchCandidates.map((c) => prefix + c[0]));
+                [ value ].concat(matchCandidates.map((c) => prefix + c[index]));
             this.selectIndex = 0;
         }
         else {
@@ -88,7 +77,7 @@ class Completer {
         if (!this.candidateInfo) {
             return;
         }
-        let [orgValue, candidateStart, type, candidates] = this.candidateInfo;
+        let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
 
         const SELECT_CLASS = "ex_select_candidate";
         if (this.selectIndex !== 0) {
@@ -97,8 +86,7 @@ class Completer {
         }
         const length = this.candidates.length;
         this.selectIndex = (this.selectIndex + diff + length) % length;
-        const selectItem = this.candidates[this.selectIndex];
-        const data = (Array.isArray(selectItem) ? selectItem[0] : selectItem);
+        const data = this.candidates[this.selectIndex];
 
         const start = input.selectionStart;
         if (input.selectionEnd !== start) {
@@ -123,7 +111,8 @@ class Completer {
     }
     static _filter(candidates, value) {
         const filter = Utils.makeFilter(value);
-        return candidates.filter((item) => filter.matchList(item));
+        return candidates.filter(
+            (item) => filter.match(item[2]) || filter.match(item[3]));
     }
 }
 

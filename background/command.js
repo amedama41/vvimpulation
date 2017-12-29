@@ -102,8 +102,8 @@ class ExCommandMap {
         const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(cmdList)) {
             return Promise.resolve([
-                value, fixedLen, "string",
-                cmdList.map((cmd) => [cmd.name, cmd.description])
+                value, fixedLen, 2,
+                cmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ]);
         }
         else {
@@ -112,8 +112,8 @@ class ExCommandMap {
             if (!result) {
                 return;
             }
-            return Promise.resolve(result).then(([start, type, candidates]) => {
-                return [value, fixedLen + start, type, candidates];
+            return Promise.resolve(result).then(([start, index, candidates]) => {
+                return [value, fixedLen + start, index, candidates];
             });
         }
     }
@@ -163,21 +163,24 @@ class OpenCommand {
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
         if (Array.isArray(engineList)) {
             return OpenCommand._getHistoryAndBookmark(value).then((result) => {
-                const engines =
-                    engineList.map((engine) => [engine.name, engine.searchUrl]);
-                return [0, "string", engines.concat(result)];
+                const engines = engineList.map(
+                    (engine) => [
+                        "chrome://browser/skin/search-glass.svg",
+                        null, engine.name, engine.searchUrl
+                    ]);
+                return [0, 2, engines.concat(result)];
             });
         }
         if (fixedLen === 0) { // Select the default engine
             return OpenCommand._getHistoryAndBookmark(value).then((result) => {
-                return [0, "string", result];
+                return [0, 2, result];
             });
         }
 
         // Suggest only if the user specify a engine name.
         const suggest = engineList.suggest;
         if (!suggest) {
-            return [0, "string", []];
+            return [0, 2, []];
         }
 
         const url = suggest.url.replace(
@@ -209,7 +212,9 @@ class OpenCommand {
                         });
                 }
             })
-            .then((result) => [fixedLen, "noinfo", result.map((e) => [e, ""])]);
+            .then((result) => [
+                fixedLen, 2, result.map((e) => [null, null, e, ""])
+            ]);
     }
     static _getJSONSuggests(json, path, decode) {
         // TODO
@@ -267,13 +272,20 @@ class OpenCommand {
                 text: value, maxResults: 40,
                 startTime: Date.now() - 31 * 24 * 60 * 60 * 1000
             }).then((historyItems) => {
-                return historyItems.map((item) => [item.url, "H:" + item.title])
+                return historyItems.map(
+                    (item) => [
+                        "chrome://browser/skin/history.svg",
+                        null, item.url, item.title
+                    ])
             }),
             browser.bookmarks.search({ query: value }).then((treeNodeList) => {
                 return treeNodeList
                     .filter((node) => (node.type === "bookmark" &&
                         !node.url.startsWith("place:")))
-                    .map((node) => [node.url, "B:" + node.title]);
+                    .map((node) => [
+                        "chrome://browser/skin/bookmark.svg",
+                        null, node.url, node.title
+                    ]);
             })
         ]).then(([history, bookmark]) => history.concat(bookmark));
     }
@@ -302,8 +314,9 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
 }, (value, tab) => {
     const filter = Utils.makeFilter(value);
     return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => [
-        0, "number", tabs.map((tab, index) => [index, tab.title]).filter(
-            ([index, title]) => filter.match(title))
+        0, 1, tabs.map((tab, index) => [
+            tab.favIconUrl, index, tab.title, tab.url
+        ]).filter(([icon, index, title, url]) => filter.match(title))
     ]);
 });
 class DownloadManager {
@@ -317,7 +330,8 @@ class DownloadManager {
                 "show", "Show all download item",
                 (args, tab) => {
                     return DownloadManager._getItemList(null, args, tab)
-                        .then((items) => items.map(([id, info]) => info));
+                        .then((items) => items.map(
+                            ([icon, id, name, info]) => name + ": " + info));
                 },
                 DownloadManager._getItemList.bind(null, null)),
             new ExCommand(
@@ -361,13 +375,13 @@ class DownloadManager {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
-                0, "string",
-                subcmdList.map((cmd) => [cmd.name, cmd.description])
+                0, 2,
+                subcmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ];
         }
         const query = value.substr(fixedLen).trim().split(/\s+/);
         return subcmdList.complete(query, tab)
-            .then((result) => [fixedLen, "number", result]);
+            .then((result) => [fixedLen, 1, result]);
     }
     static _invokeCommand(func, args, tab) {
         const ids = args
@@ -388,7 +402,7 @@ class DownloadManager {
             if (!tab.incognito) {
                 dlItems = dlItems.filter((item) => !item.incognito);
             }
-            return dlItems.map((item) => {
+            return Promise.all(dlItems.map((item) => {
                 const infoList = [];
                 switch (item.state) {
                     case browser.downloads.State.IN_PROGRESS:
@@ -404,8 +418,10 @@ class DownloadManager {
                         infoList.push(DownloadManager._hostname(item.url));
                         break;
                 }
-                return [item.id, item.filename + ": " + infoList.join(" -- ")];
-            });
+                return browser.downloads.getFileIcon(item.id).then((url) => {
+                    return [url, item.id, item.filename, infoList.join(" -- ")];
+                });
+            }));
         });
     }
     static _fileSize(item) {
@@ -535,20 +551,25 @@ class HistoryManager {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
-                0, "string",
-                subcmdList.map((cmd) => [cmd.name, cmd.description])
+                0, 2,
+                subcmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ];
         }
         return subcmdList.complete(value.substr(fixedLen), tab)
-            .then((result) => [fixedLen, "string", result]);
+            .then((result) => [fixedLen, 2, result]);
     }
     static _getItemList(text) {
         return browser.history.search({
             text, startTime: 0, maxResults: 1000
-        }).then((itemList) => itemList.map((item) => [item.url, item.title]));
+        }).then((itemList) => itemList.map(
+            (item) => [null, null, item.url, item.title]));
     }
 }
 gExCommandMap.addCommand(new HistoryManager());
+function closeTime(time) {
+    const d = new Date(time);
+    return `Closed at ${d.toLocaleTimeString()} on ${d.toLocaleDateString()}`;
+}
 gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
     (args, tab) => {
         const index = parseInt(args[0], 10);
@@ -573,8 +594,10 @@ gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
             const tabSessions = sessions.filter(
                 (s) => s.tab && s.tab.windowId === tab.windowId);
             return [
-                0, "number",
-                tabSessions.map((s, index) => [index, s.tab.title])
+                0, 1, tabSessions.map((s, index) => [
+                    s.tab.favIconUrl, index, s.tab.title,
+                    closeTime(s.lastModified)
+                ])
             ];
         });
     });
@@ -601,9 +624,15 @@ gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             return [
-                0, "number", winSessions.map((s, index) => [
-                    index, s.window.title || s.window.tabs[0].title
-                ])
+                0, 1, winSessions.map((s, index) => {
+                    const tab = s.window.tabs.reduce((lhs, rhs) => {
+                        return lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs;
+                    });
+                    return [
+                        tab.favIconUrl, index, s.window.title || tab.title,
+                        closeTime(s.lastModified)
+                    ];
+                })
             ];
         });
     });

@@ -9,7 +9,17 @@
         <script type="text/javascript" src="console.js"></script>
     </head>
     <body>
-        <ul id="ex_candidates"></ul>
+        <ul id="ex_candidates">
+        </ul>
+        <template id="candidate_template">
+            <li>
+                <span class="candidate_icon"></span><!--
+             --><span class="candidate_id"></span><!--
+             --><span class="candidate_data"></span><!--
+             --><span class="candidate_separator">:</span><!--
+             --><span class="candidate_info"></span>
+            </li>
+        </template>
         <div id="ex_console"><!--
          --><input id="ex_input" type="text" value="">
             <div id="ex_message"></div>
