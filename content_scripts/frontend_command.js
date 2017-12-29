@@ -441,14 +441,14 @@ class FrontendCommand {
         const hour = Math.floor(sec / 60 / 60);
         sec -= hour * 60 * 60;
         const min = Math.floor(sec / 60);
-        sec -= min * 60;
+        sec = Math.floor(sec - min * 60);
         const pad = (num) => ("0" + num.toString()).substr(-2);
         const durationStr = `${pad(hour)}:${pad(min)}:${pad(sec)} (${duration}s)`;
 
         const msg = (
 `Src: ${video.src}
 CurrentSrc: ${video.currentSrc}
-Duration: ${durationStr}s
+Duration: ${durationStr}
 CurrentTime: ${video.currentTime}
 Volume: ${video.volume}
 Loop: ${video.loop}`
