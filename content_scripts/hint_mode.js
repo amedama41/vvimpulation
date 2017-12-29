@@ -23,7 +23,7 @@ class HintMode {
         if (data.setZIndex) {
             this._setZIndex();
         }
-        if (data.initIndex !== undefined) {
+        if (Number.isInteger(data.initIndex)) {
             const [span, elem] = this.hints[data.initIndex];
             span.id = "wimpulation-hint-active";
             this.focusIndex = data.initIndex;
