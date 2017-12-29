@@ -438,8 +438,6 @@ function continueFind(tabInfo, frameId, isNext) {
     });
 }
 
-const IS_TAB_DEFAULT_INACTIVE = true;
-
 class Command {
     static focusNextFrame(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
@@ -628,7 +626,7 @@ class Command {
     }
     static openLinkInTab(msg, sender, tabInfo) {
         browser.tabs.get(sender.tab.id).then((tab) => {
-            const active = (IS_TAB_DEFAULT_INACTIVE ? !msg.active : msg.active);
+            const active = gOptions.activateNewTab;
             return browser.tabs.create({
                 url: msg.url, openerTabId: tab.id,
                 index: tab.index + 1, active: active
@@ -987,6 +985,7 @@ function setOptions(options) {
     }
     gOptions.autoFocus = options["miscellaneous"].autoFocus;
     gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
+    gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
 }
 
 browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {

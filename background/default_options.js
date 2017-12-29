@@ -304,7 +304,8 @@ const DEFAULT_OPTIONS = {
     "miscellaneous": {
         "autoFocus": true,
         "autoKillHover": true,
-        "overwriteErrorPage": true
+        "overwriteErrorPage": true,
+        "activateNewTab": false,
     }
 };
 
