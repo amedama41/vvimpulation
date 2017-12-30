@@ -25,7 +25,7 @@ class HintMode {
         }
         if (Number.isInteger(data.initIndex)) {
             const [span, elem] = this.hints[data.initIndex];
-            span.id = "wimpulation-hint-active";
+            HintMode._setActive(span);
             this.focusIndex = data.initIndex;
         }
     }
@@ -92,7 +92,7 @@ class HintMode {
             return;
         }
         const [span, elem] = this.hints[localIndex];
-        span.id = "wimpulation-hint-active";
+        HintMode._setActive(span);
         this.focusIndex = localIndex;
         if (msg.autoFocus) {
             invokeCommand("fixedFocusin", 0, frameInfo);
@@ -108,6 +108,9 @@ class HintMode {
         }
         const [span, elem] = this.hints[this.focusIndex];
         span.id = "";
+        if (span.style.zIndex) {
+            span.style.setProperty("z-index", span.style.zIndex, "important");
+        }
     }
     _startFilter(msg, frameInfo) {
         frameInfo.showConsole(this, "hintFilter", msg.filter);
@@ -178,6 +181,12 @@ class HintMode {
             return null;
         }
         return index;
+    }
+    static _setActive(span) {
+        span.id = "wimpulation-hint-active";
+        if (span.style.zIndex) {
+            span.style.setProperty("z-index", span.style.zIndex);
+        }
     }
 }
 
