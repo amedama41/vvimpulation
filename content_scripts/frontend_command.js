@@ -417,6 +417,27 @@ class FrontendCommand {
         }
         video.currentTime = Math.max(video.currentTime - count, 0);
     }
+    static speedFaster(count, frameInfo) {
+        const video = document.querySelector("video");
+        if (!video) {
+            return;
+        }
+        video.playbackRate += Math.max(1, count) / 100;
+    }
+    static speedSlower(count, frameInfo) {
+        const video = document.querySelector("video");
+        if (!video) {
+            return;
+        }
+        video.playbackRate -= Math.max(1, count) / 100;
+    }
+    static resetSpeed(count, frameInfo) {
+        const video = document.querySelector("video");
+        if (!video) {
+            return;
+        }
+        video.playbackRate = 1;
+    }
     static switchLoop(count, frameInfo) {
         const video = document.querySelector("video");
         if (!video) {
