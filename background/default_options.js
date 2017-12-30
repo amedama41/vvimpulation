@@ -121,6 +121,7 @@ const DEFAULT_OPTIONS = {
             "<Space>+": "speedFaster",
             "<Space>-": "speedSlower",
             "<Space>0": "resetSpeed",
+            "<Space>m": "switchMute",
             "<Space>r": "switchLoop",
             "<Space><C-L>": "reloadVideo",
             "<Space><C-G>": "showVideoInfo",

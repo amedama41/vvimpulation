@@ -88,6 +88,7 @@ const COMMAND_DESCRIPTIONS = {
     speedSlower: { description: "Make the play speed slower" },
     resetSpeed: { description: "Reset the play speed" },
     switchLoop: { description: "Switch loop mode of a video" },
+    switchMute: { description: "Switch mute of a video" },
     reloadVideo: { description: "Reload a video" },
     showVideoInfo: { description: "Show information of a video" },
 

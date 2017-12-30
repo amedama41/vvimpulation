@@ -445,6 +445,13 @@ class FrontendCommand {
         }
         video.loop = !video.loop;
     }
+    static switchMute(count, frameInfo) {
+        const video = _getVideoElement();
+        if (!video) {
+            return;
+        }
+        video.muted = !video.muted;
+    }
     static reloadVideo(count, frameInfo) {
         const video = _getVideoElement();
         if (!video) {
