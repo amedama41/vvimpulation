@@ -306,6 +306,7 @@ const DEFAULT_OPTIONS = {
 
     "miscellaneous": {
         "autoFocus": true,
+        "overlapHintLabels": false,
         "autoKillHover": true,
         "overwriteErrorPage": true,
         "activateNewTab": false,

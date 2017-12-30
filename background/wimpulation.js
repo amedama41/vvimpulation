@@ -144,14 +144,14 @@ const gOptions = {
 };
 
 class HintMode {
-    constructor(type, autoFocus) {
+    constructor(type, autoFocus, overlapHintLabels) {
         this.type = type;
         this.filter = "";
         this.filterIndexMap = []; // displayed index => global index
         this.idList = []; // global index => frame id
         this.currentIndex = 0; // current displayed index
         this.autoFocus = autoFocus;
-        this.overlap = false;
+        this.overlap = overlapHintLabels;
         this.mapper = Utils.makeCommandMapper(gOptions.hintKeyMapping);
     }
     handle(key, sender, tabInfo) {
@@ -653,7 +653,9 @@ class Command {
             pattern: HintMode._makePattern(type, sender.tab.url),
         }).then((hintsInfoList) => {
             changeHintMode(
-                tabInfo, hintsInfoList, new HintMode(type, gOptions.autoFocus))
+                tabInfo, hintsInfoList,
+                new HintMode(
+                    type, gOptions.autoFocus, gOptions.overlapHintLabels))
         }).catch((e) => {
             handleError(tabInfo, "toHintMode", e);
         });
@@ -984,6 +986,7 @@ function setOptions(options) {
         removeOverwriteErrorPageListener();
     }
     gOptions.autoFocus = options["miscellaneous"].autoFocus;
+    gOptions.overlapHintLabels = options["miscellaneous"].overlapHintLabels;
     gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
     gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
 }

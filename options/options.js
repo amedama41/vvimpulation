@@ -536,6 +536,7 @@ class SearchEngine {
 
 const MISCELLANEOUS_ID_MAP = {
     "miscellaneous-auto-focus": "autoFocus",
+    "miscellaneous-overlap-hint-labels": "overlapHintLabels",
     "miscellaneous-auto-kill-hover": "autoKillHover",
     "miscellaneous-overwrite-error-page": "overwriteErrorPage",
     "miscellaneous-activate-new-tab": "activateNewTab",
