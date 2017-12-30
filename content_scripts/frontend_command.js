@@ -497,6 +497,7 @@ class FrontendCommand {
         infoList.push(`CurrentTime: ${timeInfo(video.currentTime)}`);
         infoList.push(`Volume: ${video.volume}`);
         infoList.push(`Playback rate: ${video.playbackRate}`);
+        infoList.push(`Mute: ${video.muted ? "ON" : "OFF"}`);
         infoList.push(`Loop: ${video.loop ? "ON" : "OFF"}`);
 
         frameInfo.showMessage(
