@@ -257,6 +257,8 @@ class OpenCommand {
                     return browser.tabs.create({
                         url, index: tab.index + 1, active: true
                     }).then(() => true);
+                case "window":
+                    return browser.windows.create({ url }).then(() => true);
                 case "private":
                     return browser.windows.create({ url, incognito: true })
                         .then(() => false);
@@ -296,6 +298,9 @@ gExCommandMap.addCommand(
 gExCommandMap.addCommand(
     new OpenCommand(
         "tabopen", "Open or search in new tab", "tab", gEngineMap));
+gExCommandMap.addCommand(
+    new OpenCommand(
+        "winopen", "Open or search in new window", "window", gEngineMap));
 gExCommandMap.addCommand(
     new OpenCommand(
         "private", "Open or search in private window", "private", gEngineMap));
