@@ -159,7 +159,8 @@ class HintMode {
                 style.zIndex !== "auto" ? style.zIndex : zIndex);
         };
         this.hints.forEach(([span, elem], index) => {
-            span.style.zIndex = getZIndex(elem, "auto");
+            span.style.setProperty(
+                "z-index", getZIndex(elem, "auto"), "important");
         });
     }
     _clearZIndex() {

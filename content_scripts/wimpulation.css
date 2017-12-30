@@ -7,18 +7,20 @@
     position: static !important;
 }
 #wimpulation-hint-container > span {
-    opacity: 0.8;
-    background-color: MistyRose;
-    color: black;
-    display: inline;
-    z-index: 2147483646;
-    position: absolute;
-    visibility: visible;
-    border: 1px solid;
-    font: 10px Monospace;
-    line-height: 10px;
-    margin: 0px;
-    padding: 0px 4px;
+    opacity: 0.8 !important;
+    background-color: MistyRose !important;
+    color: black !important;
+    display: inline !important;
+    z-index: 2147483646 !important;
+    position: absolute !important;
+    visibility: visible !important;
+    border: 1px solid !important;
+    font: 10px Monospace !important;
+    line-height: 10px !important;
+    margin: 0px !important;
+    padding: 0px 4px !important;
+    height: initial !important;
+    width: initial !important;
 }
 
 #wimpulation-hint-container > .A,
@@ -41,7 +43,7 @@
     z-index: 2147483647 !important;
 }
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
-    display: none;
+    display: none !important;
 }
 
 #wimpulation-console {
