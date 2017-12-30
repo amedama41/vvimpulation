@@ -372,7 +372,7 @@ class FrontendCommand {
      * Commands for video manipulation
      */
     static playOrPause(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
@@ -384,21 +384,21 @@ class FrontendCommand {
         }
     }
     static volumeUp(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.volume = Math.min(video.volume + Math.max(1, count) / 100, 1.0);
     }
     static volumeDown(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.volume = Math.max(video.volume - Math.max(1, count) / 100, 0.0);
     }
     static seekForward(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
@@ -408,7 +408,7 @@ class FrontendCommand {
         video.currentTime = Math.min(video.currentTime + count, video.duration);
     }
     static seekBack(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
@@ -418,42 +418,42 @@ class FrontendCommand {
         video.currentTime = Math.max(video.currentTime - count, 0);
     }
     static speedFaster(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.playbackRate += Math.max(1, count) / 100;
     }
     static speedSlower(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.playbackRate -= Math.max(1, count) / 100;
     }
     static resetSpeed(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.playbackRate = 1;
     }
     static switchLoop(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.loop = !video.loop;
     }
     static reloadVideo(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
         video.load();
     }
     static showVideoInfo(count, frameInfo) {
-        const video = document.querySelector("video");
+        const video = _getVideoElement();
         if (!video) {
             return;
         }
@@ -1044,6 +1044,21 @@ function getScrollBaseElement(target) {
     else {
         return selectionNode.parentElement;
     }
+}
+
+function _getVideoElement() {
+    const videoList = Array.prototype.filter.call(
+        document.getElementsByTagName("video"), (video) => {
+            if (video.currentSrc === "" || !DomUtils.isDisplay(video)) {
+                return false;
+            }
+            const style = window.getComputedStyle(video, null);
+            if (style.visibility === "hidden") {
+                return false;
+            }
+            return true;
+        });
+    return (videoList.length !== 0 ? videoList[0] : null);
 }
 
 function incrementURL(location, count) {
