@@ -54,7 +54,8 @@ const setTabIndex = (element, index, selectorInfo) => {
         if (focus || DomUtils.hasFocusableChild(elem)) {
             return [true, true];
         }
-        if (info.isTarget) {
+        if (info.isTarget &&
+            (elem.tabIndex === -1 || DomUtils.isNonFocusableAnchor(elem))) {
             elem.tabIndex = Math.max(elem.tabIndex, 0);
             return [true, true];
         }
