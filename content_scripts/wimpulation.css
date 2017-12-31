@@ -10,13 +10,14 @@
     opacity: 0.8 !important;
     background-color: MistyRose !important;
     color: black !important;
+    box-shadow: 1px 1px 1px !important;
     display: inline !important;
     z-index: 2147483646 !important;
     position: absolute !important;
     visibility: visible !important;
     border: 1px solid !important;
-    font: 10px Monospace !important;
-    line-height: 10px !important;
+    border-radius: 3px !important;
+    font: x-small Monospace !important;
     margin: 0px !important;
     padding: 0px 4px !important;
     height: initial !important;
@@ -27,9 +28,6 @@
 #wimpulation-hint-container > .AREA {
     background-color: white !important;
 }
-#wimpulation-hint-container > .AREA {
-    font-style: italic !important;
-}
 #wimpulation-hint-container > .INPUT,
 #wimpulation-hint-container > .TEXTAREA,
 #wimpulation-hint-container > .BUTTON,
@@ -38,9 +36,19 @@
 #wimpulation-hint-container > .CANVAS {
     background-color: Lavender !important;
 }
+#wimpulation-hint-container > .wimpulation-has-clickevent {
+    text-decoration: underline !important;
+}
+#wimpulation-hint-container > .wimpulation-has-mousemoveevent {
+    font-style: italic !important;
+}
+#wimpulation-hint-container > .wimpulation-has-tabindex {
+    border: 2px double !important;
+}
 #wimpulation-hint-container > #wimpulation-hint-active {
     color: red !important;
     z-index: 2147483647 !important;
+    transform: scale(1.1);
 }
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
     display: none !important;

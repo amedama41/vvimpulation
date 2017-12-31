@@ -275,6 +275,19 @@ function getRectsOfAreaElement(area) {
             return [rect];
     }
 }
+function addClassList(elem, span) {
+    const classList = span.classList;
+    if (elem.onclick || elem.onmousedown || elem.onmouseup) {
+        classList.add("wimpulation-has-clickevent");
+    }
+    if (elem.onmousemove || elem.onmouseover || elem.onmouseout) {
+        classList.add("wimpulation-has-mousemoveevent");
+    }
+    if (elem.hasAttribute("tabindex") && elem.tabIndex === 0) {
+        classList.add("wimpulation-has-tabindex");
+    }
+}
+
 function makeHints(pattern, type, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
@@ -325,6 +338,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
             span.style.top  =
                 (Math.max(rect.top - 8, winArea.top) + scrY) + "px";
             span.className = tagName;
+            addClassList(elem, span);
             hints.push([span, elem]);
             idOrPromiseList.push(selfFrameId);
         }
