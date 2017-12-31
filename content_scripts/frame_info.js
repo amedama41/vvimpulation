@@ -360,8 +360,8 @@ class FrameInfo {
         this._mode.onReset(this);
     }
     _createConsoleFrame() {
-        const create = () => {
-            // for reinstall
+        const create = (timeout) => {
+            // For reinstall or retry
             const oldContainer =
                 document.getElementById("wimpulation-console-container");
             if (oldContainer) {
@@ -378,14 +378,20 @@ class FrameInfo {
             };
             container.appendChild(consoleFrame);
             document.documentElement.appendChild(container);
+            setTimeout(() => {
+                if (!this._consoleFrame) { // Retry when loading is canceled.
+                    create(Math.floor(timeout * 1.5));
+                }
+            }, timeout);
         };
 
         if (document.readyState === "loading") {
             window.addEventListener(
-                "DOMContentLoaded", create, { capture: true, once: true });
+                "DOMContentLoaded",
+                () => create(1000), { capture: true, once: true });
         }
         else {
-            create();
+            create(1000);
         }
     }
     _sendConsoleMessage(msg) {
