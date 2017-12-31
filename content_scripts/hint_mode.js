@@ -287,6 +287,15 @@ function addClassList(elem, span) {
         classList.add("wimpulation-has-tabindex");
     }
 }
+function getIdealRect(rectList) {
+    // Some anchor elements including img have a zero width rect as first rect.
+    for (const rect of rectList) {
+        if (rect.width !== 0 && rect.height !== 0) {
+            return rect;
+        }
+    }
+    return rectList[0];
+}
 
 function makeHints(pattern, type, winArea, frameInfo) {
     const win = window;
@@ -330,7 +339,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
             }
         }
 
-        const rect = rectList[0];
+        const rect = getIdealRect(rectList);
         if (!isFrame || isFocusType) {
             const span = doc.createElement("span");
             span.style.left =
