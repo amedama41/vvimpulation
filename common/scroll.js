@@ -11,12 +11,10 @@ return (class Scroll {
         }
     }
     static isVerticalScrollable(elem) {
-        return ((elem.clientHeight !== 0)
-            && (elem.clientHeight !== elem.scrollHeight));
+        return ((elem.clientHeight !== 0) && (elem.scrollTopMax !== 0));
     }
     static isHorizontalScrollable(elem) {
-        return ((elem.clientWidth !== 0)
-            && (elem.clientWidth !== elem.scrollWidth));
+        return ((elem.clientWidth !== 0) && (elem.scrollLeftMax !== 0));
     }
     static isVerticalScrollableStyle(style) {
         return (style.overflowY !== "visible" && style.overflowY !== "hidden");

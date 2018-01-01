@@ -22,7 +22,7 @@ class FrontendCommand {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollTop = elem.scrollHeight - elem.clientHeight;
+            elem.scrollTop = elem.scrollTopMax;
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
@@ -183,7 +183,7 @@ class FrontendCommand {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollLeft = elem.scrollWidth;
+            elem.scrollLeft = elem.scrollLeftMax;
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
