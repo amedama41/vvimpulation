@@ -14,7 +14,7 @@ class HintMode {
         container.id = "wimpulation-hint-container";
         this.hints.forEach(([span, elem], index) => {
             span.textContent = labelList[index];
-            container.appendChild(span);
+            container.insertBefore(span, container.firstElementChild);
             indexMap[labelList[index]] = index;
         });
         const target = document.documentElement;
