@@ -188,8 +188,10 @@ class MessageCommand {
         if (activeElement && activeElement.contentWindow) {
             activeElement.blur();
         }
-        gFrameInfo.forwardToParent(
-            { command: "focusin|" + gFrameInfo.getSelfFrameId() });
+        gFrameInfo.focusThisFrame();
+    }
+    static focusChildFrame(msg) {
+        return gFrameInfo.focusChildFrame(msg.frameId);
     }
     static find(msg) {
         const { keyword, caseSensitive, backward, reset } = msg;

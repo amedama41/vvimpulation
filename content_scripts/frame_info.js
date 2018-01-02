@@ -162,6 +162,19 @@ class FrameInfo {
         this._frameIdInfo.stopRegistration();
         this._frameIdInfo.setParentFrameId(msg.frameId);
     }
+    focusChildFrame(childFrameId) {
+        const frame = Array.from(window.frames).find(
+            (frame) => this.getChildFrameId(frame) === childFrameId);
+        if (!frame) {
+            return;
+        }
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.contentWindow) {
+            activeElement.blur();
+        }
+        frame.focus();
+        this.focusThisFrame();
+    }
 
     // Method related to frame id.
     getSelfFrameId() {
@@ -173,9 +186,15 @@ class FrameInfo {
     getChildFrameId(childWindow) {
         return this._frameIdInfo.getChildFrameId(childWindow);
     }
-    getChildFrame(childFrameId) {
-        return Array.from(window.frames).find(
-            (frame) => this.getChildFrameId(frame) === childFrameId);
+    focusThisFrame() {
+        if (this.isTopFrame() || document.hasFocus()) {
+            return;
+        }
+        return this.sendMessage({
+            command: "forwardFrameMessage",
+            frameId: this._frameIdInfo.getParentFrameId(),
+            data: { command: "focusChildFrame", frameId: this.getSelfFrameId() }
+        });
     }
 
     // Method related to port.

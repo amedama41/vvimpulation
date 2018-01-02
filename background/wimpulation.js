@@ -691,6 +691,9 @@ class Command {
     static forwardCommand(msg, sender, tabInfo) {
         tabInfo.sendMessage(msg.frameId, msg);
     }
+    static forwardFrameMessage(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, msg.data);
+    }
     static showMessage(msg, sender, tabInfo) {
         tabInfo.sendMessage(0, msg);
     }
