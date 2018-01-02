@@ -207,7 +207,6 @@ function getRectsInArea(rectList, area) {
     return rectList.filter((rect) => !isOutOfArea(rect, area));
 }
 function isOutOfArea(rect, winArea) {
-    if (rect.width === 0 && rect.height === 0) return true;
     return (rect.top > winArea.bottom
         || rect.bottom < winArea.top
         || rect.left > winArea.right
@@ -242,6 +241,15 @@ function getRectsInAncestorVisibleArea(elem, rectList, style) {
         }
     }
     return rectList;
+}
+function getClientRects(elem) {
+    const rects = elem.getClientRects();
+    // Some anchor elements can be zero size even though they includes children.
+    if (rects.length === 1 && rects[0].width === 0 && rects[0].height === 0 &&
+        elem.childElementCount === 0) {
+        return [];
+    }
+    return rects;
 }
 function getRectsOfAreaElement(area) {
     const rect = area.getBoundingClientRect();
@@ -330,7 +338,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
         // use getClientRects instead of getBoundingClientRect in order to
         // acquire the collect position for text wrapped elements.
         let rectList =
-            (isAreaElem ? getRectsOfAreaElement(elem) : elem.getClientRects());
+            (isAreaElem ? getRectsOfAreaElement(elem) : getClientRects(elem));
         rectList = getRectsInArea(rectList, winArea);
         if (rectList.length === 0) {
             continue;
