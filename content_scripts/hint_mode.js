@@ -152,18 +152,31 @@ class HintMode {
         this.focusIndex = undefined;
     }
     _setZIndex() {
-        const getZIndex = (elem, zIndex) => {
+        const getZIndex = (elem, zIndex, childZIndex) => {
             if (!elem) {
                 return zIndex;
             }
             const style = window.getComputedStyle(elem, null);
-            return getZIndex(
-                elem.parentElement,
-                style.zIndex !== "auto" ? style.zIndex : zIndex);
+            if (style.zIndex !== "auto" && style.position !== "static") {
+                return getZIndex(elem.parentElement, style.zIndex, "auto");
+            }
+            if (style.opacity !== "1" ||
+                style.mixBlendMode !== "normal" ||
+                style.transform !== "none" ||
+                style.filter !== "none" ||
+                style.perspective !== "none" ||
+                style.mask !== "none" || style.maskImage !== "none" ||
+                style.isolation === "isolate") { // TODO: will-change
+                return getZIndex(elem.parentElement, "auto", style.zIndex);
+            }
+            if (childZIndex !== "auto" && style.display.includes("flex")) {
+                return getZIndex(elem.parentElement, childZIndex, style.zIndex);
+            }
+            return getZIndex(elem.parentElement, zIndex, style.zIndex);
         };
         this.hints.forEach(([span, elem], index) => {
             span.style.setProperty(
-                "z-index", getZIndex(elem, "auto"), "important");
+                "z-index", getZIndex(elem, "auto", "auto"), "important");
         });
     }
     _clearZIndex() {
