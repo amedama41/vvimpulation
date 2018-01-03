@@ -1377,9 +1377,11 @@ function focusNextKeywordLink(keywords, count, target) {
         }
         return "";
     };
+    const pageHostname = location.hostname;
     const linkList = Array.prototype.filter.call(
-        document.getElementsByTagName("a"), (link) => {
+        document.querySelectorAll("a[href]"), (link) => {
             return (link.getClientRects().length !== 0
+                && link.hostname === pageHostname
                 && keywords.some(
                     (k) => getText(link).toLowerCase().includes(k)));
         });
