@@ -83,7 +83,7 @@ class FrameIdInfo {
 }
 
 class FrameInfo {
-    constructor(selfFrameId, port, modeName, keyMapping) {
+    constructor(selfFrameId, port, modeName, keyMapping, pagePattern) {
         this._frameIdInfo = new FrameIdInfo(selfFrameId);
         this._port = port;
         this._modeEventListenerList = [];
@@ -91,6 +91,7 @@ class FrameInfo {
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+        this._pagePattern = pagePattern;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
@@ -151,11 +152,12 @@ class FrameInfo {
     currentMode() {
         return this._mode.constructor.getModeName();
     }
-    setKeyMapping(keyMapping) {
+    setOptions(keyMapping, pagePattern) {
         this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+        this._pagePattern = pagePattern;
         this.changeModeNow("NORMAL");
     }
     completeChildRegistration(msg) {
@@ -229,6 +231,12 @@ class FrameInfo {
     }
     getTarget() {
         return this._mode.getTarget();
+    }
+    getNextPattern() {
+        return new RegExp(this._pagePattern.next, "i");
+    }
+    getPreviousPattern() {
+        return new RegExp(this._pagePattern.previous, "i");
     }
 
     // Method for mode classes.

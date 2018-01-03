@@ -305,6 +305,11 @@ const DEFAULT_OPTIONS = {
         }
     },
 
+    "pagePattern": {
+        "next": "(^(次の?ページ|次へ?)$)|\\b(next|>>|»)\\b",
+        "previous": "(^(前の?ページ|前へ?)$)|\\b(prev(ious)?|<<|«)\\b"
+    },
+
     "miscellaneous": {
         "autoFocus": true,
         "overlapHintLabels": false,

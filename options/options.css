@@ -92,6 +92,11 @@ ul.tab:after {
     width: 40px;
 }
 
+.page-pattern-regex {
+    width: 90%;
+    font-family: monospace;
+}
+
 body {
     margin-bottom: 42px;
 }

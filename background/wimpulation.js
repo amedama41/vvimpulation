@@ -978,10 +978,12 @@ function removeOverwriteErrorPageListener() {
 }
 
 function setOptions(options) {
+    const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
     gOptions.keyMapping = options["keyMapping"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping = Utils.toPreparedCmdMap(options.keyMapping.hint);
     setEngine(gEngineMap, options["searchEngine"]);
+    gOptions.pagePattern = getOption("pagePattern");
     if (options["miscellaneous"].overwriteErrorPage) {
         setOverwriteErrorPageListener();
     }
@@ -1003,7 +1005,9 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         }
         setOptions(changes["options"].newValue);
         postAllFrame({
-            command: "updateKeyMapping", keyMapping: gOptions.keyMapping
+            command: "updateKeyMapping",
+            keyMapping: gOptions.keyMapping,
+            pagePattern: gOptions.pagePattern
         });
     });
 
@@ -1042,6 +1046,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             command: "initFrame",
             frameId: frameId,
             keyMapping: gOptions.keyMapping,
+            pagePattern: gOptions.pagePattern,
             autoKillHover: gOptions.autoKillHover,
             mode: tabInfo.getMode(),
         });

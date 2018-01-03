@@ -13,6 +13,7 @@ class Options {
         this.keyMapping = new KeyMapping();
         this.hintPattern = new HintPattern();
         this.searchEngine = new SearchEngine();
+        this.pagePattern = new PagePattern();
         this.miscellaneous = new Miscellaneous();
         document.getElementById("import-button")
             .addEventListener("click", (e) => { this.importOptions(); });
@@ -24,9 +25,11 @@ class Options {
             .addEventListener("click", (e) => { this.saveOptions(); });
     }
     setOptions(options) {
+        const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
         this.keyMapping.setOptions(options["keyMapping"]);
         this.hintPattern.setOptions(options["hintPattern"]);
         this.searchEngine.setOptions(options["searchEngine"] || {});
+        this.pagePattern.setOptions(getOption("pagePattern"));
         this.miscellaneous.setOptions(options["miscellaneous"] || {});
         this.options = options;
     }
@@ -36,6 +39,7 @@ class Options {
                 "keyMapping": this.keyMapping.getOptions(),
                 "hintPattern": this.hintPattern.getOptions(),
                 "searchEngine": this.searchEngine.getOptions(),
+                "pagePattern": this.pagePattern.getOptions(),
                 "miscellaneous": this.miscellaneous.getOptions(),
             };
             this.options = options;
@@ -531,6 +535,62 @@ class SearchEngine {
             "click", (e) => this.removeEngine(rowIndex));
         row.appendChild(removeButton);
         return row;
+    }
+}
+
+class PagePattern {
+    constructor() {
+        this.options = { next: "", previous: "" };
+
+        const inputList =
+            Array.from(document.querySelectorAll(".page-pattern-regex"));
+        inputList.forEach((input) => {
+            input.addEventListener("change", (e) => {
+                const id = e.target.id;
+                const kind = id.substr(id.lastIndexOf("-") + 1);
+                this._setPattern(kind, e.target.value);
+            });
+        });
+    }
+    getOptions() {
+        const options = {};
+        Object.keys(this.options).forEach((kind) => {
+            try {
+                new RegExp(this.options[kind]);
+                options[kind] = this.options[kind];
+            }
+            catch (e) {
+                throw new Error("page pattern: " + e.message);
+            }
+        });
+        return options;
+    }
+    setOptions(pagePattern) {
+        this.options = Object.assign({}, pagePattern);
+        Object.keys(this.options).forEach((kind) => {
+            const input = document.getElementById("page-pattern-" + kind);
+            input.value = this.options[kind];
+        });
+        this._checkPattern();
+    }
+    _setPattern(kind, pattern) {
+        this.options[kind] = pattern;
+        this._checkPattern();
+    }
+    _checkPattern() {
+        const errorMessageList = [];
+        for (const kind of ["next", "previous"]) {
+            try {
+                if (this.options[kind] !== "") {
+                    new RegExp(this.options[kind]);
+                }
+            }
+            catch (error) {
+                errorMessageList.push(kind + ": " + error.message);
+            }
+        }
+        document.getElementById("page-pattern-error").innerText =
+            errorMessageList.join("\n");
     }
 }
 

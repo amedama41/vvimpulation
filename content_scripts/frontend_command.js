@@ -313,12 +313,12 @@ class FrontendCommand {
         });
     }
     static findNextPage(count, frameInfo) {
-        const NEXT_KEYWORD = /(^(次の?ページ|次へ?)$)|\b(next|>>|»)\b/i;
+        const NEXT_KEYWORD = frameInfo.getNextPattern();
         focusNextKeywordLink(
             NEXT_KEYWORD, Math.max(count, 1), frameInfo.getTarget());
     }
     static findPreviousPage(count, frameInfo) {
-        const PREVIOUS_KEYWORD = /(^(前の?ページ|前へ?)$)|\b(prev(ious)?|<<|«)\b/i;
+        const PREVIOUS_KEYWORD = frameInfo.getPreviousPattern();
         focusNextKeywordLink(
             PREVIOUS_KEYWORD, Math.max(count, 1), frameInfo.getTarget());
     }
