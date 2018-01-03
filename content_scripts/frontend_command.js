@@ -1367,11 +1367,21 @@ function invokeCommand(cmdName, count, frameInfo) {
 
 function focusNextKeywordLink(keywords, count, target) {
     keywords = keywords.map((key) => key.toLowerCase());
+    const getText = (elem) => {
+        if (elem.innerText) {
+            return elem.innerText;
+        }
+        const img = elem.querySelector(":scope img");
+        if (img) {
+            return img.alt;
+        }
+        return "";
+    };
     const linkList = Array.prototype.filter.call(
         document.getElementsByTagName("a"), (link) => {
             return (link.getClientRects().length !== 0
                 && keywords.some(
-                    (k) => link.innerText.toLowerCase().includes(k)));
+                    (k) => getText(link).toLowerCase().includes(k)));
         });
     if (linkList.length === 0) {
         return;
