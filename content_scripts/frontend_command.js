@@ -986,6 +986,12 @@ class FrontendCommand {
             editableElement: inputs[(index + 1) % inputs.length]
         });
     }
+    static toInsertModeIfEditable(count, frameInfo) {
+        const target = frameInfo.getTarget();
+        if (DomUtils.isEditable(target)) {
+            frameInfo.changeMode("INSERT", { editableElement: target });
+        }
+    }
     static toHintMode(count, frameInfo) {
         // TODO: slot 3, 4
         const TYPE_LIST = ["link", "focus", "media", "code", "link"];

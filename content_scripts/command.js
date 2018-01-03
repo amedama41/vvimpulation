@@ -186,6 +186,7 @@ const COMMAND_DESCRIPTIONS = {
     toInsertModeOnLastElement: { description: "Change insert mode with a last input element" },
     toInsertModeOnPreviousInput: { description: "Change insert mode with a previous input element" },
     toInsertModeOnNextInput: { description: "Change insert mode with a next input element" },
+    toInsertModeIfEditable: { description: "Change insert mode if the current target is editable" },
     toHintMode: { description: "Change link hint mode" },
     toHintFocusMode: { description: "Change focus hint mode" },
     toHintMediaMode: { description: "Change media hint mode" },
