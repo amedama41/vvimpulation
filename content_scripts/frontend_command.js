@@ -313,18 +313,14 @@ class FrontendCommand {
         });
     }
     static findNextPage(count, frameInfo) {
-        const NEXT_KEYWORDS = [
-            "次のページ", "次へ", "次ページ", "NEXT", ">>", "»"
-        ];
+        const NEXT_KEYWORD = /(^(次の?ページ|次へ?)$)|\b(next|>>|»)\b/i;
         focusNextKeywordLink(
-            NEXT_KEYWORDS, Math.max(count, 1), frameInfo.getTarget());
+            NEXT_KEYWORD, Math.max(count, 1), frameInfo.getTarget());
     }
     static findPreviousPage(count, frameInfo) {
-        const PREVIOUS_KEYWORDS = [
-            "前のページ", "前へ", "前ページ", "PREV", "<<", "«"
-        ];
+        const PREVIOUS_KEYWORD = /(^(前の?ページ|前へ?)$)|\b(prev(ious)?|<<|«)\b/i;
         focusNextKeywordLink(
-            PREVIOUS_KEYWORDS, Math.max(count, 1), frameInfo.getTarget());
+            PREVIOUS_KEYWORD, Math.max(count, 1), frameInfo.getTarget());
     }
 
     /**
@@ -1365,8 +1361,7 @@ function invokeCommand(cmdName, count, frameInfo) {
     return isIgnore;
 }
 
-function focusNextKeywordLink(keywords, count, target) {
-    keywords = keywords.map((key) => key.toLowerCase());
+function focusNextKeywordLink(keyword, count, target) {
     const getText = (elem) => {
         if (elem.innerText) {
             return elem.innerText;
@@ -1384,8 +1379,7 @@ function focusNextKeywordLink(keywords, count, target) {
                 && window.getComputedStyle(link, null).visibility !== "hidden"
                 && (link.protocol === "javascript:" ||
                     link.hostname === pageHostname)
-                && keywords.some(
-                    (k) => getText(link).toLowerCase().includes(k)));
+                && keyword.test(getText(link)));
         });
     if (linkList.length === 0) {
         return;
