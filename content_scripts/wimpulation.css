@@ -54,7 +54,7 @@
     display: none !important;
 }
 
-#wimpulation-console {
+#wimpulation-console-container > iframe {
     background-color: transparent !important;
     padding: 0px !important;
     margin: 0px !important;
@@ -69,10 +69,10 @@
     display: none !important;
     pointer-events: none !important;
 }
-#wimpulation-console.wimpulation-show-console {
+#wimpulation-console-container > iframe.wimpulation-show-console {
     display: block !important;
 }
-#wimpulation-console.wimpulation-console-mode {
+#wimpulation-console-container > iframe.wimpulation-console-mode {
     pointer-events: auto !important;
 }
 
