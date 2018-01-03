@@ -1382,7 +1382,8 @@ function focusNextKeywordLink(keywords, count, target) {
         document.querySelectorAll("a[href]"), (link) => {
             return (link.getClientRects().length !== 0
                 && window.getComputedStyle(link, null).visibility !== "hidden"
-                && link.hostname === pageHostname
+                && (link.protocol === "javascript:" ||
+                    link.hostname === pageHostname)
                 && keywords.some(
                     (k) => getText(link).toLowerCase().includes(k)));
         });
