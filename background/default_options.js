@@ -22,6 +22,7 @@ const DEFAULT_OPTIONS = {
             "S": "toConsoleMode|tabopen",
             "R": "toConsoleModeWithURL|tabopen",
             "b": "toConsoleMode|buffer",
+            "B": "toConsoleMode|winbuffer",
             "/": "toSearchMode",
             "?": "toBackwardSearchMode",
             "g<": "showLastMessage",

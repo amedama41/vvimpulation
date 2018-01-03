@@ -324,6 +324,29 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
         ]).filter(([icon, index, title, url]) => filter.match(title))
     ]);
 });
+gExCommandMap.makeCommand("winbuffer", "Switch window", (args, tab) => {
+    if (args.length === 0) {
+        return Promise.reject("no argument");
+    }
+    const index = parseInt(args[0], 10);
+    if (Number.isNaN(index)) {
+        return Promise.reject("argument must be number");
+    }
+    return browser.windows.getAll().then((windows) => {
+        return browser.windows.update(windows[index].id, {
+            focused: true
+        }).then((win) => true);
+    });
+}, (value, tab) => {
+    const filter = Utils.makeFilter(value);
+    return browser.windows.getAll().then((windows) => [
+        0, 1, windows.map((win, index) => [
+            (win.incognito ?
+                "chrome://browser/skin/privatebrowsing/favicon.svg" : null),
+            index, win.title, win.type
+        ]).filter(([icons, index, title, type]) => filter.match(title))
+    ]);
+});
 class DownloadManager {
     constructor() {
         this.name = "download";
