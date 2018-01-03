@@ -194,7 +194,7 @@ function search(keyword, backward, mode) {
     return mode.sendMessage({
         command: "find", keyword: keyword, backward: backward, frameId: 0
     }).then((result) => {
-        if (result && !browser.extension.inIncognitoContext) {
+        if (!browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
         }
         if (result) {
