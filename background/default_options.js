@@ -306,8 +306,8 @@ const DEFAULT_OPTIONS = {
     },
 
     "pagePattern": {
-        "next": "(^(次の?ページ|次へ?|»)$)|\\b(next|>>)\\b",
-        "previous": "(^(前の?ページ|前へ?|«)$)|\\b(prev(ious)?|<<)\\b"
+        "next": "^\\s*((次の?ページ|次へ?|(next|newer)(\\s+\\w+)?)(\\s*(›|»|≫|>>?|→))?|»|›|≫|>>?|→)\\s*$",
+        "previous": "^\\s*(((‹|«|≪|<<?|←)\\s*)?(前の?ページ|前へ?|(prev(ious)?|older)(\\s+\\w+)?)|‹|«|≪|<<?|←)\\s*$"
     },
 
     "miscellaneous": {
