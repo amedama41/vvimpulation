@@ -336,3 +336,13 @@ function convertHintKeyMapping(keyMapping) {
     return keyMapping;
 }
 
+function convertConsoleKeyMapping(keyMapping) {
+    Object.keys(keyMapping).forEach((key) => {
+        const cmd = keyMapping[key];
+        if (cmd.startsWith("console.")) {
+            keyMapping[key] = cmd.substr(8);
+        }
+    });
+    return keyMapping;
+}
+

@@ -19,6 +19,8 @@
     <script src="../content_scripts/suspend_mode.js"></script>
     <script src="../content_scripts/wimpulation.js"></script>
     <script src="../background/default_options.js"></script>
+    <script src="../background/hint_command.js"></script>
+    <script src="../console/command.js"></script>
     <link rel="stylesheet" type="text/css" href="../content_scripts/wimpulation.css">
     <script src="options.js"></script>
     <link rel="stylesheet" type="text/css" href="options.css">
@@ -35,7 +37,27 @@
         <li mode="hint"><a href="#">Hint</a></li>
         <li mode="console"><a href="#">Console</a></li>
       </ul>
-      <textarea id="key-mapping-textarea"></textarea>
+      <div id="key-mapping-table">
+        <div id="key-mapping-table-header">
+          <span class="key-mapping-key">Key</span><!--
+       --><span class="key-mapping-command">Command</span><!--
+       --><span class="key-mapping-remove">&nbsp;</span>
+        </div>
+        <div id="key-mapping-table-contents">
+        </div>
+        <template id="key-mapping-table-template">
+          <div>
+            <input class="key-mapping-key" type="text"><!--
+         --><input class="key-mapping-command" type="text" list="key-mapping-table-command-list"><!--
+         --><input class="key-mapping-remove" type="button" value="Remove">
+          </div>
+        </template>
+        <datalist id="key-mapping-table-command-list">
+        </datalist>
+        <div id="key-mapping-table-manipulation">
+          <input id="key-mapping-table-add-button" type="button" value="Add">
+        </div>
+      </div>
       <div id="key-mapping-error" class="error-message"></div>
     </div>
 

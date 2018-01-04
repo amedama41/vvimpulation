@@ -981,6 +981,7 @@ function removeOverwriteErrorPageListener() {
 function setOptions(options) {
     const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
     gOptions.keyMapping = options["keyMapping"];
+    convertConsoleKeyMapping(gOptions.keyMapping["console"]);
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping =
         Utils.toPreparedCmdMap(convertHintKeyMapping(options.keyMapping.hint));

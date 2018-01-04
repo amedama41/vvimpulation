@@ -100,69 +100,146 @@ class Options {
 const KEY_MAPPING_TYPES = ["normal", "insert", "visual", "hint", "console"];
 class KeyMapping {
     constructor() {
-        this.options = KEY_MAPPING_TYPES.reduce((options, type) => {
-            options[type] = ["", ""];
+        this.options = KEY_MAPPING_TYPES.reduce((options, mode) => {
+            options[mode] = [];
             return options;
         }, {});
         this.currentMode = "normal";
 
         const tabs = document.querySelectorAll("#key-mapping-tabs li");
         setSelectTabListener(tabs, (tab) => {
-            this.setMode(tab.getAttribute("mode"));
+            this._setMode(tab.getAttribute("mode"));
         });
 
-        const textarea = document.getElementById("key-mapping-textarea");
-        textarea.addEventListener("change", (e) => {
-            const mapping = e.target.value;
-            this.options[this.currentMode][0] = mapping;
-            try {
-                JSON.parse(mapping);
-                this.setErrorMessage("");
-            }
-            catch (error) {
-                this.setErrorMessage(error.message);
-            }
+        const button = document.getElementById("key-mapping-table-add-button");
+        button.addEventListener("click", (e) => {
+            this.options[this.currentMode].push(["", ""]);
+            this._updateKeyMappingSection();
         });
     }
-    setMode(mode) {
-        this.currentMode = mode;
-        this._updateKeyMappingSection();
-    }
-    setErrorMessage(message) {
-        this.options[this.currentMode][1] = message;
-        const error = document.getElementById("key-mapping-error");
-        error.textContent = message;
-    }
     getOptions() {
-        try {
-            const options = {};
-            for (const mode of KEY_MAPPING_TYPES) {
-                options[mode] = JSON.parse(this.options[mode][0]);
-            }
+        const errorList = KeyMapping._getErrorList(this.options);
+        if (errorList.length !== 0) {
+            throw new Error("key mapping: " + errorList[0]);
+        }
+        return KEY_MAPPING_TYPES.reduce((options, mode) => {
+            options[mode] = this.options[mode].reduce((mapping, [key, cmd]) => {
+                mapping[key.trim()] = cmd.trim();
+                return mapping;
+            }, {});
             return options;
-        }
-        catch (e) {
-            throw new Error("key mapping: " + e.message);
-        }
+        }, {});
     }
     setOptions(keyMapping) {
-        for (const mode of Object.keys(keyMapping)) {
-            this.options[mode] = [
-                JSON.stringify(
-                    (mode === "hint" ?
-                        convertHintKeyMapping(keyMapping["hint"]) :
-                        keyMapping[mode]),
-                    null, 2),
-                ""
-            ];
-        }
+        KEY_MAPPING_TYPES.forEach((mode) => {
+            const mapping = keyMapping[mode] || {};
+            if (mode === "hint") {
+                convertHintKeyMapping(mapping);
+            }
+            if (mode === "console") {
+                convertConsoleKeyMapping(mapping);
+            }
+            this.options[mode] =
+                Object.keys(mapping).map((key) => [key, mapping[key]]);
+        });
+        this._setMode(this.currentMode);
+    }
+    _setMode(mode) {
+        this.currentMode = mode;
+        this._updateDataList();
         this._updateKeyMappingSection();
     }
+    _updateDataList() {
+        const datalist =
+            document.getElementById("key-mapping-table-command-list");
+        const descriptions = KeyMapping._getDescriptions(this.currentMode);
+        const fragment = document.createDocumentFragment();
+        Object.keys(descriptions).forEach((cmd) => {
+            fragment.appendChild(
+                new Option(`${cmd} -- ${descriptions[cmd].description}`, cmd));
+        });
+        datalist.innerHTML = "";
+        datalist.appendChild(fragment);
+    }
     _updateKeyMappingSection() {
-        const textarea = document.getElementById("key-mapping-textarea");
-        const errorMsg = document.getElementById("key-mapping-error");
-        textarea.value = this.options[this.currentMode][0];
-        errorMsg.textContent = this.options[this.currentMode][1];
+        const modeKeyMapping = this.options[this.currentMode];
+        const fragment = document.createDocumentFragment();
+        const template = document.getElementById("key-mapping-table-template");
+        modeKeyMapping.forEach(([key, command], index) => {
+            const row = document.importNode(template.content, true);
+            const inputs = row.firstElementChild.children;
+            inputs[0].value = key;
+            inputs[1].value = command;
+            this._setEventListener(inputs, index);
+            fragment.appendChild(row);
+        });
+        const table = document.getElementById("key-mapping-table-contents");
+        table.innerHTML = "";
+        table.appendChild(fragment);
+    }
+    _setEventListener(inputs, index) {
+        inputs[0].addEventListener("change", (e) => {
+            this.options[this.currentMode][index][0] = e.target.value;
+            this._checkMapping();
+        });
+        inputs[1].addEventListener("change", (e) => {
+            this.options[this.currentMode][index][1] = e.target.value;
+            this._checkMapping();
+        });
+        inputs[2].addEventListener("click", (e) => {
+            this.options[this.currentMode].splice(index, 1);
+            this._updateKeyMappingSection();
+        });
+    }
+    _checkMapping() {
+        const error = document.getElementById("key-mapping-error");
+        error.innerText = KeyMapping._getErrorList(this.options).join("\n");
+    }
+    static _getErrorList(options) {
+        return KEY_MAPPING_TYPES.reduce((errorList, mode) => {
+            try {
+                const mapping = {};
+                options[mode].forEach(([key, cmd]) => {
+                    key = key.trim();
+                    cmd = cmd.trim();
+                    if (key === "") {
+                        if (cmd === "") {
+                            return
+                        }
+                        throw new Error(`Key is not found for ${cmd}`);
+                    }
+                    if (cmd === "") {
+                        throw new Error(`Command is not found for ${key}`);
+                    }
+                    if (mapping[key]) {
+                        throw new Error(
+                            `${key} is already mapped to ${mapping[key]}`);
+                    }
+                    const descriptions = KeyMapping._getDescriptions(mode);
+                    if (mode === "visual" && cmd.startsWith("move ")) {
+                        // TODO
+                    }
+                    else if (!descriptions[cmd.split("|", 1)[0]]) {
+                        throw new Error(`${cmd} is unknown`);
+                    }
+                    mapping[key] = cmd;
+                });
+            }
+            catch (e) {
+                errorList.push(mode + ": " + e.message);
+            }
+            return errorList;
+        }, []);
+    }
+    static _getDescriptions(mode) {
+        switch (mode) {
+            case "normal": case "insert": case "visual":
+                return COMMAND_DESCRIPTIONS;
+            case "hint":
+                return HINT_COMMAND_DESCRIPTIONS;
+            case "console":
+                return CONSOLE_COMMAND_DESCRIPTIONS;
+        }
     }
 }
 

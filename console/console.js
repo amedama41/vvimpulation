@@ -305,9 +305,6 @@ class ConsoleCommand {
 }
 
 function makeCommandMapper(keyMap) {
-    Object.keys(keyMap).forEach((key) => {
-        keyMap[key] = keyMap[key].replace(/^console./, "");
-    });
     return Utils.makeCommandMapper(Utils.toPreparedCmdMap(keyMap));
 }
 

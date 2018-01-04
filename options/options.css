@@ -35,9 +35,33 @@ ul.tab:after {
     clear: both;
 }
 
-#key-mapping-textarea {
-    width: 100%;
+#key-mapping-table {
+    margin-bottom: 10px;
+}
+#key-mapping-table * {
+    font-family: monospace;
+    font-size: medium;
+}
+#key-mapping-table-header > span {
+    display: inline-block;
+    border: 2px double gray;
+}
+.key-mapping-key {
+    width: 10em;
+}
+.key-mapping-command {
+    width: calc(100% - 16em);
+}
+.key-mapping-remove {
+    width: 6em;
+}
+#key-mapping-table-contents {
     height: 400px;
+    overflow-y: auto;
+    border: 1px solid gray;
+}
+#key-mapping-table-manipulation {
+    margin-top: 4px;
 }
 
 .hint-pattern-global-selector {
