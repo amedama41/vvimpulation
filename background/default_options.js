@@ -172,20 +172,20 @@ const DEFAULT_OPTIONS = {
             "<S-Tab>": "focusPreviousAndChangeMode",
         },
         "visual": {
-            "h": "move backward character",
-            "l": "move forward character",
-            "b": "move backward word",
-            "w": "move forward word",
-            "j": "move forward line",
-            "k": "move backward line",
-            ")": "move forward sentence",
-            "(": "move backward sentence",
-            "}": "move forward paragraph",
-            "{": "move backward paragraph",
-            "^": "move backward lineboundary",
-            "$": "move forward lineboundary",
-            "G": "move forward documentboundary",
-            "gg": "move backward documentboundary",
+            "h": "extendSelection|backward|character",
+            "l": "extendSelection|forward|character",
+            "b": "extendSelection|backward|word",
+            "w": "extendSelection|forward|word",
+            "k": "extendSelection|backward|line",
+            "j": "extendSelection|forward|line",
+            "(": "extendSelection|backward|sentence",
+            ")": "extendSelection|forward|sentence",
+            "{": "extendSelection|backward|paragraph",
+            "}": "extendSelection|forward|paragraph",
+            "^": "extendSelection|backward|lineboundary",
+            "$": "extendSelection|forward|lineboundary",
+            "gg": "extendSelection|backward|documentboundary",
+            "G": "extendSelection|forward|documentboundary",
             "y": "compose|yankSelection|toNormalMode",
             "*": "compose|findSelectionForward|toNormalMode",
             "#": "compose|findSelectionBackward|toNormalMode",
@@ -319,6 +319,17 @@ const DEFAULT_OPTIONS = {
         "activateNewTab": false,
     }
 };
+
+function convertVisualKeyMapping(keyMapping) {
+    Object.keys(keyMapping).forEach((key) => {
+        const cmd = keyMapping[key];
+        if (cmd.startsWith("move ")) {
+            const [prefix, direction, granularity] = cmd.split(" ");
+            keyMapping[key] = `extendSelection|${direction}|${granularity}`;
+        }
+    });
+    return keyMapping;
+}
 
 function convertHintKeyMapping(keyMapping) {
     Object.keys(keyMapping).forEach((key) => {

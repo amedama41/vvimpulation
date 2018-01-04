@@ -32,8 +32,8 @@ class VisualModeBase {
     onInvoking(cmd, frameInfo) {
         const count = parseInt(this.count, 10);
         this.count = "0";
-        if (cmd.startsWith("move ")) {
-            const [prefix, direction, granularity] = cmd.split(" ");
+        if (cmd.startsWith("extendSelection|")) {
+            const [prefix, direction, granularity] = cmd.split("|");
             for (let i = 0; i < Math.max(count, 1); ++i) {
                 this.selectionModify(this.selection, direction, granularity);
             }

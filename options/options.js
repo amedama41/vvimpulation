@@ -133,6 +133,9 @@ class KeyMapping {
     setOptions(keyMapping) {
         KEY_MAPPING_TYPES.forEach((mode) => {
             const mapping = keyMapping[mode] || {};
+            if (mode === "visual") {
+                convertVisualKeyMapping(mapping);
+            }
             if (mode === "hint") {
                 convertHintKeyMapping(mapping);
             }
@@ -216,10 +219,7 @@ class KeyMapping {
                             `${key} is already mapped to ${mapping[key]}`);
                     }
                     const descriptions = KeyMapping._getDescriptions(mode);
-                    if (mode === "visual" && cmd.startsWith("move ")) {
-                        // TODO
-                    }
-                    else if (!descriptions[cmd.split("|", 1)[0]]) {
+                    if (!descriptions[cmd.split("|", 1)[0]]) {
                         throw new Error(`${cmd} is unknown`);
                     }
                     mapping[key] = cmd;
@@ -233,8 +233,17 @@ class KeyMapping {
     }
     static _getDescriptions(mode) {
         switch (mode) {
-            case "normal": case "insert": case "visual":
+            case "normal": case "insert":
                 return COMMAND_DESCRIPTIONS;
+            case "visual":
+                return Object.assign({
+                    extendSelection: {
+                        description: (
+                            "Extend selection. This takes two arguments " +
+                            "such as extendSelection|<direction>|<granularity>"
+                        )
+                    },
+                }, COMMAND_DESCRIPTIONS);
             case "hint":
                 return HINT_COMMAND_DESCRIPTIONS;
             case "console":
