@@ -148,7 +148,12 @@ class KeyMapping {
     setOptions(keyMapping) {
         for (const mode of Object.keys(keyMapping)) {
             this.options[mode] = [
-                JSON.stringify(keyMapping[mode], null, 2), ""
+                JSON.stringify(
+                    (mode === "hint" ?
+                        convertHintKeyMapping(keyMapping["hint"]) :
+                        keyMapping[mode]),
+                    null, 2),
+                ""
             ];
         }
         this._updateKeyMappingSection();

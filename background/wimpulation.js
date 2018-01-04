@@ -243,6 +243,15 @@ class HintMode {
         const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
         tabInfo.showMessage(message, 3000, false);
     }
+    invokeCommand(tabInfo, args) {
+        const match = /^(\d+)\|(.*$)/.exec(args);
+        const [count, commandName] =
+            (match ? [parseInt(match[1], 10), match[2]] : [0, args]);
+        const currentFrameId =
+            this.idList[this.filterIndexMap[this.currentIndex]];
+        tabInfo.forwardModeCommand(
+            currentFrameId, "HINT", { command: "invoke", commandName, count });
+    }
 
     _fixFilter(tabInfo) {
         const promiseList = [];
@@ -267,18 +276,10 @@ class HintMode {
         });
     }
     _invoke(cmd, tabInfo) {
-        const command = cmd.command;
-        if (command.startsWith("hint.")) {
-            this[command.substr(5)](tabInfo);
-        }
-        else {
-            const currentFrameId =
-                this.idList[this.filterIndexMap[this.currentIndex]];
-            const count = cmd.count || 0;
-            tabInfo.forwardModeCommand(
-                currentFrameId, "HINT",
-                { command: "invoke", commandName: command, count });
-        }
+        const index = cmd.indexOf("|");
+        const command = (index === -1 ? cmd : cmd.substr(0, index));
+        const args = cmd.substr(command.length + 1);
+        this[command](tabInfo, args);
     }
     _handleDigit(num, tabInfo) {
         const length = this.filterIndexMap.length;
@@ -981,7 +982,8 @@ function setOptions(options) {
     const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
     gOptions.keyMapping = options["keyMapping"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
-    gOptions.hintKeyMapping = Utils.toPreparedCmdMap(options.keyMapping.hint);
+    gOptions.hintKeyMapping =
+        Utils.toPreparedCmdMap(convertHintKeyMapping(options.keyMapping.hint));
     setEngine(gEngineMap, options["searchEngine"]);
     gOptions.pagePattern = getOption("pagePattern");
     if (options["miscellaneous"].overwriteErrorPage) {
