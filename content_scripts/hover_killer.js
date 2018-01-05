@@ -410,7 +410,7 @@ class Parser {
         }
     }
     static _removeHover(str, index) {
-        return ":not([tabindex='0'])" + str.substr(index + 6);
+        return ":not([wimpulation-hover-target])" + str.substr(index + 6);
     };
 
     static _test(pattern, input) {
