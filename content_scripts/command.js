@@ -42,6 +42,7 @@ const COMMAND_DESCRIPTIONS = {
     focusNextAndChangeMode: { description: "Focus a next element and if the element is editable, then change to insert otherwise normal" },
     focusPreviousAndChangeMode: { description: "Focus a previous element and if the element is editable, then change to insert otherwise normal" },
     focusNextFrame: { background: true, description: "Focus next frame" },
+    focusPreviousFrame: { background: true, description: "Focus previous frame" },
     resetFocus: { description: "Reset focus state" },
 
     /** Commands for tab manipulation **/

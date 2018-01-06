@@ -447,15 +447,21 @@ function continueFind(tabInfo, frameId, isNext) {
     });
 }
 
+function focusFrame(tabInfo, frameId, count) {
+    tabInfo.frameIdList((frameIdList) => {
+        const index = frameIdList.indexOf(frameId);
+        tabInfo.sendMessage(
+            Utils.nextElement(frameIdList, index, count),
+            { command: "focusFrame" });
+    });
+}
+
 class Command {
     static focusNextFrame(msg, sender, tabInfo) {
-        const count = Math.max(msg.count, 1);
-        tabInfo.frameIdList((frameIdList) => {
-            const index = frameIdList.indexOf(sender.frameId);
-            tabInfo.sendMessage(
-                frameIdList[(index + count) % frameIdList.length],
-                { command: "focusFrame" });
-        });
+        focusFrame(tabInfo, sender.frameId, Math.max(msg.count, 1));
+    }
+    static focusPreviousFrame(msg, sender, tabInfo) {
+        focusFrame(tabInfo, sender.frameId, -Math.max(msg.count, 1));
     }
     static find(msg, sender, tabInfo) {
         return tabInfo.frameIdList((frameIdList) => {
