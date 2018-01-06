@@ -311,6 +311,17 @@ const DEFAULT_OPTIONS = {
         "previous": "^\\s*(((‹|«|≪|<<?|←)\\s*)?(前の?ページ|前へ?|(prev(ious)?|older)(\\s+\\w+)?)|‹|«|≪|<<?|←)\\s*$"
     },
 
+    "consoleDesign": {
+        "backgroundColor": "rgba(69, 69, 69, 0.6)",
+        "fontColor": "#FFFFFF",
+        "fontSize": "large",
+        "informationColor": "#FFFF00",
+        "selectedBackgroundColor": "#D3D3D3",
+        "selectedFontColor": "#000000",
+        "selectedInformationColor": "#000000",
+        "borderColor": "#757575"
+    },
+
     "miscellaneous": {
         "autoFocus": true,
         "overlapHintLabels": false,

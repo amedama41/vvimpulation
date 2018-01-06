@@ -12,6 +12,7 @@ class TabInfo {
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
         this.consolePort = undefined;
+        this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         this._lastSearchInfo = ["", false, false, 0];
@@ -20,6 +21,7 @@ class TabInfo {
         this.mode = "NORMAL";
         this.frameInfoMap.clear();
         this.consolePort = undefined;
+        this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
     }
@@ -34,6 +36,9 @@ class TabInfo {
     }
     get incognito() {
         return this.tab.incognito;
+    }
+    get consoleFrameId() {
+        return this._consoleFrameId;
     }
     update(tab) {
         this.tab = tab;
@@ -111,8 +116,9 @@ class TabInfo {
         this.sendMessage(
             0, { command: "showMessage", message, duration, saveMessage });
     }
-    setConsolePort(port) {
+    setConsolePort(port, frameId) {
         this.consolePort = port;
+        this._consoleFrameId = frameId;
     }
     sendConsoleMessage(msg) {
         if (!this.consolePort) {
@@ -124,6 +130,7 @@ class TabInfo {
     clearConsolePort(port) {
         if (this.consolePort === port) {
             this.consolePort = undefined;
+            this._consoleFrameId = undefined;
         }
     }
 }
@@ -988,6 +995,7 @@ function setOptions(options) {
         Utils.toPreparedCmdMap(convertHintKeyMapping(options.keyMapping.hint));
     setEngine(gEngineMap, options["searchEngine"]);
     gOptions.pagePattern = getOption("pagePattern");
+    gOptions.consoleDesign = makeConsoleCSS(getOption("consoleDesign"));
     if (options["miscellaneous"].overwriteErrorPage) {
         setOverwriteErrorPageListener();
     }
@@ -1007,11 +1015,21 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         if (!changes["options"]) {
             return;
         }
+        const oldConsoleDesign = gOptions.consoleDesign;
         setOptions(changes["options"].newValue);
         postAllFrame({
             command: "updateKeyMapping",
             keyMapping: gOptions.keyMapping,
             pagePattern: gOptions.pagePattern
+        });
+        const newConsoleDesign = gOptions.consoleDesign;
+        gTabInfoMap.forEach((tabInfo, tabId) => {
+            const frameId = tabInfo.consoleFrameId;
+            if (frameId === undefined) {
+                return;
+            }
+            browser.tabs.removeCSS(tabId, { frameId, code: oldConsoleDesign });
+            browser.tabs.insertCSS(tabId, { frameId, code: newConsoleDesign });
         });
     });
 
@@ -1028,13 +1046,13 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             console.warn("TAB_ID_NONE:", tab.url);
             return;
         }
+        const frameId = sender.frameId;
 
         if (port.name === "console") {
-            setConsolePort(port, tabId);
+            setConsolePort(port, tabId, frameId, gOptions.consoleDesign);
             return;
         }
 
-        const frameId = sender.frameId;
         port.onNotification.addListener(invokeCommand);
         port.onRequest.addListener(invokeCommand);
         port.onDisconnect.addListener(
@@ -1083,15 +1101,16 @@ function cleanupFrameInfo(tabId, frameId, port, error) {
         tabInfo.reset();
     }
 }
-function setConsolePort(port, tabId) {
+function setConsolePort(port, tabId, frameId, consoleDesign) {
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         console.warn(`tabInfo for ${tabId} is not found`);
         return;
     }
+    browser.tabs.insertCSS(tabId, { frameId, code: consoleDesign });
     port.onRequest.addListener(invokeCommand);
     port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
-    tabInfo.setConsolePort(port);
+    tabInfo.setConsolePort(port, frameId);
 }
 function cleanupConsolePort(tabId, port, error) {
     const tabInfo = gTabInfoMap.get(tabId);
@@ -1099,5 +1118,30 @@ function cleanupConsolePort(tabId, port, error) {
         return;
     }
     tabInfo.clearConsolePort(port);
+}
+function makeConsoleCSS(consoleDesign) {
+    return String.raw`
+    body {
+        border-top: 1px solid ${consoleDesign.borderColor};
+    }
+    body * {
+        color: ${consoleDesign.fontColor};
+        font-size: ${consoleDesign.fontSize};
+    }
+    body > * {
+        background-color: ${consoleDesign.backgroundColor};
+    }
+    span.candidate_info {
+        color: ${consoleDesign.informationColor};
+    }
+    #ex_candidates > li.ex_select_candidate,
+    #ex_candidates > li.ex_select_candidate > span {
+        background-color: ${consoleDesign.selectedBackgroundColor};
+        color: ${consoleDesign.selectedFontColor};
+    }
+    #ex_candidates > li.ex_select_candidate > span.candidate_info {
+        color: ${consoleDesign.selectedInformationColor};
+    }
+    `;
 }
 

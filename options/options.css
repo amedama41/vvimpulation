@@ -123,6 +123,17 @@ ul.tab:after {
     font-family: monospace;
 }
 
+#console-design {
+    font-family: monospace;
+    margin-bottom: 10px;
+}
+#console-design label {
+    margin-left: 4px;
+}
+#console-design label > * {
+    vertical-align: middle;
+}
+
 body {
     margin-bottom: 42px;
 }

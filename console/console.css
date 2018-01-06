@@ -10,30 +10,23 @@ body * {
     margin: 0px;
     padding: 0px;
     border: none;
-    color: white;
     font-family: monospace;
-    font-size: large;
-}
-body > * {
-    background-color: rgba(69, 69, 69, 0.6);
 }
 
 #ex_candidates {
-    padding: 4px 0px 0px 0px;
     list-style-type: none;
     white-space: nowrap;
     overflow: auto;
 }
-#ex_candidates > li.ex_select_candidate,
-#ex_candidates > li.ex_select_candidate > span {
-    background-color: lightgray;
-    color: black;
+#ex_candidates > li {
+    line-height: calc(1em + 3px);
 }
 #ex_candidates > li > span {
     display: inline-block;
     text-overflow: ellipsis;
     overflow: hidden;
     box-sizing: border-box;
+    vertical-align: middle;
 }
 span.candidate_icon {
     height: 1em;
@@ -53,7 +46,6 @@ span.candidate_separator {
 }
 span.candidate_info {
     width: 50%;
-    color: yellow;
 }
 
 #ex_console[mode="exec"]::before {

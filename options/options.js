@@ -14,6 +14,7 @@ class Options {
         this.hintPattern = new HintPattern();
         this.searchEngine = new SearchEngine();
         this.pagePattern = new PagePattern();
+        this.consoleDesign = new ConsoleDesign();
         this.miscellaneous = new Miscellaneous();
         document.getElementById("import-button")
             .addEventListener("click", (e) => { this.importOptions(); });
@@ -29,6 +30,7 @@ class Options {
         this.keyMapping.setOptions(options["keyMapping"]);
         this.hintPattern.setOptions(options["hintPattern"]);
         this.searchEngine.setOptions(options["searchEngine"] || {});
+        this.consoleDesign.setOptions(getOption("consoleDesign"));
         this.pagePattern.setOptions(getOption("pagePattern"));
         this.miscellaneous.setOptions(options["miscellaneous"] || {});
         this.options = options;
@@ -40,6 +42,7 @@ class Options {
                 "hintPattern": this.hintPattern.getOptions(),
                 "searchEngine": this.searchEngine.getOptions(),
                 "pagePattern": this.pagePattern.getOptions(),
+                "consoleDesign": this.consoleDesign.getOptions(),
                 "miscellaneous": this.miscellaneous.getOptions(),
             };
             this.options = options;
@@ -682,6 +685,91 @@ class PagePattern {
         }
         document.getElementById("page-pattern-error").innerText =
             errorMessageList.join("\n");
+    }
+}
+
+const CONSOLE_DESIGN_ID_MAP = new Map([
+    ["console-design-background-color", "backgroundColor"],
+    ["console-design-background-opacity", "backgroundOpacity"],
+    ["console-design-font-color", "fontColor"],
+    ["console-design-font-size", "fontSize"],
+    ["console-design-information-color", "informationColor"],
+    ["console-design-selected-background-color", "selectedBackgroundColor"],
+    ["console-design-selected-font-color", "selectedFontColor"],
+    ["console-design-selected-information-color", "selectedInformationColor"],
+    ["console-design-border-color", "borderColor"],
+]);
+class ConsoleDesign {
+    constructor() {
+        this.options = {};
+        CONSOLE_DESIGN_ID_MAP.forEach((key, id) => {
+            const elem = document.getElementById(id);
+            const type = (key === "fontSize" ? "change" : "input");
+            elem.addEventListener(type, (e) => {
+                if (key === "fontColor" && !e.target.checkValidity()) {
+                    return;
+                }
+                this.options[key] = e.target.value;
+                this._updateDesign();
+            });
+        });
+    }
+    getOptions() {
+        const options = Object.assign({}, this.options);
+        options["backgroundColor"] = this._getRGBABackgroundColor();
+        delete options["backgroundOpacity"];
+        return options;
+    }
+    setOptions(consoleDesign) {
+        this.options = Object.assign({}, consoleDesign);
+        const [bgColor, bgOpacity] =
+            ConsoleDesign._fromRGBA(consoleDesign["backgroundColor"]);
+        this.options["backgroundColor"] = bgColor;
+        this.options["backgroundOpacity"] = bgOpacity;
+        CONSOLE_DESIGN_ID_MAP.forEach((key, id) => {
+            const elem = document.getElementById(id);
+            elem.value = this.options[key];
+        });
+        this._updateDesign();
+    }
+    _updateDesign() {
+        const div = document.getElementById("console-design");
+        div.style = String.raw`
+        background-color: ${this._getRGBABackgroundColor()};
+        color: ${this.options["fontColor"]};
+        font-size: ${this.options["fontSize"]};
+        border-top: 1px solid ${this.options["borderColor"]};
+        `;
+
+        const info = document.getElementById("console-design-information");
+        info.style = `color: ${this.options["informationColor"]};`;
+
+        const selected = document.getElementById("console-design-selected");
+        selected.style = String.raw`
+        background-color: ${this.options["selectedBackgroundColor"]};
+        color: ${this.options["selectedFontColor"]};
+        `;
+        const selectedInfo =
+            document.getElementById("console-design-selected-information");
+        selectedInfo.style =
+            `color: ${this.options["selectedInformationColor"]};`;
+    }
+    _getRGBABackgroundColor() {
+        const color = this.options["backgroundColor"];
+        const opacity = this.options["backgroundOpacity"];
+        const r = parseInt(color.substring(1, 3), 16);
+        const g = parseInt(color.substring(3, 5), 16);
+        const b = parseInt(color.substring(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    static _fromRGBA(rgbaColor) {
+        const pattern = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d+(?:.\d+)?)\)$/;
+        const match = pattern.exec(rgbaColor);
+        const rgbList = [];
+        for (let i = 1; i < 4; ++i) {
+            rgbList.push(parseInt(match[i], 10).toString(16).padStart(2, 0));
+        }
+        return ["#" + rgbList.join(""), parseFloat(match[4])];
     }
 }
 
