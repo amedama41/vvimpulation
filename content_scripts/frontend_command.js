@@ -1275,6 +1275,12 @@ function _getLastNode() {
 }
 function _moveFocus(count, frameInfo, isReset, details) {
     let node = frameInfo.getTarget();
+    if (node === document.body) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount !== 0) {
+            node = selection.focusNode;
+        }
+    }
     if (isReset) {
         node = details.getDefaultNode();
         if (node.contentWindow) {
