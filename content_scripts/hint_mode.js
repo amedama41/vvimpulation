@@ -363,10 +363,8 @@ function makeHints(pattern, type, winArea, frameInfo) {
         const rect = getIdealRect(rectList);
         if (!isFrame || isFocusType) {
             const span = doc.createElement("span");
-            span.style.left =
-                (Math.max(rect.left - 8, winArea.left) + scrX) + "px";
-            span.style.top  =
-                (Math.max(rect.top - 8, winArea.top) + scrY) + "px";
+            span.style.left = (Math.max(rect.left, winArea.left) + scrX) + "px";
+            span.style.top  = (Math.max(rect.top, winArea.top) + scrY) + "px";
             span.className = tagName;
             addClassList(elem, span);
             hints.push([span, elem]);
