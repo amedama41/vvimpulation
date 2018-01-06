@@ -170,6 +170,9 @@ const DEFAULT_OPTIONS = {
             "<Esc>": "toNormalMode",
             "<Tab>": "focusNextAndChangeMode",
             "<S-Tab>": "focusPreviousAndChangeMode",
+            "<C-O><Tab>": "toInsertModeOnNextInput",
+            "<C-O><C-I>": "toInsertModeOnNextInput",
+            "<C-O><S-Tab>": "toInsertModeOnPreviousInput",
         },
         "visual": {
             "h": "extendSelection|backward|character",
@@ -207,10 +210,12 @@ const DEFAULT_OPTIONS = {
             ",": "previousHint",
             "/": "startFilter",
             "zz": "toggleOverlap",
-            "ff": "toggleAutoFocus",
+            "zf": "toggleAutoFocus",
             "fi": "invokeCommand|0|focusin",
             "fo": "invokeCommand|0|focusout",
-            "c": "invokeCommand|0|mouseclick",
+            "i": "invokeCommand|0|compose|mouseoutTo|mouseinTo|fixedFocusin|toInsertModeIfEditable",
+            "_": "invokeCommand|0|compose|resetFocus|mouseoutFrom|mouseinFrom",
+            "c": "invokeCommand|0|compose|mousedown|mouseup|mouseclick",
             "mc": "invokeCommand|0|mouseclick",
             "mC": "invokeCommand|2|mouseclick",
             "m<C-C>": "invokeCommand|1|mouseclick",
@@ -242,8 +247,12 @@ const DEFAULT_OPTIONS = {
             "Y": "invokeCommand|0|smartYank",
             "s": "invokeCommand|0|downloadLink",
             "v": "invokeCommand|0|selectElement",
+            "gv": "invokeCommand|0|compose|selectElement|toVisualModeWithCurrentSelection",
+            "gj": "invokeCommand|0|selectNextOption",
+            "gk": "invokeCommand|0|selectPreviousOption",
             "dat": "invokeCommand|0|deleteElement",
             "dit": "invokeCommand|0|deleteChildElements",
+            ".": "invokeCommand|0|repeatLastCommand",
             "<C-C>": "invokeCommand|0|toNormalMode",
             "<C-[>": "invokeCommand|0|toNormalMode",
             "<Esc>": "invokeCommand|0|toNormalMode",
@@ -284,6 +293,14 @@ const DEFAULT_OPTIONS = {
                     ["div.dismiss.js-action-dismiss", "Dismiss button of recommended users"],
                     ["h1.Icon.Icon--bird.bird-topbar-etched", "Twitter icon on topbar"]
                 ]
+            },
+            "ja.wikipedia.org": {
+                "link": [
+                    [
+                        "div.mw-ui-icon-popups-close",
+                        "Button to close page preview configuration"
+                    ]
+                ]
             }
         }
     },
@@ -323,8 +340,8 @@ const DEFAULT_OPTIONS = {
     },
 
     "miscellaneous": {
-        "autoFocus": true,
-        "overlapHintLabels": false,
+        "autoFocus": false,
+        "overlapHintLabels": true,
         "autoKillHover": true,
         "overwriteErrorPage": true,
         "activateNewTab": false,
