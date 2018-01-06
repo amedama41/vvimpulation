@@ -280,6 +280,7 @@ class HintMode {
                     command: "setHintLabel", labelList: labelMap[id]
                 });
             });
+            this._changeHintNum(this.currentIndex, tabInfo);
         });
     }
     _invoke(cmd, tabInfo) {
@@ -875,10 +876,14 @@ class MacroManager {
 }
 const gMacro = new MacroManager();
 
-function changeHintMode(tabInfo, idList, hintMode, targetId, targetIndex) {
+function changeHintMode(tabInfo, idList, hintMode, targetId, targetIndex=null) {
     if (idList.length === 0) {
         changeNormalMode(tabInfo);
         return;
+    }
+    if (targetIndex === null) {
+        targetId = idList[0];
+        targetIndex = 0;
     }
     const mode = "HINT";
     let labelMap = {};
