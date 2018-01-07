@@ -119,6 +119,11 @@ class KeyMapping {
             this.options[this.currentMode].push(["", ""]);
             this._updateKeyMappingSection();
         });
+
+        const input = document.getElementById("key-mapping-suspend-input");
+        input.addEventListener("change", (e) => {
+            this.options["suspend"] = e.target.value;
+        });
     }
     getOptions() {
         const errorList = KeyMapping._getErrorList(this.options);
@@ -131,7 +136,7 @@ class KeyMapping {
                 return mapping;
             }, {});
             return options;
-        }, {});
+        }, { "suspend": this.options["suspend"] });
     }
     setOptions(keyMapping) {
         KEY_MAPPING_TYPES.forEach((mode) => {
@@ -148,7 +153,11 @@ class KeyMapping {
             this.options[mode] =
                 Object.keys(mapping).map((key) => [key, mapping[key]]);
         });
+        this.options["suspend"] =
+            keyMapping["suspend"] || DEFAULT_OPTIONS["keyMapping"]["suspend"];
         this._setMode(this.currentMode);
+        const input = document.getElementById("key-mapping-suspend-input");
+        input.value = this.options["suspend"];
     }
     _setMode(mode) {
         this.currentMode = mode;

@@ -1,7 +1,8 @@
 'use strict';
 
 class SuspendMode {
-    constructor(frameInfo) {
+    constructor(frameInfo, leaveKey) {
+        this._leaveKey = leaveKey;
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     static getModeName() {
@@ -11,7 +12,7 @@ class SuspendMode {
         return null;
     }
     consume(key, frameInfo) {
-        if (key === "<C-[>") { // TODO: to configure options
+        if (key === this._leaveKey) {
             return [true, undefined, "toNormalMode", undefined];
         }
         else {

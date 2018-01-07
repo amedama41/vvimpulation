@@ -277,7 +277,8 @@ const DEFAULT_OPTIONS = {
             "<C-C>": "console.closeConsoleMode",
             "<Esc>": "console.closeConsoleMode",
             "<C-[>": "console.closeConsoleMode",
-        }
+        },
+        "suspend": "<C-[>"
     },
 
     "hintPattern": {

@@ -1004,6 +1004,10 @@ function setOptions(options) {
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping =
         Utils.toPreparedCmdMap(convertHintKeyMapping(options.keyMapping.hint));
+    if (gOptions.keyMapping["suspend"] === undefined) {
+        gOptions.keyMapping["suspend"] =
+            DEFAULT_OPTIONS["keyMapping"]["suspend"];
+    }
     setEngine(gEngineMap, options["searchEngine"]);
     gOptions.pagePattern = getOption("pagePattern");
     gOptions.consoleDesign = makeConsoleCSS(getOption("consoleDesign"));

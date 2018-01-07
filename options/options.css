@@ -63,6 +63,14 @@ ul.tab:after {
 #key-mapping-table-manipulation {
     margin-top: 4px;
 }
+#key-mapping-suspend {
+    margin-bottom: 10px;
+}
+#key-mapping-suspend-input {
+    font-family: monospace;
+    font-size: medium;
+    width: 6em;
+}
 
 .hint-pattern-global-selector {
     width: 100%;

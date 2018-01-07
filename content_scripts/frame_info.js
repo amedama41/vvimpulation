@@ -91,6 +91,7 @@ class FrameInfo {
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+        this._suspendLeaveKey = keyMapping["suspend"];
         this._pagePattern = pagePattern;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
@@ -157,6 +158,7 @@ class FrameInfo {
         this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
         this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
         this._consoleKeyMap = keyMapping["console"];
+        this._suspendLeaveKey = keyMapping["suspend"];
         this._pagePattern = pagePattern;
         this.changeModeNow("NORMAL");
     }
@@ -407,7 +409,7 @@ class FrameInfo {
                 case "CONSOLE":
                     return new ConsoleMode(this, data);
                 case "SUSPEND":
-                    return new SuspendMode(this);
+                    return new SuspendMode(this, this._suspendLeaveKey);
                 default:
                     console.assert(false, "never reach here");
                     return new NormalMode(this, this._normalKeyMap);
