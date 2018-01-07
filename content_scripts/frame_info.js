@@ -87,11 +87,7 @@ class FrameInfo {
         this._frameIdInfo = new FrameIdInfo(selfFrameId);
         this._port = port;
         this._modeEventListenerList = [];
-        this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
-        this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
-        this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
-        this._consoleKeyMap = keyMapping["console"];
-        this._suspendLeaveKey = keyMapping["suspend"];
+        this._keyMap = FrameInfo._convertKeyMap(keyMapping);
         this._pagePattern = pagePattern;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
@@ -154,11 +150,7 @@ class FrameInfo {
         return this._mode.constructor.getModeName();
     }
     setOptions(keyMapping, pagePattern) {
-        this._normalKeyMap = Utils.toPreparedCmdMap(keyMapping["normal"]);
-        this._insertKeyMap = Utils.toPreparedCmdMap(keyMapping["insert"]);
-        this._visualKeyMap = Utils.toPreparedCmdMap(keyMapping["visual"]);
-        this._consoleKeyMap = keyMapping["console"];
-        this._suspendLeaveKey = keyMapping["suspend"];
+        this._keyMap = FrameInfo._convertKeyMap(keyMapping);
         this._pagePattern = pagePattern;
         this.changeModeNow("NORMAL");
     }
@@ -295,7 +287,9 @@ class FrameInfo {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
         }
-        const options = { mode, defaultCommand, keyMap: this._consoleKeyMap };
+        const options = {
+            mode, defaultCommand, keyMap: this._keyMap["console"]
+        };
         return this._sendConsoleMessage({ command: "setConsoleMode", options })
             .then((result) => {
                 if (this._mode !== requestMode) { // Maybe mode is changed.
@@ -397,27 +391,27 @@ class FrameInfo {
         try {
             switch (mode) {
                 case "NORMAL":
-                    return new NormalMode(this, this._normalKeyMap, data);
+                    return new NormalMode(this, this._keyMap["normal"], data);
                 case "INSERT":
-                    return new InsertMode(this, this._insertKeyMap, data);
+                    return new InsertMode(this, this._keyMap["insert"], data);
                 case "HINT":
                     return new HintMode(this, data);
                 case "VISUAL":
-                    return new VisualMode(this, this._visualKeyMap, data);
+                    return new VisualMode(this, this._keyMap["visual"], data);
                 case "CARET":
-                    return new CaretMode(this, this._visualKeyMap, data);
+                    return new CaretMode(this, this._keyMap["visual"], data);
                 case "CONSOLE":
                     return new ConsoleMode(this, data);
                 case "SUSPEND":
-                    return new SuspendMode(this, this._suspendLeaveKey);
+                    return new SuspendMode(this, this._keyMap["suspend"]);
                 default:
                     console.assert(false, "never reach here");
-                    return new NormalMode(this, this._normalKeyMap);
+                    return new NormalMode(this, this._keyMap["normal"]);
             }
         }
         catch (e) {
             console.warn("change mode error:", Utils.errorString(e));
-            return new NormalMode(this, this._normalKeyMap);
+            return new NormalMode(this, this._keyMap["normal"]);
         }
     }
     _resetMode() {
@@ -472,6 +466,12 @@ class FrameInfo {
             activeElement.blur();
         }
         elem.focus();
+    }
+    static _convertKeyMap(keyMapping) {
+        ["normal", "insert", "visual"].forEach((mode) => {
+            keyMapping[mode] = Utils.toPreparedCmdMap(keyMapping[mode]);
+        });
+        return keyMapping;
     }
 }
 
