@@ -223,6 +223,9 @@ class FrontendCommand {
         const rect = elem.getBoundingClientRect();
         // (bottom + top) / 2 - height / 2
         window.scrollBy(0, (rect.bottom + rect.top - window.innerHeight) / 2);
+        if (!frameInfo.isTopFrame()) {
+            frameInfo.forwardToParent({ command: "moveTargetAtCenter", count });
+        }
     }
     static moveTargetAtBottom(count, frameInfo) {
         const elem = getScrollBaseElement(frameInfo.getTarget());
