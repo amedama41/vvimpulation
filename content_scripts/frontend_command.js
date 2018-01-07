@@ -1230,6 +1230,14 @@ function _editElement(frameInfo, editFunc) {
             elem.undoStack = [];
         }
         elem.undoStack.push(prevValue);
+        elem.dispatchEvent(new InputEvent("input", {
+            bubbles: true,
+            cancelable: false,
+            composed: true,
+            detail: 0,
+            view: window,
+            isComposing: false,
+        }));
     }
 }
 
