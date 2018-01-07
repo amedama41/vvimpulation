@@ -76,7 +76,7 @@
     pointer-events: auto !important;
 }
 
-.wimpulation-input {
+[wimpulation-input] {
     box-shadow: #0cf 0 0 3px !important;
     border-color: #09C !important;
 }

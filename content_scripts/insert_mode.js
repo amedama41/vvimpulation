@@ -10,7 +10,7 @@ class InsertMode {
         if (document.activeElement !== this.target) {
             throw new Error(`Target element is not focusable (${this.target})`);
         }
-        this.target.classList.add("wimpulation-input");
+        this.target.setAttribute("wimpulation-input", "");
         this.inInvoking = false;
         frameInfo.setEventListener(this.target, "blur", (e, frameInfo) => {
             if (this.inInvoking) {
@@ -30,7 +30,7 @@ class InsertMode {
     }
     onReset() {
         try {
-            this.target.classList.remove("wimpulation-input");
+            this.target.removeAttribute("wimpulation-input");
             if (document.activeElement === this.target) {
                 this.target.blur(); // Prevent IME from stealing key events.
                 if (document.hasFocus && this.lastFocusedElem) {
