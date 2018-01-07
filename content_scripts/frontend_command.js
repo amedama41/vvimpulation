@@ -945,15 +945,12 @@ class FrontendCommand {
         frameInfo.changeMode("INSERT", { editableElement: target });
     }
     static toInsertModeOnFirstElement(count, frameInfo) {
-        const inputs = DomUtils.getInputList(document);
-        if (inputs.length === 0) {
-            return;
-        }
-        const target = inputs[Math.min(count, inputs.length - 1)];
-        frameInfo.changeMode("INSERT", { editableElement: target });
+        _toInsertMode(
+            frameInfo, (len) => Math.min(Math.max(count, 1), len) - 1);
     }
     static toInsertModeOnLastElement(count, frameInfo) {
-        return FrontendCommand.toInsertModeOnFirstElement(100000, frameInfo);
+        _toInsertMode(
+            frameInfo, (len) => Math.max(len - Math.max(count, 1), 0));
     }
     static toInsertModeOnPreviousInput(count, frameInfo) {
         const inputs = DomUtils.getInputList(document);
@@ -1269,6 +1266,15 @@ function _focusin(frameInfo, args, focusElement) {
         console.warn(
             `Element ${elem} is likely dead:`, Utils.errorString(e));
     }
+}
+
+function _toInsertMode(frameInfo, getIndex) {
+    const inputs = DomUtils.getInputList(document);
+    if (inputs.length === 0) {
+        return;
+    }
+    const target = inputs[getIndex(inputs.length)];
+    frameInfo.changeMode("INSERT", { editableElement: target });
 }
 
 function invokeCommand(cmdName, count, frameInfo) {
