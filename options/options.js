@@ -176,6 +176,7 @@ class KeyMapping {
             const inputs = row.firstElementChild.children;
             inputs[0].value = key;
             inputs[1].value = command;
+            KeyMapping._setTitle(inputs[1], this.currentMode);
             this._setEventListener(inputs, index);
             fragment.appendChild(row);
         });
@@ -190,6 +191,7 @@ class KeyMapping {
         });
         inputs[1].addEventListener("change", (e) => {
             this.options[this.currentMode][index][1] = e.target.value;
+            KeyMapping._setTitle(e.target, this.currentMode);
             this._checkMapping();
         });
         inputs[2].addEventListener("click", (e) => {
@@ -205,6 +207,7 @@ class KeyMapping {
         return KEY_MAPPING_TYPES.reduce((errorList, mode) => {
             try {
                 const mapping = {};
+                const descriptions = KeyMapping._getDescriptions(mode);
                 options[mode].forEach(([key, cmd]) => {
                     key = key.trim();
                     cmd = cmd.trim();
@@ -221,7 +224,6 @@ class KeyMapping {
                         throw new Error(
                             `${key} is already mapped to ${mapping[key]}`);
                     }
-                    const descriptions = KeyMapping._getDescriptions(mode);
                     if (!descriptions[cmd.split("|", 1)[0]]) {
                         throw new Error(`${cmd} is unknown`);
                     }
@@ -251,6 +253,16 @@ class KeyMapping {
                 return HINT_COMMAND_DESCRIPTIONS;
             case "console":
                 return CONSOLE_COMMAND_DESCRIPTIONS;
+        }
+    }
+    static _setTitle(input, mode) {
+        const descriptions = KeyMapping._getDescriptions(mode);
+        const cmdDesc = descriptions[input.value.trim().split("|", 1)[0]];
+        if (cmdDesc) {
+            input.setAttribute("title", cmdDesc.description);
+        }
+        else {
+            input.removeAttribute("title");
         }
     }
 }
