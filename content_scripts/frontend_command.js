@@ -258,31 +258,17 @@ class FrontendCommand {
                 `Element ${elem} is likely dead:`, Utils.errorString(e));
         }
     }
-    static focusNext(count, frameInfo, args) {
-        focusNext(count, frameInfo, args, "focusNext");
+    static focusNext(count, frameInfo) {
+        _moveFocus(frameInfo, count, true, false);
     }
-    static focusPrevious(count, frameInfo, args) {
-        focusPrevious(count, frameInfo, args, "focusPrevious");
+    static focusPrevious(count, frameInfo) {
+        _moveFocus(frameInfo, count, false, false);
     }
-    static focusNextAndChangeMode(count, frameInfo, args) {
-        const elem =
-            focusNext(count, frameInfo, args, "focusNextAndChangeMode");
-        if (elem && DomUtils.isEditable(elem)) {
-            frameInfo.changeMode("INSERT", { editableElement: elem });
-        }
-        else {
-            frameInfo.changeMode("NORMAL");
-        }
+    static focusNextAndChangeMode(count, frameInfo) {
+        _moveFocus(frameInfo, count, true, true);
     }
-    static focusPreviousAndChangeMode(count, frameInfo, args) {
-        const elem =
-            focusPrevious(count, frameInfo, args, "focusPreviousAndChangeMode");
-        if (elem && DomUtils.isEditable(elem)) {
-            frameInfo.changeMode("INSERT", { editableElement: elem });
-        }
-        else {
-            frameInfo.changeMode("NORMAL");
-        }
+    static focusPreviousAndChangeMode(count, frameInfo) {
+        _moveFocus(frameInfo, count, false, true);
     }
     static resetFocus(count, frameInfo) {
         // Suppress scroll when an html element has height 100%.
@@ -1247,33 +1233,7 @@ function _editElement(frameInfo, editFunc) {
     }
 }
 
-function focusNext(count, frameInfo, args, command) {
-    return _moveFocus(Math.max(count, 1), frameInfo, args.length > 0, {
-        command: command,
-        getNode: (walker) => walker.nextNode(),
-        getDefaultNode: () => document.documentElement
-    });
-}
-function focusPrevious(count, frameInfo, args, command) {
-    return _moveFocus(Math.max(count, 1), frameInfo, args.length > 0, {
-        command: command,
-        getNode: (walker) => walker.previousNode(),
-        getDefaultNode: _getLastNode
-    });
-}
-function _getLastNode() {
-    const walker = DomUtils.createFocusNodeWalker(document.documentElement);
-    let lastNode = document.documentElement;
-    while (true) {
-        const node = walker.lastChild();
-        if (!node) {
-            break;
-        }
-        lastNode = node;
-    }
-    return lastNode;
-}
-function _moveFocus(count, frameInfo, isReset, details) {
+function _moveFocus(frameInfo, count, isForward, changeMode) {
     let node = frameInfo.getTarget();
     if (node === document.body) {
         const selection = window.getSelection();
@@ -1281,54 +1241,7 @@ function _moveFocus(count, frameInfo, isReset, details) {
             node = selection.focusNode;
         }
     }
-    if (isReset) {
-        node = details.getDefaultNode();
-        if (node.contentWindow) {
-            _focusRecursively(node, count, frameInfo, details.command);
-            return null;
-        }
-        --count;
-    }
-    const walker = DomUtils.createFocusNodeWalker(document.documentElement);
-    walker.currentNode = node;
-    while (count > 0) {
-        let next = details.getNode(walker);
-        if (!next) {
-            if (!frameInfo.isTopFrame()) {
-                _exactlyFocus(node);
-                frameInfo.forwardToParent({ command: details.command, count });
-                return null;
-            }
-            next = details.getDefaultNode();
-            walker.currentNode = next;
-        }
-        if (next.contentWindow) {
-            _focusRecursively(next, count, frameInfo, details.command);
-            return null;
-        }
-        node = next;
-        --count;
-    }
-    _exactlyFocus(node);
-    return node;
-}
-function _focusRecursively(node, count, frameInfo, command) {
-    const activeElement = document.activeElement;
-    if (activeElement) {
-        activeElement.blur();
-    }
-    const childWindow = node.contentWindow;
-    command = command + "|reset";
-    if (!frameInfo.forwardToChildWindow(childWindow, { command, count })) {
-        setTimeout(() => node.focus(), 0);
-    }
-}
-function _exactlyFocus(node) {
-    const activeElement = document.activeElement;
-    if (activeElement && activeElement.contentWindow) {
-        activeElement.blur();
-    }
-    node.focus();
+    frameInfo.moveFocus(node, Math.max(count, 1), isForward, changeMode);
 }
 
 function _focusin(frameInfo, args, focusElement) {

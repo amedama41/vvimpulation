@@ -193,6 +193,24 @@ class MessageCommand {
     static focusChildFrame(msg) {
         return gFrameInfo.focusChildFrame(msg.frameId);
     }
+    static moveFocus(msg) {
+        let node = document.activeElement;
+        if (msg.recursive) {
+            if (msg.isForward) {
+                node = document.documentElement;
+            }
+            else {
+                node = DomUtils.getLastNode();
+                if (node.contentWindow) {
+                    return gFrameInfo.moveFocusRecursively(
+                        node, msg.count, msg.isForward, msg.changeMode);
+                }
+            }
+            --msg.count;
+        }
+        return gFrameInfo.moveFocus(
+            node, msg.count, msg.isForward, msg.changeMode);
+    }
     static find(msg) {
         const { keyword, caseSensitive, backward, reset } = msg;
         const selection = window.getSelection();

@@ -170,12 +170,22 @@ class FrameInfo {
         if (!frame) {
             return;
         }
+        FrameInfo._exactlyFocus(frame);
+        this.focusThisFrame();
+    }
+    moveFocusRecursively(child, count, isForward, changeMode) {
         const activeElement = document.activeElement;
-        if (activeElement && activeElement.contentWindow) {
+        if (activeElement) {
             activeElement.blur();
         }
-        frame.focus();
-        this.focusThisFrame();
+        const childFrameId = this.getChildFrameId(child.contentWindow);
+        if (childFrameId === undefined) {
+            setTimeout(() => child.focus(), 0);
+            return;
+        }
+        return this.forwardMessage(childFrameId, {
+            command: "moveFocus", recursive: true, count, isForward, changeMode
+        });
     }
 
     // Method related to frame id.
@@ -192,11 +202,14 @@ class FrameInfo {
         if (this.isTopFrame() || document.hasFocus()) {
             return;
         }
-        return this.sendMessage({
-            command: "forwardFrameMessage",
-            frameId: this._frameIdInfo.getParentFrameId(),
-            data: { command: "focusChildFrame", frameId: this.getSelfFrameId() }
+        return this.forwardMessage(this._frameIdInfo.getParentFrameId(), {
+            command: "focusChildFrame",
+            frameId: this.getSelfFrameId()
         });
+    }
+    forwardMessage(frameId, data) {
+        return this.sendMessage(
+            { command: "forwardFrameMessage", frameId, data });
     }
 
     // Method related to port.
@@ -208,14 +221,6 @@ class FrameInfo {
     }
     forwardToParent(msg) {
         this.forwardToFrame(this._frameIdInfo.getParentFrameId(), msg);
-    }
-    forwardToChildWindow(childWindow, msg) {
-        const frameId = this.getChildFrameId(childWindow);
-        if (!frameId) {
-            return false;
-        }
-        this.forwardToFrame(frameId, msg);
-        return true;
     }
     forwardToFrame(frameId, data) {
         this._port.postMessage({ command: 'forwardCommand', frameId, data });
@@ -237,6 +242,41 @@ class FrameInfo {
     }
     getPreviousPattern() {
         return new RegExp(this._pagePattern.previous, "i");
+    }
+    moveFocus(node, count, isForward, changeMode) {
+        const root = document.documentElement;
+        const walker = DomUtils.createFocusNodeWalker(root);
+        walker.currentNode = node;
+        while (count > 0) {
+            let next = (isForward ? walker.nextNode() : walker.previousNode());
+            if (!next) {
+                const parentFrameId = this._frameIdInfo.getParentFrameId();
+                if (parentFrameId !== undefined) {
+                    FrameInfo._exactlyFocus(node);
+                    return this.forwardMessage(parentFrameId, {
+                        command: "moveFocus", recursive: false,
+                        count, isForward, changeMode
+                    });
+                }
+                next = (isForward ? root : DomUtils.getLastNode());
+                walker.currentNode = next;
+            }
+            if (next.contentWindow) {
+                return this.moveFocusRecursively(
+                    next, count, isForward, changeMode);
+            }
+            node = next;
+            --count;
+        }
+        FrameInfo._exactlyFocus(node);
+        if (changeMode) {
+            if (DomUtils.isEditable(node)) {
+                this.changeMode("INSERT", { editableElement: node });
+            }
+            else {
+                this.changeMode("NORMAL");
+            }
+        }
     }
 
     // Method for mode classes.
@@ -423,6 +463,13 @@ class FrameInfo {
     _sendConsoleMessage(msg) {
         return this._port.sendMessage(
             { command: "sendConsoleMessage", data: msg });
+    }
+    static _exactlyFocus(elem) {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.contentWindow) {
+            activeElement.blur();
+        }
+        elem.focus();
     }
 }
 

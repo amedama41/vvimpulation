@@ -291,6 +291,18 @@ return (class Edit {
             acceptNode: Edit.acceptFocusable
         });
     }
+    static getLastNode() {
+        const walker = Edit.createFocusNodeWalker(document.documentElement);
+        let lastNode = document.documentElement;
+        while (true) {
+            const node = walker.lastChild();
+            if (!node) {
+                break;
+            }
+            lastNode = node;
+        }
+        return lastNode;
+    }
 });
 
 function indexOfAfterPreviousNewline(value, from) {
