@@ -204,7 +204,8 @@ class HintMode {
     }
     static _setContainerPosition(container) {
         const style = window.getComputedStyle(document.documentElement, null);
-        if (style.position === "static") {
+        // In about:blank, style can be null.
+        if (style === null || style.position === "static") {
             return;
         }
         const rect = document.documentElement.getBoundingClientRect();
