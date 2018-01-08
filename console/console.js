@@ -401,10 +401,7 @@ class ExMode extends ConsoleMode {
                 if (typeof(result) === "boolean") {
                     return [true, null];
                 }
-                return [
-                    true,
-                    (Array.isArray(result) ? result.join("\n") : result)
-                ];
+                return [true, result];
             })
             .catch((error) => {
                 return [false, error];
@@ -469,6 +466,25 @@ function createConsoleMode(options, port, input, container) {
     }
 }
 
+function setMessage(output, message) {
+    if (!Array.isArray(message)) {
+        output.innerText = message;
+        return;
+    }
+    const table = document.createElement("table");
+    table.style.setProperty("border-spacing", "8px 2px");
+    message.forEach((row) => {
+        const tr = document.createElement("tr");
+        row.forEach((column) => {
+            const td = document.createElement("td");
+            td.innerText = column;
+            tr.appendChild(td);
+        });
+        table.appendChild(tr);
+    });
+    output.innerHTML = table.outerHTML;
+}
+
 window.addEventListener("DOMContentLoaded", (e) => {
     const port = new Port(browser.runtime.connect({ name: "console" }));
     const input = document.getElementById("ex_input");
@@ -482,7 +498,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
                 mode = createConsoleMode(msg.options, port, input, container);
                 return true;
             case "setMessage":
-                output.innerText = msg.message;
+                setMessage(output, msg.message);
                 output.parentNode.setAttribute("mode", "showMessage");
                 return true;
             default:

@@ -474,19 +474,18 @@ class FrontendCommand {
         };
 
         const infoList = [];
-        infoList.push(`Src: ${video.src}`);
-        infoList.push(`CurrentSrc: ${video.currentSrc}`);
-        infoList.push(`Size: ${video.videoWidth}x${video.videoHeight}`);
-        infoList.push(`Duration: ${timeInfo(video.duration)}`);
-        infoList.push(`Buffered: ${buffered(video.buffered)}`);
-        infoList.push(`CurrentTime: ${timeInfo(video.currentTime)}`);
-        infoList.push(`Volume: ${video.volume}`);
-        infoList.push(`Playback rate: ${video.playbackRate}`);
-        infoList.push(`Mute: ${video.muted ? "ON" : "OFF"}`);
-        infoList.push(`Loop: ${video.loop ? "ON" : "OFF"}`);
+        infoList.push(["Src:", video.src]);
+        infoList.push(["CurrentSrc:", video.currentSrc]);
+        infoList.push(["Size:", `${video.videoWidth}x${video.videoHeight}`]);
+        infoList.push(["Duration:", timeInfo(video.duration)]);
+        infoList.push(["Buffered:", buffered(video.buffered)]);
+        infoList.push(["CurrentTime:", timeInfo(video.currentTime)]);
+        infoList.push(["Volume:", video.volume]);
+        infoList.push(["Playback rate:", video.playbackRate]);
+        infoList.push(["Mute:", video.muted ? "ON" : "OFF"]);
+        infoList.push(["Loop:", video.loop ? "ON" : "OFF"]);
 
-        frameInfo.showMessage(
-            infoList.join("\n"), (count === 0 ? 3000 : count * 1000));
+        frameInfo.showMessage(infoList, (count === 0 ? 3000 : count * 1000));
     }
 
     /**
@@ -864,17 +863,17 @@ class FrontendCommand {
             }
         };
         const infoList = [];
-        infoList.push("Title: " + document.title);
-        infoList.push("Address: " + document.documentURI);
-        infoList.push("Type: " + document.contentType);
-        infoList.push("Render Mode: " + renderMode(document.compatMode));
-        infoList.push("Text Encoding: " + document.characterSet);
+        infoList.push(["Title:", document.title]);
+        infoList.push(["Address:", document.documentURI]);
+        infoList.push(["Type:", document.contentType]);
+        infoList.push(["Render Mode:", renderMode(document.compatMode)]);
+        infoList.push(["Text Encoding:", document.characterSet]);
         if (document.referrer) {
-            infoList.push("Referring URL: " + document.referrer);
+            infoList.push(["Referring URL:", document.referrer]);
         }
-        infoList.push("Modified: " + document.lastModified);
+        infoList.push(["Modified:", document.lastModified]);
         const duration = (count === 0 ? 3000 : count * 1000);
-        frameInfo.showMessage(infoList.join("\n"), duration);
+        frameInfo.showMessage(infoList, duration);
     }
     static smartOpen(count, frameInfo) {
         smartOpenImpl(count, frameInfo, { command: 'openLink' });

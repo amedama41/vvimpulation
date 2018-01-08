@@ -359,7 +359,7 @@ class DownloadManager {
                 (args, tab) => {
                     return DownloadManager._getItemList(null, args, tab)
                         .then((items) => items.map(
-                            ([icon, id, name, info]) => name + ": " + info));
+                            ([icon, id, name, info]) => [id, name, info]));
                 },
                 DownloadManager._getItemList.bind(null, null)),
             new ExCommand(
@@ -673,6 +673,6 @@ gExCommandMap.makeCommand(
     (args, tab) => {
         return Promise.resolve(
             gMacro.getRegisters().map(
-                ([register, keyList]) => `"${register}: ${keyList.join("")}`));
+                ([register, keyList]) => [register, keyList.join("")]));
     });
 
