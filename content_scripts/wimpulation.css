@@ -1,5 +1,5 @@
 #wimpulation-hint-container, #wimpulation-console-container {
-    z-index: 2147483647 !important;
+    z-index: auto !important;
     border: none !important;
     background: none !important;
     width: 0px !important;

@@ -17,6 +17,7 @@ class HintMode {
             container.insertBefore(span, container.firstElementChild);
             indexMap[labelList[index]] = index;
         });
+        HintMode._setContainerPosition(container);
         const target = document.documentElement;
         target.appendChild(container);
         this.indexMap = indexMap;
@@ -200,6 +201,18 @@ class HintMode {
         if (span.style.zIndex) {
             span.style.setProperty("z-index", span.style.zIndex);
         }
+    }
+    static _setContainerPosition(container) {
+        const style = window.getComputedStyle(document.documentElement, null);
+        if (style.position === "static") {
+            return;
+        }
+        const rect = document.documentElement.getBoundingClientRect();
+        const offsetX = -(rect.x + window.scrollX);
+        const offsetY = -(rect.y + window.scrollY);
+        container.style.setProperty("position", "absolute", "important");
+        container.style.setProperty("left", offsetX + "px", "important");
+        container.style.setProperty("top", offsetY + "px", "important");
     }
 }
 
