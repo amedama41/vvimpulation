@@ -195,8 +195,8 @@ const COMMAND_DESCRIPTIONS = {
     toVisualMode: { description: "Change visual mode" },
     toVisualModeWithCurrentSelection: { description: "Change visual mode with current selection" },
     toCaretMode: { description: "Change caret mode" },
-    toConsoleMode: { topFrame: true, description: "Change console mode" },
-    toConsoleModeWithURL: { topFrame: true, description: "Change console mode with URL as default input" },
-    toSearchMode: { topFrame: true, description: "Change search forward mode" },
-    toBackwardSearchMode: { topFrame: true, description: "Change search backward mode" },
+    toConsoleMode: { description: "Change console mode" },
+    toConsoleModeWithURL: { description: "Change console mode with URL as default input" },
+    toSearchMode: { description: "Change search forward mode" },
+    toBackwardSearchMode: { description: "Change search backward mode" },
 };

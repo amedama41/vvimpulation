@@ -190,9 +190,9 @@ class History {
     }
 };
 
-function search(keyword, backward, mode) {
+function search(keyword, backward, frameId, mode) {
     return mode.sendMessage({
-        command: "find", keyword: keyword, backward: backward, frameId: 0
+        command: "find", keyword, backward, frameId
     }).then((result) => {
         if (!browser.extension.inIncognitoContext) {
             History.save("search_history", keyword);
@@ -315,7 +315,8 @@ class ConsoleMode {
         this._port = port;
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
-        this._input.value = options.defaultCommand;
+        this._input.value = options.defaultInput;
+        this._frameId = options.frameId;
         this._mapper = makeCommandMapper(options.keyMap);
 
         this.onInit(container, options);
@@ -357,6 +358,9 @@ class ConsoleMode {
     getTarget() {
         return this._input;
     }
+    getFrameId() {
+        return this._frameId;
+    }
     isBackward() {
         return this._input.parentNode.getAttribute("mode") === "backwardSearch";
     }
@@ -390,7 +394,8 @@ class ExMode extends ConsoleMode {
         }
         const prefix = value.charAt(0);
         if (prefix === "/" || prefix === "?") {
-            return search(value.substr(1), prefix === '?', this);
+            return search(
+                value.substr(1), prefix === '?', super.getFrameId(), this);
         }
 
         return this.sendMessage({ command: "execCommand", cmd: value })
@@ -427,13 +432,13 @@ class SearchMode extends ConsoleMode {
         if (value === "") {
             return Promise.resolve([false, null]);
         }
-        return search(value, this.isBackward(), this);
+        return search(value, this.isBackward(), super.getFrameId(), this);
     }
 
 }
 class HintFilterMode extends ConsoleMode {
     onInit(container, options) {
-        this._prevFilter = options.defaultCommand;
+        this._prevFilter = options.defaultInput;
     }
     onStart() {
     }

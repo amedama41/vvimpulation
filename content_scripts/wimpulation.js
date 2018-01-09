@@ -160,6 +160,10 @@ class MessageCommand {
         };
         return makeHints(msg.pattern, msg.type, winArea, gFrameInfo);
     }
+    static changeToConsoleMode(msg) {
+        return gFrameInfo.changeToConsoleMode(
+            msg.frameId, msg.mode, msg.defaultInput, msg.passURL);
+    }
     static hideConsole(msg) {
         return gFrameInfo.handleMessage(msg);
     }

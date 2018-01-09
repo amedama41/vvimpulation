@@ -114,7 +114,7 @@ class HintMode {
         }
     }
     _startFilter(msg, frameInfo) {
-        frameInfo.showConsole(this, "hintFilter", msg.filter);
+        frameInfo.showConsole(this, "hintFilter", msg.filter, 0);
     }
     _stopFilter(msg, frameInfo) {
         frameInfo.sendMessage(

@@ -228,6 +228,18 @@ class FrameInfo {
         this._resetMode();
         this._mode = this._createMode(mode, data);
     }
+    changeToConsoleMode(frameId, mode, defaultInput, passURL=false) {
+        if (!this.isTopFrame()) {
+            return this.forwardMessage(this._frameIdInfo.getParentFrameId(), {
+                command: "changeToConsoleMode",
+                frameId, mode, defaultInput, passURL
+            });
+        }
+        if (passURL) {
+            defaultInput += location.href;
+        }
+        this.changeMode("CONSOLE", { mode, frameId, defaultInput });
+    }
     getTarget() {
         return this._mode.getTarget();
     }
@@ -283,12 +295,12 @@ class FrameInfo {
     get consoleFrame() {
         return this._consoleFrame;
     }
-    showConsole(requestMode, mode, defaultCommand) {
+    showConsole(requestMode, mode, defaultInput, frameId) {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
         }
         const options = {
-            mode, defaultCommand, keyMap: this._keyMap["console"]
+            mode, defaultInput, frameId, keyMap: this._keyMap["console"]
         };
         return this._sendConsoleMessage({ command: "setConsoleMode", options })
             .then((result) => {

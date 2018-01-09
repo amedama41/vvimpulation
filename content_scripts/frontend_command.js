@@ -1006,21 +1006,21 @@ class FrontendCommand {
     }
     static toConsoleMode(count, frameInfo, args) {
         args.push("");
-        frameInfo.changeMode(
-            "CONSOLE", { mode: "exec", defaultCommand: args.join(" ") });
+        frameInfo.changeToConsoleMode(
+            frameInfo.getSelfFrameId(), "exec", args.join(" "), false);
     }
     static toConsoleModeWithURL(count, frameInfo, args) {
-        args.push(location.href);
-        frameInfo.changeMode(
-            "CONSOLE", { mode: "exec", defaultCommand: args.join(" ") });
+        args.push("");
+        frameInfo.changeToConsoleMode(
+            frameInfo.getSelfFrameId(), "exec", args.join(" "), true);
     }
     static toSearchMode(count, frameInfo, isBackward=false) {
-        frameInfo.changeMode(
-            "CONSOLE", { mode: "forwardSearch", defaultCommand: '' });
+        frameInfo.changeToConsoleMode(
+            frameInfo.getSelfFrameId(), "forwardSearch", '');
     }
     static toBackwardSearchMode(count, frameInfo) {
-        frameInfo.changeMode(
-            "CONSOLE", { mode: "backwardSearch", defaultCommand: '' });
+        frameInfo.changeToConsoleMode(
+            frameInfo.getSelfFrameId(), "backwardSearch", '');
     }
 }
 

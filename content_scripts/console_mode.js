@@ -8,10 +8,11 @@ class ConsoleMode {
         }
         this.lastFocusedElem = document.activeElement;
 
-        frameInfo.showConsole(this, options.mode, options.defaultCommand)
-            .catch((error) => {
-                frameInfo.changeMode("NORMAL");
-            });
+        const { mode, defaultInput, frameId } = options;
+        frameInfo.showConsole(this, mode, defaultInput, frameId).catch((e) => {
+            console.error("showConsole error: " + Utils.errorString(e));
+            frameInfo.changeMode("NORMAL");
+        });
     }
     static getModeName() {
         return "CONSOLE";
