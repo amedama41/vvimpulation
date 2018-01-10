@@ -124,9 +124,23 @@ class HintMode {
     _applyFilter(msg) {
         const className = "wimpulation-filtered-hint";
         const filter = Utils.makeFilter(msg.filter);
+        const getText = (elem) => {
+            const innerText = elem.innerText;
+            if (innerText === undefined) { // SVGElement does not have innerText
+                return elem.textContent;
+            }
+            const text = (innerText.trim() || elem.value || elem.alt);
+            if (text) {
+                return text;
+            }
+            const child = elem.firstElementChild;
+            if (child instanceof HTMLImageElement) {
+                return child.alt;
+            }
+            return "";
+        };
         this.hints.forEach(([span, elem]) => {
-            // SVGElement does not have innerText
-            if (filter.match(elem.innerText || elem.textContent)) {
+            if (filter.match(getText(elem))) {
                 span.classList.remove(className);
             }
             else {
