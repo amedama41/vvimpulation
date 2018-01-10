@@ -51,7 +51,7 @@
     transform: scale(1.1);
 }
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
-    display: none !important;
+    visibility: hidden !important;
 }
 
 #wimpulation-console-container > iframe {
