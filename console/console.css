@@ -72,6 +72,9 @@ span.candidate_info {
     width: 100%;
     display: none;
 }
+#ex_message > table > tbody > tr > td:first-of-type {
+    white-space: nowrap;
+}
 #ex_console[mode="showMessage"] > #ex_input {
     display: none;
 }
