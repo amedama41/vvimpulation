@@ -194,15 +194,23 @@ class HintMode {
         });
     }
     stopFilter(result, filter, sender, tabInfo) {
-        if (result) {
-            if (filter !== this.filter) {
-                this.filter = filter;
-                this._fixFilter(tabInfo);
-            }
-        }
-        else {
+        if (!result) {
             this.applyFilter(this.filter, sender, tabInfo);
+            return;
         }
+        if (filter === this.filter) {
+            return;
+        }
+        this._fixFilter(tabInfo).then((hasMatchingElements) => {
+            if (hasMatchingElements) {
+                this.filter = filter;
+            }
+            else {
+                const message = "No elements matched by " + filter;
+                tabInfo.showMessage(message, 3000, false);
+                this.applyFilter(this.filter, sender, tabInfo);
+            }
+        });
     }
 
     nextHint(tabInfo) {
@@ -266,13 +274,16 @@ class HintMode {
         tabInfo.forEachPort((port, id) => {
             promiseList.push(forwardModeCommand(port, "HINT", msg));
         });
-        Promise.all(promiseList).then((resultList) => {
+        return Promise.all(promiseList).then((resultList) => {
             const filterResult = resultList.reduce((filterResult, result) => {
                 Array.prototype.push.apply(filterResult, result);
                 return filterResult;
             }).sort((lhs, rhs) => lhs[0] - rhs[0]);
             const [indexMap, labelMap] =
                 HintMode._createFilterMaps(filterResult, this.idList);
+            if (indexMap.length === 0) {
+                return false;
+            }
             this.filterIndexMap = indexMap;
             this.currentIndex = 0;
             tabInfo.forEachPort((port, id) => {
@@ -281,6 +292,7 @@ class HintMode {
                 });
             });
             this._changeHintNum(this.currentIndex, tabInfo);
+            return true;
         });
     }
     _invoke(cmd, tabInfo) {
