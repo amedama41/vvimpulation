@@ -195,7 +195,7 @@ class HintMode {
     }
     stopFilter(result, filter, sender, tabInfo) {
         if (result) {
-            if (!filter !== this.filter) {
+            if (filter !== this.filter) {
                 this.filter = filter;
                 this._fixFilter(tabInfo);
             }
