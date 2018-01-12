@@ -65,9 +65,19 @@ class VisualModeBase {
     }
     static _extendToBlock(selection, count, direction) {
         const positionBit = Node.DOCUMENT_POSITION_CONTAINED_BY;
-        const walker =
-            VisualModeBase._createTreeWalker(selection.focusNode);
         const isForward = (direction === "forward");
+        const currentBlock = VisualModeBase._getTextBlock(selection.focusNode);
+        if (!isForward) {
+            const [text, index] = VisualModeBase._getFirstText(currentBlock);
+            const result = selection.focusNode.compareDocumentPosition(text);
+            if ((result === 0 && selection.focusOffset !== index) ||
+                (result & Node.DOCUMENT_POSITION_PRECEDING) !== 0) {
+                selection.extend(text, index);
+                VisualModeBase._scrollIntoViewIfNeed(currentBlock);
+                return;
+            }
+        }
+        const walker = VisualModeBase._createTreeWalker(currentBlock);
         let node = null;
         for (let i = 0; i < count; ++i) {
             const next =
@@ -142,10 +152,10 @@ class VisualModeBase {
         }
         return elem;
     }
-    static _createTreeWalker(current) {
-        let parentElem = VisualModeBase._getTextBlock(current);
+    static _createTreeWalker(currentBlock) {
         const positionBit =
-            Node.DOCUMENT_POSITION_CONTAINED_BY | Node.DOCUMENT_POSITION_CONTAINS;
+            Node.DOCUMENT_POSITION_CONTAINED_BY |
+            Node.DOCUMENT_POSITION_CONTAINS;
         const walker = document.createTreeWalker(
             document.documentElement, NodeFilter.SHOW_ELEMENT, (elem) => {
                 if (elem.getClientRects().length === 0) {
@@ -161,18 +171,18 @@ class VisualModeBase {
                 if (!VisualModeBase._isSelectable(elem)) {
                     return NodeFilter.FILTER_SKIP;
                 }
-                const result = parentElem.compareDocumentPosition(elem);
+                const result = currentBlock.compareDocumentPosition(elem);
                 if (result === 0 || (result & positionBit) !== 0) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
             });
-        walker.currentNode = current;
+        walker.currentNode = currentBlock;
         return class {
             static nextNode() {
                 const n = walker.nextNode();
                 if (n) {
-                    parentElem = n;
+                    currentBlock = n;
                 }
                 return n;
             }
@@ -180,7 +190,7 @@ class VisualModeBase {
                 let n = walker.previousNode();
                 if (n) {
                     n = VisualModeBase._getTextBlock(n);
-                    parentElem = n;
+                    currentBlock = n;
                 }
                 return n;
             }
