@@ -17,7 +17,8 @@ class VisualModeBase {
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     getTarget() {
-        return selection.anchorNode;
+        const node = this.selection.focusNode;
+        return node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
     }
     consume(key, frameInfo) {
         if (key === "0" && this.count !== "0" && // Is continuation of count?
