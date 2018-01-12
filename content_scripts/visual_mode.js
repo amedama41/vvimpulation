@@ -84,12 +84,9 @@ class VisualModeBase {
         }
     }
     static _getFirstText(elem) {
-        const walker = document.createTreeWalker(elem, Node.SHOW_TEXT);
+        const walker = document.createTreeWalker(elem, NodeFilter.SHOW_TEXT);
         let text = null;
         while (text = walker.nextNode()) {
-            if (text.nodeType !== Node.TEXT_NODE) {
-                continue;
-            }
             const index = text.data.search(/[^\s\u200B]/);
             if (index === -1) {
                 continue;
