@@ -177,11 +177,12 @@ class VisualModeBase {
                 return n;
             }
             static previousNode() {
-                const n = walker.previousNode();
+                let n = walker.previousNode();
                 if (n) {
+                    n = VisualModeBase._getTextBlock(n);
                     parentElem = n;
                 }
-                return VisualModeBase._getTextBlock(n);
+                return n;
             }
         };
     }
