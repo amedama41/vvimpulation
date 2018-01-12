@@ -68,8 +68,8 @@ class ExCommand {
         this.proc = proc;
         this.completion = completion;
     }
-    invoke(args, tab) {
-        return this.proc(args, tab);
+    invoke(args, tab, options) {
+        return this.proc(args, tab, options);
     }
     complete(value, tab) {
         if (!this.completion) {
@@ -89,14 +89,14 @@ class ExCommandMap {
     makeCommand(name, description, proc, completion) {
         this.addCommand(new ExCommand(name, description, proc, completion));
     }
-    execCommand(inputCmd, tab) {
+    execCommand(inputCmd, tab, options) {
         const args = inputCmd.trim().split(/\s+/);
         const cmdName = args.shift();
         const [cmd, reason] = this.cmdMap.getCommand(cmdName);
         if (!cmd) {
             return Promise.reject(reason);
         }
-        return cmd.invoke(args, tab);
+        return cmd.invoke(args, tab, options);
     }
     getCandidate(value, tab) {
         const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -138,9 +138,9 @@ class OpenCommand {
         this.kind = kind;
         this.engineMap = engineMap;
     }
-    invoke(args, tab) {
+    invoke(args, tab, options) {
         if (args.length === 0) {
-            return OpenCommand._open("about:blank", tab, this.kind);
+            return OpenCommand._open("about:blank", tab, this.kind, options);
         }
         const [engine, reason] = this.engineMap.getCommand(args[0]);
         if (!engine) {
@@ -149,7 +149,7 @@ class OpenCommand {
         if (reason) { // Select the default engine, but args may be URL.
             const url = OpenCommand._createURL(args.join(" "));
             if (url) {
-                return OpenCommand._open(url, tab, this.kind);
+                return OpenCommand._open(url, tab, this.kind, options);
             }
         }
         else { // If reason is null, the head of args is a search engigne name.
@@ -157,7 +157,7 @@ class OpenCommand {
         }
         const url = engine.searchUrl.replace(
             "%s", encodeURIComponent(args.join(" ")));
-        return OpenCommand._open(url, tab, this.kind);
+        return OpenCommand._open(url, tab, this.kind, options);
     }
     complete(value, tab) {
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
@@ -250,12 +250,14 @@ class OpenCommand {
             return null;
         }
     }
-    static _open(url, tab, kind) {
+    static _open(url, tab, kind, options) {
         return (() => {
             switch (kind) {
                 case "tab":
                     return browser.tabs.create({
-                        url, index: tab.index + 1, active: true
+                        url,
+                        index: tab.index + 1,
+                        active: options.activateNewTab
                     }).then(() => true);
                 case "window":
                     return browser.windows.create({ url }).then(() => true);
@@ -386,7 +388,7 @@ class DownloadManager {
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
         this.cmdMap.setDefault("show");
     }
-    invoke(args, tab) {
+    invoke(args, tab, options) {
         if (args.length === 0) {
             args.push("show");
         }
@@ -397,7 +399,7 @@ class DownloadManager {
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        return subcmd.invoke(args, tab);
+        return subcmd.invoke(args, tab, options);
     }
     complete(value, tab) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -559,7 +561,7 @@ class HistoryManager {
         ];
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
     }
-    invoke(args, tab) {
+    invoke(args, tab, options) {
         if (args.length === 0) {
             return Promise.reject("No subcommand");
         }
@@ -573,7 +575,7 @@ class HistoryManager {
         if (args.length === 0) {
             return Promise.reject("No arguments");
         }
-        return subcmd.invoke(args, tab).then(() => true);
+        return subcmd.invoke(args, tab, options).then(() => true);
     }
     complete(value, tab) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);

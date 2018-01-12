@@ -739,7 +739,7 @@ class Command {
 
     static execCommand(msg, sender, tabInfo) {
         return browser.tabs.get(sender.tab.id).then((tab) => {
-            return gExCommandMap.execCommand(msg.cmd, tab)
+            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
         });
     }
     static getCandidate(msg, sender, tabInfo) {
