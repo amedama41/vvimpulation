@@ -441,6 +441,18 @@ function findAllFrame(
     return findFrame(0);
 }
 
+function startFind(keyword, backward, frameId, tabInfo) {
+    return tabInfo.frameIdList((frameIdList) => {
+        const caseSensitive = /[A-Z]/.test(keyword);
+        return findAllFrame(
+            tabInfo, keyword, frameId, frameIdList, caseSensitive, backward)
+            .then((result) => {
+                tabInfo.lastSearchInfo = [keyword, caseSensitive, backward];
+                return result;
+            });
+    });
+}
+
 function continueFind(tabInfo, frameId, isNext) {
     const [keyword, caseSensitive, backward] = tabInfo.lastSearchInfo;
     if (keyword === "") {
@@ -473,17 +485,7 @@ class Command {
      * Commands for search
      */
     static find(msg, sender, tabInfo) {
-        return tabInfo.frameIdList((frameIdList) => {
-            const caseSensitive = /[A-Z]/.test(msg.keyword);
-            return findAllFrame(
-                tabInfo, msg.keyword, msg.frameId, frameIdList,
-                caseSensitive, msg.backward)
-                .then((result) => {
-                    tabInfo.lastSearchInfo =
-                        [msg.keyword, caseSensitive, msg.backward];
-                    return result;
-                });
-        });
+        return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
     }
     static findNext(msg, sender, tabInfo) {
         continueFind(tabInfo, sender.frameId, true).catch((e) => {
@@ -817,30 +819,8 @@ class Command {
             });
         });
     }
-
-    /**
-     * Commands for console
-     */
-    static execCommand(msg, sender, tabInfo) {
-        return browser.tabs.get(tabInfo.id).then((tab) => {
-            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
-        });
-    }
-    static getCandidate(msg, sender, tabInfo) {
-        return browser.tabs.get(tabInfo.id).then((tab) => {
-            return gExCommandMap.getCandidate(msg.value, tab);
-        });
-    }
-    static hideConsole(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(0, msg);
-    }
-    static applyFilter(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
-    }
 }
+
 class MacroManager {
     constructor() {
         this.registerMap = {};
@@ -938,6 +918,31 @@ class MacroManager {
     }
 }
 const gMacro = new MacroManager();
+
+class ConsoleCommand {
+    static find(msg, sender, tabInfo) {
+        return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
+    }
+    static execCommand(msg, sender, tabInfo) {
+        return browser.tabs.get(tabInfo.id).then((tab) => {
+            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
+        });
+    }
+    static getCandidate(msg, sender, tabInfo) {
+        return browser.tabs.get(tabInfo.id).then((tab) => {
+            return gExCommandMap.getCandidate(msg.value, tab);
+        });
+    }
+    static hideConsole(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(0, msg);
+    }
+    static applyFilter(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
+    }
+}
 
 function changeHintMode(tabInfo, idList, hintMode, targetId, targetIndex=null) {
     if (idList.length === 0) {
@@ -1189,10 +1194,18 @@ function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
         return;
     }
     browser.tabs.insertCSS(tabId, { frameId, code: consoleDesign });
-    port.onRequest.addListener(invokeCommand);
+    port.onRequest.addListener(invokeConsoleCommand);
     port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
     tabInfo.setConsolePort(port, frameId);
     tabInfo.sendConsoleMessage({ command: "setKeyMapping", keyMapping });
+}
+function invokeConsoleCommand(msg, sender) {
+    const tabInfo = gTabInfoMap.get(sender.tab.id);
+    if (!tabInfo) {
+        console.warn(`tabInfo for ${sender.tab.id} is not found`);
+        return;
+    }
+    return ConsoleCommand[msg.command](msg, sender, tabInfo);
 }
 function cleanupConsolePort(tabId, port, error) {
     const tabInfo = gTabInfoMap.get(tabId);
