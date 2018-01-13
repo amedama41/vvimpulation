@@ -816,11 +816,10 @@ class FrontendCommand {
         if (!selection) {
             return;
         }
-        const target = frameInfo.getTarget();
-        const parent = target.parentNode;
-        const index = Array.from(parent.childNodes).indexOf(target);
+        const range = document.createRange();
+        range.selectNode(frameInfo.getTarget());
         selection.removeAllRanges();
-        selection.setBaseAndExtent(parent, index, parent, index + 1);
+        selection.addRange(range);
     }
     static yankInnerText(count, frameInfo) {
         if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
