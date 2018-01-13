@@ -146,7 +146,7 @@ const DEFAULT_OPTIONS = {
         "insert": {
             "<C-Z>": "toSuspendMode",
             "<C-H>": "deleteCharBackward",
-            "<C-X>": "deleteWordBackward",
+            "<C-O><C-H>": "deleteWordBackward",
             "<C-K>": "deleteToEndOfLine",
             "<C-U>": "deleteToBeginningOfLine",
             "<C-F>": "charNext",
@@ -271,7 +271,7 @@ const DEFAULT_OPTIONS = {
             "<Enter>": "execute",
             "<C-M>": "execute",
             "<C-H>": "deleteCharBackward",
-            "<C-X>": "deleteWordBackward",
+            "<C-O><C-H>": "deleteWordBackward",
             "<C-U>": "deleteToBeginningOfLine",
             "<C-K>": "deleteToEndOfLine",
             "<C-A>": "beginLine",
