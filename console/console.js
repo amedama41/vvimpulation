@@ -487,7 +487,8 @@ function setMessage(output, message) {
         });
         table.appendChild(tr);
     });
-    output.innerHTML = table.outerHTML;
+    output.innerHTML = ""
+    output.appendChild(table);
 }
 
 window.addEventListener("DOMContentLoaded", (e) => {
