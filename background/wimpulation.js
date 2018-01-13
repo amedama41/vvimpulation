@@ -1059,8 +1059,9 @@ function setOptions(options) {
     convertVisualKeyMapping(gOptions.keyMapping["visual"]);
     convertConsoleKeyMapping(gOptions.keyMapping["console"]);
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
-    gOptions.hintKeyMapping =
-        Utils.toPreparedCmdMap(convertHintKeyMapping(options.keyMapping.hint));
+    gOptions.hintKeyMapping = Utils.toPreparedCmdMap(
+        convertHintKeyMapping(options.keyMapping["hint"]));
+    delete gOptions.keyMapping["hint"];
     if (gOptions.keyMapping["suspend"] === undefined) {
         gOptions.keyMapping["suspend"] =
             DEFAULT_OPTIONS["keyMapping"]["suspend"];
