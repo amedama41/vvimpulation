@@ -469,12 +469,9 @@ function focusFrame(tabInfo, frameId, count) {
 }
 
 class Command {
-    static focusNextFrame(msg, sender, tabInfo) {
-        focusFrame(tabInfo, sender.frameId, Math.max(msg.count, 1));
-    }
-    static focusPreviousFrame(msg, sender, tabInfo) {
-        focusFrame(tabInfo, sender.frameId, -Math.max(msg.count, 1));
-    }
+    /**
+     * Commands for search
+     */
     static find(msg, sender, tabInfo) {
         return tabInfo.frameIdList((frameIdList) => {
             const caseSensitive = /[A-Z]/.test(msg.keyword);
@@ -499,6 +496,19 @@ class Command {
         });
     }
 
+    /**
+     * Commands for focus manipulation
+     */
+    static focusNextFrame(msg, sender, tabInfo) {
+        focusFrame(tabInfo, sender.frameId, Math.max(msg.count, 1));
+    }
+    static focusPreviousFrame(msg, sender, tabInfo) {
+        focusFrame(tabInfo, sender.frameId, -Math.max(msg.count, 1));
+    }
+
+    /**
+     * Commands for tab manipulation
+     */
     static nextTab(msg, sender, tabInfo) {
         const tab = sender.tab;
         const count = msg.count;
@@ -606,11 +616,19 @@ class Command {
             handleError(tabInfo, "openTab", e);
         });
     }
+
+    /**
+     * Commands for window manipulation
+     */
     static removeCurrentWindow(msg, sender, tabInfo) {
         browser.windows.remove(tabInfo.windowId).catch((e) => {
             handleError(tabInfo, "removeCurrentWindow", e);
         });
     }
+
+    /**
+     * Commands for page load manipulation
+     */
     static reload(msg, sender, tabInfo) {
         browser.tabs.reload(sender.tab.id).catch((e) => {
             handleError(tabInfo, "reload", e);
@@ -621,6 +639,10 @@ class Command {
             handleError(tabInfo, "reloadSkipCache", e);
         });
     }
+
+    /**
+     * Commands for page zoom manipulation
+     */
     static zoomIn(msg, sender, tabInfo) {
         const tabId = sender.tab.id;
         const count = Math.max(msg.count, 1);
@@ -646,6 +668,10 @@ class Command {
             handleError(tabInfo, "zoomReset", e);
         });
     }
+
+    /**
+     * Commands for link manipulation
+     */
     static openLink(msg, sender, tabInfo) {
         browser.tabs.update(sender.tab.id, { url: msg.url }).catch((e) => {
             handleError(tabInfo, "openLink", e);
@@ -672,6 +698,23 @@ class Command {
         });
     }
 
+    /**
+     * Commands for various applications
+     */
+    static killHover(msg, sender, tabInfo) {
+        tabInfo.forEachPort((port, frameId) => port.sendMessage(msg));
+    }
+
+    /**
+     * Commands for mode changing
+     */
+    static toSuspendMode(msg, sender, tabInfo) {
+        const changeModeMsg = { command: "changeMode", mode: "SUSPEND" };
+        tabInfo.forEachPort((port, frameId) => port.postMessage(changeModeMsg));
+    }
+    static toNormalMode(msg, sender, tabInfo) {
+        changeNormalMode(tabInfo);
+    }
     static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
         tabInfo.sendMessage(0, {
@@ -687,43 +730,10 @@ class Command {
             handleError(tabInfo, "toHintMode", e);
         });
     }
-    static collectHint(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, {
-            command: "collectHint",
-            type: msg.type,
-            pattern: HintMode._makePattern(msg.type, msg.url),
-            area: msg.area,
-        });
-    }
-    static forwardHintKeyEvent(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
-    }
-    static stopFilter(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        tabInfo.modeInfo.stopFilter(msg.result, msg.filter, sender, tabInfo);
-    }
 
-    static collectFrameId(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, msg);
-    }
-    static killHover(msg, sender, tabInfo) {
-        tabInfo.forEachPort((port, frameId) => port.sendMessage(msg));
-    }
-
-    static forwardCommand(msg, sender, tabInfo) {
-        tabInfo.sendMessage(msg.frameId, msg);
-    }
-    static forwardFrameMessage(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, msg.data);
-    }
-    static showMessage(msg, sender, tabInfo) {
-        tabInfo.sendMessage(0, msg);
-    }
+    /**
+     * Commands for repeatLastCommand
+     */
     static setLastCommand(msg, sender, tabInfo) {
         if (msg.cmdName !== "repeatLastCommand") {
             gLastCommand[0] = msg.cmdName;
@@ -733,42 +743,10 @@ class Command {
     static getLastCommand(msg, sender, tabInfo) {
         return gLastCommand;
     }
-    static hideFixedMessage(msg, sender, tabInfo) {
-        tabInfo.sendMessage(0, msg);
-    }
 
-    static execCommand(msg, sender, tabInfo) {
-        return browser.tabs.get(sender.tab.id).then((tab) => {
-            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
-        });
-    }
-    static getCandidate(msg, sender, tabInfo) {
-        return browser.tabs.get(sender.tab.id).then((tab) => {
-            return gExCommandMap.getCandidate(msg.value, tab);
-        });
-    }
-
-    static toNormalMode(msg, sender, tabInfo) {
-        changeNormalMode(tabInfo);
-    }
-    static toSuspendMode(msg, sender, tabInfo) {
-        const changeModeMsg = { command: "changeMode", mode: "SUSPEND" };
-        tabInfo.forEachPort((port, frameId) => port.postMessage(changeModeMsg));
-    }
-
-    static sendConsoleMessage(msg, sender, tabInfo) {
-        return tabInfo.sendConsoleMessage(msg.data);
-    }
-    static hideConsole(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(0, msg);
-    }
-    static applyFilter(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
-    }
-
+    /**
+     * Commands for macro
+     */
     static startMacro(msg, sender, tabInfo) {
         gMacro.start(msg.key, tabInfo);
     }
@@ -782,6 +760,51 @@ class Command {
         gMacro.play(msg.key, sender.frameId, tabInfo);
     }
 
+    /**
+     * Commands for hint mode
+     */
+    static forwardHintKeyEvent(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
+    }
+    static stopFilter(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        tabInfo.modeInfo.stopFilter(msg.result, msg.filter, sender, tabInfo);
+    }
+
+    /**
+     * Commands for FrameInfo
+     */
+    static collectHint(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, {
+            command: "collectHint",
+            type: msg.type,
+            pattern: HintMode._makePattern(msg.type, msg.url),
+            area: msg.area,
+        });
+    }
+    static collectFrameId(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, msg);
+    }
+    static forwardCommand(msg, sender, tabInfo) {
+        tabInfo.sendMessage(msg.frameId, msg);
+    }
+    static forwardFrameMessage(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(msg.frameId, msg.data);
+    }
+    static showMessage(msg, sender, tabInfo) {
+        tabInfo.sendMessage(0, msg);
+    }
+    static hideFixedMessage(msg, sender, tabInfo) {
+        tabInfo.sendMessage(0, msg);
+    }
+    static sendConsoleMessage(msg, sender, tabInfo) {
+        return tabInfo.sendConsoleMessage(msg.data);
+    }
     static registerChild(msg, sender, tabInfo) {
         const childFrameId = msg.frameId;
         return browser.webNavigation.getFrame({
@@ -794,6 +817,29 @@ class Command {
                 command: "completeChildRegistration", frameId: sender.frameId
             });
         });
+    }
+
+    /**
+     * Commands for console
+     */
+    static execCommand(msg, sender, tabInfo) {
+        return browser.tabs.get(sender.tab.id).then((tab) => {
+            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
+        });
+    }
+    static getCandidate(msg, sender, tabInfo) {
+        return browser.tabs.get(sender.tab.id).then((tab) => {
+            return gExCommandMap.getCandidate(msg.value, tab);
+        });
+    }
+    static hideConsole(msg, sender, tabInfo) {
+        return tabInfo.sendMessage(0, msg);
+    }
+    static applyFilter(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
     }
 }
 class MacroManager {
