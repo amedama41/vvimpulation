@@ -535,6 +535,9 @@ window.addEventListener("DOMContentLoaded", (e) => {
         mode.startConsole();
     });
     input.addEventListener("blur", (e) => {
+        if (document.activeElement === input) { // If other window is focused
+            return;
+        }
         // If inExec, stopConsole is called by ConsoleMode.execute
         if (mode.isOpened && !mode.inExec) {
             mode.stopConsole()
