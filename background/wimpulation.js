@@ -1057,7 +1057,9 @@ function setOptions(options) {
     const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
     gOptions.keyMapping = options["keyMapping"];
     convertVisualKeyMapping(gOptions.keyMapping["visual"]);
-    convertConsoleKeyMapping(gOptions.keyMapping["console"]);
+    gOptions.consoleKeyMapping =
+        convertConsoleKeyMapping(gOptions.keyMapping["console"]);
+    delete gOptions.keyMapping["console"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
     gOptions.hintKeyMapping = Utils.toPreparedCmdMap(
         convertHintKeyMapping(options.keyMapping["hint"]));
@@ -1096,6 +1098,9 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             pagePattern: gOptions.pagePattern
         });
         const newConsoleDesign = gOptions.consoleDesign;
+        const setKeyMappingMsg = {
+            command: "setKeyMapping", keyMapping: gOptions.consoleKeyMapping
+        };
         gTabInfoMap.forEach((tabInfo, tabId) => {
             const frameId = tabInfo.consoleFrameId;
             if (frameId === undefined) {
@@ -1103,6 +1108,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             }
             browser.tabs.removeCSS(tabId, { frameId, code: oldConsoleDesign });
             browser.tabs.insertCSS(tabId, { frameId, code: newConsoleDesign });
+            tabInfo.sendConsoleMessage(setKeyMappingMsg);
         });
     });
 
@@ -1122,7 +1128,9 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         const frameId = sender.frameId;
 
         if (port.name === "console") {
-            setConsolePort(port, tabId, frameId, gOptions.consoleDesign);
+            setConsolePort(
+                port, tabId, frameId,
+                gOptions.consoleDesign, gOptions.consoleKeyMapping);
             return;
         }
 
@@ -1174,7 +1182,7 @@ function cleanupFrameInfo(tabId, frameId, port, error) {
         tabInfo.reset();
     }
 }
-function setConsolePort(port, tabId, frameId, consoleDesign) {
+function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         console.warn(`tabInfo for ${tabId} is not found`);
@@ -1184,6 +1192,7 @@ function setConsolePort(port, tabId, frameId, consoleDesign) {
     port.onRequest.addListener(invokeCommand);
     port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
     tabInfo.setConsolePort(port, frameId);
+    tabInfo.sendConsoleMessage({ command: "setKeyMapping", keyMapping });
 }
 function cleanupConsolePort(tabId, port, error) {
     const tabInfo = gTabInfoMap.get(tabId);

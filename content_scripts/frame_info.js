@@ -299,9 +299,7 @@ class FrameInfo {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
         }
-        const options = {
-            mode, defaultInput, frameId, keyMap: this._keyMap["console"]
-        };
+        const options = { mode, defaultInput, frameId };
         return this._sendConsoleMessage({ command: "setConsoleMode", options })
             .then((result) => {
                 if (this._mode !== requestMode) { // Maybe mode is changed.

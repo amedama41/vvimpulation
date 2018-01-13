@@ -304,12 +304,8 @@ class ConsoleCommand {
     }
 }
 
-function makeCommandMapper(keyMap) {
-    return Utils.makeCommandMapper(Utils.toPreparedCmdMap(keyMap));
-}
-
 class ConsoleMode {
-    constructor(options, port, input, container) {
+    constructor(options, port, input, container, keyMapping) {
         this._isOpened = false;
         this._inExec = false;
         this._port = port;
@@ -317,7 +313,7 @@ class ConsoleMode {
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultInput;
         this._frameId = options.frameId;
-        this._mapper = makeCommandMapper(options.keyMap);
+        this._mapper = keyMapping;
 
         this.onInit(container, options);
     }
@@ -457,15 +453,16 @@ class HintFilterMode extends ConsoleMode {
     }
 }
 
-function createConsoleMode(options, port, input, container) {
+function createConsoleMode(options, port, input, container, keyMapping) {
     switch (options.mode) {
         case "exec":
-            return new ExMode(options, port, input, container);
+            return new ExMode(options, port, input, container, keyMapping);
         case "forwardSearch":
         case "backwardSearch":
-            return new SearchMode(options, port, input, container);
+            return new SearchMode(options, port, input, container, keyMapping);
         case "hintFilter":
-            return new HintFilterMode(options, port, input, container);
+            return new HintFilterMode(
+                options, port, input, container, keyMapping);
         default:
             throw new Error("Unknown mode: " + options.mode);
     }
@@ -497,11 +494,17 @@ window.addEventListener("DOMContentLoaded", (e) => {
     const output = document.getElementById("ex_message");
     const container = document.getElementById("ex_candidates");
     let mode = undefined;
+    let keyMapping = undefined;
 
     port.onRequest.addListener((msg) => {
         switch (msg.command) {
+            case "setKeyMapping":
+                keyMapping = Utils.makeCommandMapper(
+                    Utils.toPreparedCmdMap(msg.keyMapping));
+                return true;
             case "setConsoleMode":
-                mode = createConsoleMode(msg.options, port, input, container);
+                mode = createConsoleMode(
+                    msg.options, port, input, container, keyMapping);
                 return true;
             case "setMessage":
                 setMessage(output, msg.message);
