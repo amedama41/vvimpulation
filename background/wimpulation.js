@@ -510,7 +510,6 @@ class Command {
      * Commands for tab manipulation
      */
     static nextTab(msg, sender, tabInfo) {
-        const tab = sender.tab;
         const count = msg.count;
         selectTab(
             tabInfo,
@@ -555,12 +554,12 @@ class Command {
         });
     }
     static moveTabToLeft(msg, sender, tabInfo) {
-        moveTab(sender.tab.id, Math.max(msg.count, 1), true).catch((e) => {
+        moveTab(tabInfo.id, Math.max(msg.count, 1), true).catch((e) => {
             handleError(tabInfo, "moveTabToLeft", e);
         });
     }
     static moveTabToRight(msg, sender, tabInfo) {
-        moveTab(sender.tab.id, Math.max(msg.count, 1), false).catch((e) => {
+        moveTab(tabInfo.id, Math.max(msg.count, 1), false).catch((e) => {
             handleError(tabInfo, "moveTabToRight", e);
         });
     }
@@ -584,7 +583,7 @@ class Command {
         });
     }
     static removeCurrentTab(msg, sender, tabInfo) {
-        browser.tabs.remove(sender.tab.id).catch((e) => {
+        browser.tabs.remove(tabInfo.id).catch((e) => {
             handleError(tabInfo, "removeCurrentTab", e);
         });
     }
@@ -604,12 +603,12 @@ class Command {
         });
     }
     static duplicateTab(msg, sender, tabInfo) {
-        browser.tabs.duplicate(sender.tab.id).catch((e) => {
+        browser.tabs.duplicate(tabInfo.id).catch((e) => {
             handleError(tabInfo, "duplicateTab", e);
         });
     }
     static openTab(msg, sender, tabInfo) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
+        browser.tabs.get(tabInfo.id).then((tab) => {
             return browser.tabs.create(
                 { index: tab.index + 1, windowId: tab.windowId });
         }).catch((e) => {
@@ -630,12 +629,12 @@ class Command {
      * Commands for page load manipulation
      */
     static reload(msg, sender, tabInfo) {
-        browser.tabs.reload(sender.tab.id).catch((e) => {
+        browser.tabs.reload(tabInfo.id).catch((e) => {
             handleError(tabInfo, "reload", e);
         });
     }
     static reloadSkipCache(msg, sender, tabInfo) {
-        browser.tabs.reload(sender.tab.id, { bypassCache: true }).catch((e) => {
+        browser.tabs.reload(tabInfo.id, { bypassCache: true }).catch((e) => {
             handleError(tabInfo, "reloadSkipCache", e);
         });
     }
@@ -644,7 +643,7 @@ class Command {
      * Commands for page zoom manipulation
      */
     static zoomIn(msg, sender, tabInfo) {
-        const tabId = sender.tab.id;
+        const tabId = tabInfo.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
             return browser.tabs.setZoom(
@@ -654,7 +653,7 @@ class Command {
         });
     }
     static zoomOut(msg, sender, tabInfo) {
-        const tabId = sender.tab.id;
+        const tabId = tabInfo.id;
         const count = Math.max(msg.count, 1);
         browser.tabs.getZoom(tabId).then((factor) => {
             return browser.tabs.setZoom(
@@ -664,7 +663,7 @@ class Command {
         });
     }
     static zoomReset(msg, sender, tabInfo) {
-        browser.tabs.setZoom(sender.tab.id, 0).catch((e) => {
+        browser.tabs.setZoom(tabInfo.id, 0).catch((e) => {
             handleError(tabInfo, "zoomReset", e);
         });
     }
@@ -673,12 +672,12 @@ class Command {
      * Commands for link manipulation
      */
     static openLink(msg, sender, tabInfo) {
-        browser.tabs.update(sender.tab.id, { url: msg.url }).catch((e) => {
+        browser.tabs.update(tabInfo.id, { url: msg.url }).catch((e) => {
             handleError(tabInfo, "openLink", e);
         });
     }
     static openLinkInTab(msg, sender, tabInfo) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
+        browser.tabs.get(tabInfo.id).then((tab) => {
             const active = gOptions.activateNewTab;
             return browser.tabs.create({
                 url: msg.url, openerTabId: tab.id,
@@ -689,7 +688,7 @@ class Command {
         });
     }
     static downloadLink(msg, sender, tabInfo) {
-        browser.tabs.get(sender.tab.id).then((tab) => {
+        browser.tabs.get(tabInfo.id).then((tab) => {
             return browser.downloads.download({
                 url: msg.url, incognito: tab.incognito, saveAs: true
             });
@@ -823,12 +822,12 @@ class Command {
      * Commands for console
      */
     static execCommand(msg, sender, tabInfo) {
-        return browser.tabs.get(sender.tab.id).then((tab) => {
+        return browser.tabs.get(tabInfo.id).then((tab) => {
             return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
         });
     }
     static getCandidate(msg, sender, tabInfo) {
-        return browser.tabs.get(sender.tab.id).then((tab) => {
+        return browser.tabs.get(tabInfo.id).then((tab) => {
             return gExCommandMap.getCandidate(msg.value, tab);
         });
     }
