@@ -41,8 +41,13 @@ class VisualModeBase {
             }
             else {
                 const alter = this.constructor.getAlter();
-                for (let i = 0; i < count; ++i) {
-                    this.selection.modify(alter, direction, granularity);
+                try {
+                    for (let i = 0; i < count; ++i) {
+                        this.selection.modify(alter, direction, granularity);
+                    }
+                }
+                catch (e) {
+                    console.warn(Utils.errorString(e));
                 }
             }
             this.constructor.collapse(this.selection);
