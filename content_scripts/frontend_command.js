@@ -712,38 +712,96 @@ class FrontendCommand {
      * Commands for text edit
      **/
     static deleteCharBackward(count, frameInfo) {
-        _editElement(frameInfo, (elem) => DomUtils.deleteCharBackward(elem));
+        _editElement(frameInfo, DomUtils.deleteCharBackward, (selection) => {
+            selection.modify("extend", "backward", "character");
+            document.execCommand("delete");
+        });
     }
     static deleteWordBackward(count, frameInfo) {
-        _editElement(frameInfo, (elem) => DomUtils.deleteWordBackward(elem));
+        _editElement(frameInfo, DomUtils.deleteWordBackward, (selection) => {
+            selection.modify("extend", "backward", "word");
+            document.execCommand("delete");
+        });
     }
     static deleteToBeginningOfLine(count, frameInfo) {
         _editElement(
-            frameInfo, (elem) => DomUtils.deleteToBeginningOfLine(elem));
+            frameInfo, DomUtils.deleteToBeginningOfLine, (selection) => {
+                selection.modify("extend", "backward", "lineboundary");
+                document.execCommand("delete");
+            });
     }
     static deleteToEndOfLine(count, frameInfo) {
-        _editElement(frameInfo, (elem) => DomUtils.deleteToEndOfLine(elem));
+        _editElement(frameInfo, DomUtils.deleteToEndOfLine, (selection) => {
+            selection.modify("extend", "forward", "lineboundary");
+            document.execCommand("delete");
+        });
     }
     static charNext(count, frameInfo) {
-        DomUtils.charNext(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.charNext(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "forward", "character");
+        }
     }
     static charPrevious(count, frameInfo) {
-        DomUtils.charPrevious(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.charPrevious(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "backward", "character");
+        }
     }
     static beginLine(count, frameInfo) {
-        DomUtils.beginLine(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.beginLine(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "backward", "lineboundary");
+        }
     }
     static endLine(count, frameInfo) {
-        DomUtils.endLine(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.endLine(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "forward", "lineboundary");
+        }
     }
     static nextLine(count, frameInfo) {
-        DomUtils.nextLine(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.nextLine(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "forward", "line");
+        }
     }
     static previousLine(count, frameInfo) {
-        DomUtils.previousLine(frameInfo.getTarget());
+        const elem = frameInfo.getTarget();
+        if (_isEditableType(elem)) {
+            DomUtils.previousLine(elem);
+        }
+        else {
+            const selection = window.getSelection();
+            selection.modify("move", "backward", "line");
+        }
     }
     static undo(count, frameInfo) {
         const elem = frameInfo.getTarget();
+        if (!_isEditableType(elem)) {
+            document.execCommand("undo");
+            return;
+        }
         if (!elem.undoStack || elem.undoStack.length === 0) {
             return;
         }
@@ -751,7 +809,8 @@ class FrontendCommand {
     }
     static yankValue(count, frameInfo) {
         const elem = frameInfo.getTarget();
-        if (DomUtils.setToClipboard(elem.value)) {
+        const value = (_isEditableType(elem) ? elem.value : elem.innerText);
+        if (DomUtils.setToClipboard(value)) {
             frameInfo.showMessage("Yank current target value");
         }
     }
@@ -766,7 +825,7 @@ class FrontendCommand {
             }
             elem.setRangeText(value, start, end, "end");
             return true;
-        });
+        }, (selection) => document.execCommand("paste"));
     }
 
     /**
@@ -1220,22 +1279,32 @@ function emulateEnter(target, type, ctrl, alt, shift, meta) {
     target.dispatchEvent(keyEvent);
 }
 
-function _editElement(frameInfo, editFunc) {
+function _isEditableType(elem) {
+    const tagName = elem.localName.toUpperCase();
+    return tagName === "INPUT" || tagName === "TEXTAREA";
+}
+function _editElement(frameInfo, editFunc, contentEditFunc) {
     const elem = frameInfo.getTarget();
-    const prevValue = elem.value;
-    if (editFunc(elem)) {
-        if (!elem.undoStack) {
-            elem.undoStack = [];
+    if (_isEditableType(elem)) {
+        const prevValue = elem.value;
+        if (editFunc(elem)) {
+            if (!elem.undoStack) {
+                elem.undoStack = [];
+            }
+            elem.undoStack.push(prevValue);
+            elem.dispatchEvent(new InputEvent("input", {
+                bubbles: true,
+                cancelable: false,
+                composed: true,
+                detail: 0,
+                view: window,
+                isComposing: false,
+            }));
         }
-        elem.undoStack.push(prevValue);
-        elem.dispatchEvent(new InputEvent("input", {
-            bubbles: true,
-            cancelable: false,
-            composed: true,
-            detail: 0,
-            view: window,
-            isComposing: false,
-        }));
+    }
+    else {
+        contentEditFunc(window.getSelection());
+        return;
     }
 }
 
