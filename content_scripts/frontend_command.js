@@ -936,6 +936,14 @@ class FrontendCommand {
             target.removeChild(target.children[i - 1]);
         }
     }
+    static setTabIndex(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        elem.tabIndex = count;
+    }
+    static removeTabIndex(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        elem.removeAttribute("tabindex");
+    }
 
     /**
      * Commands for various applications

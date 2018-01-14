@@ -167,6 +167,8 @@ const COMMAND_DESCRIPTIONS = {
     yankOuterHTML: { description: "Yank outer HTML of the target" },
     deleteElement: { description: "Delete the target" },
     deleteChildElements: { description: "Delete the child elements of the target" },
+    setTabIndex: { description: "Set N tabindex to the target" },
+    removeTabIndex: { description: "Remove tabindex from the target" },
 
     /** Commands for various applications **/
     showPageInfo: { topFrame: true, description: "Show the current page information" },
