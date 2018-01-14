@@ -29,6 +29,7 @@
             "common/port.js",
             "background/default_options.js",
             "background/command.js",
+            "background/hint_mode.js",
             "background/wimpulation.js"
         ]
     },

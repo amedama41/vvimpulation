@@ -134,6 +134,25 @@ class TabInfo {
         }
     }
 }
+function changeNormalMode(tabInfo, frameId=undefined, data=undefined) {
+    const mode = "NORMAL";
+    tabInfo.setMode(mode);
+    const msg = { command: "changeMode", mode: mode };
+    tabInfo.forEachPort((port, id) => {
+        if (id === frameId) {
+            port.postMessage(Object.assign({ data: data }, msg));
+        }
+        else {
+            port.postMessage(msg)
+        }
+    });
+}
+function handleError(tabInfo, func, error) {
+    console.error(`${func}: ${Utils.errorString(error)}`);
+    tabInfo.showMessage(
+        `${func} error (${(error || "some error occured").toString()})`,
+        3000, true);
+}
 function forwardModeCommand(port, mode, data) {
     return port.sendMessage({ command: "forwardModeCommand", mode, data });
 }
@@ -143,208 +162,6 @@ const gLastCommand = [undefined, 0];
 const gOptions = {
     keyMapping: undefined, hintPattern: undefined, hintKeyMapping: undefined
 };
-
-class HintMode {
-    constructor(type, autoFocus, overlapHintLabels) {
-        this.type = type;
-        this.filter = "";
-        this.filterIndexMap = []; // displayed index => global index
-        this.idList = []; // global index => frame id
-        this.currentIndex = 0; // current displayed index
-        this.autoFocus = autoFocus;
-        this.overlap = overlapHintLabels;
-        this.mapper = Utils.makeCommandMapper(gOptions.hintKeyMapping);
-    }
-    handle(key, sender, tabInfo) {
-        if (key.length === 1 && "0" <= key && key <= "9") {
-            this._handleDigit(key, tabInfo);
-            return;
-        }
-        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
-        if (optCmd) {
-            this._invoke(optCmd, tabInfo);
-        }
-        if (cmd) {
-            this._invoke(cmd, tabInfo);
-        }
-        else if (!consumed) {
-            changeNormalMode(tabInfo, sender.frameId, [key]);
-        }
-    }
-    getOverlap() {
-        return this.overlap;
-    }
-    setIdList(idList, index) {
-        this.idList = idList;
-        this.filterIndexMap = this.idList.map((id, index) => index);
-        this.filter = "";
-        this.currentIndex = index;
-        this.mapper.reset();
-    }
-    applyFilter(filter, sender, tabInfo) {
-        const msg = { command: "applyFilter", filter };
-        tabInfo.forEachPort((port, id) => {
-            forwardModeCommand(port, "HINT", msg);
-        });
-    }
-    stopFilter(result, filter, sender, tabInfo) {
-        if (!result) {
-            this.applyFilter(this.filter, sender, tabInfo);
-            return;
-        }
-        if (filter === this.filter) {
-            return;
-        }
-        this._fixFilter(tabInfo).then((hasMatchingElements) => {
-            if (hasMatchingElements) {
-                this.filter = filter;
-            }
-            else {
-                const message = "No elements matched by " + filter;
-                tabInfo.showMessage(message, 3000, false);
-                this.applyFilter(this.filter, sender, tabInfo);
-            }
-        });
-    }
-
-    nextHint(tabInfo) {
-        const nextIndex = (this.currentIndex + 1) % this.filterIndexMap.length;
-        this._changeHintNum(nextIndex, tabInfo);
-    }
-    previousHint(tabInfo) {
-        const length = this.filterIndexMap.length;
-        const prevIndex = (this.currentIndex - 1 + length) % length;
-        this._changeHintNum(prevIndex, tabInfo);
-    }
-    reconstruct(tabInfo) {
-        const type = this.type;
-        tabInfo.sendMessage(0, {
-            command: "collectHint",
-            type: type,
-            pattern: gOptions.hintPattern["global"][type]
-        }).then((hintsInfoList) => {
-            const targetId =
-                this.idList[this.filterIndexMap[this.currentIndex]];
-            return tabInfo.forwardModeCommand(targetId, "HINT", {
-                command: "getTargetIndex"
-            }).then((targetIndex) => [hintsInfoList, targetId, targetIndex]);
-        }).then(([hintsInfoList, targetId, targetIndex]) => {
-            changeHintMode(tabInfo, hintsInfoList, this, targetId, targetIndex);
-        }).catch((e) => {
-            handleError(tabInfo, "reconstruct", e);
-        });
-    }
-    startFilter(tabInfo) {
-        tabInfo.forwardModeCommand(
-            0, "HINT", { command: "startFilter", filter: this.filter });
-    }
-    toggleOverlap(tabInfo) {
-        this.overlap = !this.overlap;
-        const msg = { command: (this.overlap ? "setZIndex" : "clearZIndex") };
-        tabInfo.forEachPort((port, id) => {
-            forwardModeCommand(port, "HINT", msg);
-        });
-        const message = "Overlapping " + (this.overlap ? "ON" : "OFF");
-        tabInfo.showMessage(message, 3000, false);
-    }
-    toggleAutoFocus(tabInfo) {
-        this.autoFocus = !this.autoFocus;
-        const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
-        tabInfo.showMessage(message, 3000, false);
-    }
-    invokeCommand(tabInfo, args) {
-        const match = /^(\d+)\|(.*$)/.exec(args);
-        const [count, commandName] =
-            (match ? [parseInt(match[1], 10), match[2]] : [0, args]);
-        const currentFrameId =
-            this.idList[this.filterIndexMap[this.currentIndex]];
-        tabInfo.forwardModeCommand(
-            currentFrameId, "HINT", { command: "invoke", commandName, count });
-    }
-
-    _fixFilter(tabInfo) {
-        const promiseList = [];
-        const msg = { command: "getFilterResult" };
-        tabInfo.forEachPort((port, id) => {
-            promiseList.push(forwardModeCommand(port, "HINT", msg));
-        });
-        return Promise.all(promiseList).then((resultList) => {
-            const filterResult = resultList.reduce((filterResult, result) => {
-                Array.prototype.push.apply(filterResult, result);
-                return filterResult;
-            }).sort((lhs, rhs) => lhs[0] - rhs[0]);
-            const [indexMap, labelMap] =
-                HintMode._createFilterMaps(filterResult, this.idList);
-            if (indexMap.length === 0) {
-                return false;
-            }
-            this.filterIndexMap = indexMap;
-            this.currentIndex = 0;
-            tabInfo.forEachPort((port, id) => {
-                forwardModeCommand(port, "HINT", {
-                    command: "setHintLabel", labelList: labelMap[id]
-                });
-            });
-            this._changeHintNum(this.currentIndex, tabInfo);
-            return true;
-        });
-    }
-    _invoke(cmd, tabInfo) {
-        const index = cmd.indexOf("|");
-        const command = (index === -1 ? cmd : cmd.substr(0, index));
-        const args = cmd.substr(command.length + 1);
-        this[command](tabInfo, args);
-    }
-    _handleDigit(num, tabInfo) {
-        const length = this.filterIndexMap.length;
-        let index = this.currentIndex.toString() + num;
-        while (index && parseInt(index, 10) >= length) {
-            index = index.substring(1);
-        }
-        const nextIndex = (index ? parseInt(index, 10) : length - 1);
-
-        this._changeHintNum(nextIndex, tabInfo);
-    }
-    _changeHintNum(nextDisplayedIndex, tabInfo) {
-        const prevId = this.idList[this.filterIndexMap[this.currentIndex]];
-        const nextIndex = this.filterIndexMap[nextDisplayedIndex];
-        const nextId = this.idList[nextIndex];
-        if (prevId !== nextId) {
-            tabInfo.forwardModeCommand(
-                prevId, "HINT", { command: "blurHintLink", });
-        }
-        tabInfo.forwardModeCommand(nextId, "HINT", {
-            command: "focusHintLink",
-            index: nextIndex, autoFocus: this.autoFocus
-        });
-        this.currentIndex = nextDisplayedIndex;
-    }
-    static _createFilterMaps(filterResult, idList) {
-        const filterIndexMap = [];
-        const labelMap = {};
-        filterResult.forEach(([index, filter]) => {
-            const frameId = idList[index];
-            if (!labelMap[frameId]) {
-                labelMap[frameId] = [];
-            }
-            if (filter) {
-                labelMap[frameId].push(filterIndexMap.length);
-                filterIndexMap.push(index);
-            }
-            else {
-                labelMap[frameId].push("-");
-            }
-        });
-        return [filterIndexMap, labelMap];
-    }
-}
-
-function handleError(tabInfo, func, error) {
-    console.error(`${func}: ${Utils.errorString(error)}`);
-    tabInfo.showMessage(
-        `${func} error (${(error || "some error occured").toString()})`,
-        3000, true);
-}
 
 function selectTab(tabInfo, getIndex) {
     return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
@@ -697,15 +514,18 @@ class Command {
     }
     static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
+        const pattern = gOptions.hintPattern["global"][type];
         tabInfo.sendMessage(0, {
-            command: "collectHint",
-            type: type,
-            pattern: gOptions.hintPattern["global"][type]
+            command: "collectHint", type, pattern
         }).then((hintsInfoList) => {
-            changeHintMode(
-                tabInfo, hintsInfoList,
-                new HintMode(
-                    type, gOptions.autoFocus, gOptions.overlapHintLabels))
+            if (hintsInfoList.length === 0) {
+                changeNormalMode(tabInfo);
+                return;
+            }
+            tabInfo.setMode("HINT", new HintMode(
+                tabInfo, hintsInfoList, { type, pattern },
+                gOptions.autoFocus,
+                gOptions.overlapHintLabels, gOptions.hintKeyMapping));
         }).catch((e) => {
             handleError(tabInfo, "toHintMode", e);
         });
@@ -907,54 +727,6 @@ class ConsoleCommand {
         }
         tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
     }
-}
-
-function changeHintMode(tabInfo, idList, hintMode, targetId, targetIndex=null) {
-    if (idList.length === 0) {
-        changeNormalMode(tabInfo);
-        return;
-    }
-    if (targetIndex === null) {
-        targetId = idList[0];
-        targetIndex = 0;
-    }
-    const mode = "HINT";
-    let labelMap = {};
-    let globalTargetIndex = 0;
-    let counter = 0;
-    idList.forEach((id, index) => {
-        if (!labelMap[id]) {
-            labelMap[id] = [];
-        }
-        labelMap[id].push(index);
-        if (id === targetId && counter++ === targetIndex) {
-            globalTargetIndex = index;
-        }
-    });
-    hintMode.setIdList(idList, globalTargetIndex);
-    tabInfo.setMode(mode, hintMode);
-    const setZIndex = hintMode.getOverlap();
-    tabInfo.forEachPort((port, id) => {
-        const data = { labelList: (labelMap[id] || []), setZIndex };
-        if (id === targetId) {
-            data.initIndex = targetIndex;
-        }
-        port.postMessage({ command: "changeMode", mode: mode, data });
-    });
-}
-
-function changeNormalMode(tabInfo, frameId=undefined, data=undefined) {
-    const mode = "NORMAL";
-    tabInfo.setMode(mode);
-    const msg = { command: "changeMode", mode: mode };
-    tabInfo.forEachPort((port, id) => {
-        if (id === frameId) {
-            port.postMessage(Object.assign({ data: data }, msg));
-        }
-        else {
-            port.postMessage(msg)
-        }
-    });
 }
 
 function normalizeHintPattern(hintPattern) {
