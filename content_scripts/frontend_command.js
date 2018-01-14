@@ -903,6 +903,14 @@ class FrontendCommand {
         selection.removeAllRanges();
         selection.addRange(range);
     }
+    static setCaret(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        const node = frameInfo.getTarget();
+        selection.setBaseAndExtent(node, 0, node, 0);
+    }
     static yankInnerText(count, frameInfo) {
         if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
             frameInfo.showMessage("Yank current target innerText");

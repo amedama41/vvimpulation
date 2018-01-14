@@ -161,6 +161,7 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for element manipulation **/
     selectElement: { description: "Select the target" },
+    setCaret: { description: "Set a caret on the head of the target" },
     yankInnerText: { description: "Yank inner text of the target" },
     yankInnerHTML: { description: "Yank inner HTML of the target" },
     yankOuterHTML: { description: "Yank outer HTML of the target" },

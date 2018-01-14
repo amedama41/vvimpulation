@@ -258,6 +258,7 @@ const DEFAULT_OPTIONS = {
             "s": "invokeCommand|0|downloadLink",
             "v": "invokeCommand|0|selectElement",
             "gv": "invokeCommand|0|compose|selectElement|toVisualModeWithCurrentSelection",
+            "<C-V>": "invokeCommand|0|compose|setCaret|toCaretMode",
             "gj": "invokeCommand|0|selectNextOption",
             "gk": "invokeCommand|0|selectPreviousOption",
             "dat": "invokeCommand|0|deleteElement",
