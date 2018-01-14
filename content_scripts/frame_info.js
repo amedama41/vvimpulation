@@ -361,6 +361,12 @@ class FrameInfo {
         }
         const msg = { command: "setMessage", message };
         this._sendConsoleMessage(msg).then((result) => {
+            if (duration === 0 && this._fixedMessage !== message) {
+                // This happens when hideFixedMessage is called between
+                // returning this showMessage and before receiving this
+                // sendConsoleMessage's response.
+                return;
+            }
             if (this._consoleTimerId !== 0) {
                 clearTimeout(this._consoleTimerId);
                 this._consoleTimerId = 0;
