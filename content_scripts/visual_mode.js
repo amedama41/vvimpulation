@@ -28,7 +28,12 @@ class VisualModeBase {
         return this.mapper.get(key);
     }
     onReset(frameInfo) {
-        this.constructor.clean(this.selection);
+        try {
+            this.constructor.clean(this.selection);
+        }
+        catch (e) {
+            // Ignore. If there is no selection, some exception can be thrown.
+        }
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
