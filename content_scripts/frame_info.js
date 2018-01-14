@@ -219,7 +219,7 @@ class FrameInfo {
         this.forwardToFrame(this._frameIdInfo.getParentFrameId(), msg);
     }
     forwardToFrame(frameId, data) {
-        this._port.postMessage({ command: 'forwardCommand', frameId, data });
+        this.forwardMessage(frameId, { command: 'forwardCommand', data });
     }
 
     // Method for frontend commands.

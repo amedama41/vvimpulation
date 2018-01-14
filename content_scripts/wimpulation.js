@@ -179,8 +179,8 @@ class MessageCommand {
             .map((frame) => gFrameInfo.getChildFrameId(frame.contentWindow))
             .filter((frameId) => frameId !== undefined);
         return Promise.all(
-            frameIdList.map((frameId) => gFrameInfo.sendMessage({
-                command: "collectFrameId", frameId: frameId
+            frameIdList.map((frameId) => gFrameInfo.forwardMessage(frameId, {
+                command: "collectFrameId"
             }))
         ).then((idListList) => idListList.reduce(
             (list, idList) => list.concat(idList),

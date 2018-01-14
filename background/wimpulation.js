@@ -759,12 +759,6 @@ class Command {
     /**
      * Commands for FrameInfo
      */
-    static collectFrameId(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, msg);
-    }
-    static forwardCommand(msg, sender, tabInfo) {
-        tabInfo.sendMessage(msg.frameId, msg);
-    }
     static forwardFrameMessage(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, msg.data);
     }
