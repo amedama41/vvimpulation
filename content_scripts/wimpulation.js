@@ -190,7 +190,7 @@ class MessageCommand {
         if (activeElement && activeElement.contentWindow) {
             activeElement.blur();
         }
-        gFrameInfo.focusThisFrame();
+        return gFrameInfo.focusThisFrame();
     }
     static focusChildFrame(msg) {
         return gFrameInfo.focusChildFrame(msg.frameId);

@@ -169,7 +169,7 @@ class FrameInfo {
             return;
         }
         FrameInfo._exactlyFocus(frame);
-        this.focusThisFrame();
+        return this.focusThisFrame();
     }
     moveFocusRecursively(child, count, isForward, changeMode) {
         const activeElement = document.activeElement;

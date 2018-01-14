@@ -164,16 +164,21 @@ const gOptions = {
 };
 const gMacro = new MacroManager();
 
+function discard(promise) {
+    return promise.then(() => null);
+}
+
 function selectTab(tabInfo, getIndex) {
-    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+    const windowId = tabInfo.windowId;
+    return discard(browser.tabs.query({ windowId }).then((tabs) => {
         const currentTab = tabs.find((tab) => tab.id === tabInfo.id);
         const index = getIndex(currentTab.index, tabs.length);
         return browser.tabs.update(tabs[index].id, { active: true });
-    });
+    }));
 }
 
 function moveTab(tabId, distance, toLeft) {
-    return browser.tabs.get(tabId).then((tab) => {
+    return discard(browser.tabs.get(tabId).then((tab) => {
         return browser.tabs.query({
             pinned: tab.pinned, windowId: tab.windowId
         }).then((tabs) => {
@@ -190,10 +195,11 @@ function moveTab(tabId, distance, toLeft) {
             return browser.tabs.move(
                 tabId, { windowId: tab.windowId, index: newIdx });
         });
-    });
+    }));
 }
 function moveTabToWindow(tabInfo, distance) {
-    return browser.windows.getAll({ windowTypes: ["normal"] }).then((wins) => {
+    const windowTypes = ["normal"];
+    return discard(browser.windows.getAll({ windowTypes }).then((wins) => {
         wins = wins.filter((win) => win.incognito === tabInfo.incognito);
         const index = wins.findIndex((win) => win.id === tabInfo.windowId);
         const nextWin = Utils.nextElement(wins, index, distance);
@@ -208,9 +214,7 @@ function moveTabToWindow(tabInfo, distance) {
                 browser.windows.update(windowId, { focused: true }),
             ]);
         });
-    }).catch((e) => {
-        handleError(tabInfo, "moveTabToNextWindow", e);
-    });
+    }));
 }
 
 function findAllFrame(
@@ -269,9 +273,9 @@ function continueFind(tabInfo, frameId, isNext) {
 }
 
 function focusFrame(tabInfo, frameId, count) {
-    tabInfo.frameIdList((frameIdList) => {
+    return tabInfo.frameIdList((frameIdList) => {
         const index = frameIdList.indexOf(frameId);
-        tabInfo.sendMessage(
+        return tabInfo.sendMessage(
             Utils.nextElement(frameIdList, index, count),
             { command: "focusFrame" });
     });
@@ -285,12 +289,12 @@ class Command {
         return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
     }
     static findNext(msg, sender, tabInfo) {
-        continueFind(tabInfo, sender.frameId, true).catch((e) => {
+        return continueFind(tabInfo, sender.frameId, true).catch((e) => {
             handleError(tabInfo, "findNext", e);
         });
     }
     static findPrevious(msg, sender, tabInfo) {
-        continueFind(tabInfo, sender.frameId, false).catch((e) => {
+        return continueFind(tabInfo, sender.frameId, false).catch((e) => {
             handleError(tabInfo, "findPrevious", e);
         });
     }
@@ -299,10 +303,10 @@ class Command {
      * Commands for focus manipulation
      */
     static focusNextFrame(msg, sender, tabInfo) {
-        focusFrame(tabInfo, sender.frameId, Math.max(msg.count, 1));
+        return focusFrame(tabInfo, sender.frameId, Math.max(msg.count, 1));
     }
     static focusPreviousFrame(msg, sender, tabInfo) {
-        focusFrame(tabInfo, sender.frameId, -Math.max(msg.count, 1));
+        return focusFrame(tabInfo, sender.frameId, -Math.max(msg.count, 1));
     }
 
     /**
@@ -310,7 +314,7 @@ class Command {
      */
     static nextTab(msg, sender, tabInfo) {
         const count = msg.count;
-        selectTab(
+        return selectTab(
             tabInfo,
             (count === 0
                 ? (index, tabLen) => (index + 1) % tabLen
@@ -321,7 +325,7 @@ class Command {
     }
     static previousTab(msg, sender, tabInfo) {
         const count = Math.max(msg.count, 1);
-        selectTab(
+        return selectTab(
             tabInfo,
             (index, tabLen) => (index + tabLen - (count % tabLen)) % tabLen
         ).catch((e) => {
@@ -329,17 +333,18 @@ class Command {
         });
     }
     static firstTab(msg, sender, tabInfo) {
-        selectTab(tabInfo, (index, tabLen) => 0).catch((e) => {
+        return selectTab(tabInfo, (index, tabLen) => 0).catch((e) => {
             handleError(tabInfo, "firstTab", e);
         });
     }
     static lastTab(msg, sender, tabInfo) {
-        selectTab(tabInfo, (index, tabLen) => tabLen - 1).catch((e) => {
+        return selectTab(tabInfo, (index, tabLen) => tabLen - 1).catch((e) => {
             handleError(tabInfo, "lastTab", e);
         });
     }
     static lastActivatedTab(msg, sender, tabInfo) {
-        browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+        const windowId = tabInfo.windowId;
+        return discard(browser.tabs.query({ windowId }).then((tabs) => {
             tabs = tabs.filter((tab) => tab.id !== tabInfo.id);
             if (tabs.length === 0) {
                 return;
@@ -348,47 +353,48 @@ class Command {
                 return (lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs);
             });
             return browser.tabs.update(lastActivated.id, { active: true });
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "lastActivatedTab", e);
         });
     }
     static moveTabToLeft(msg, sender, tabInfo) {
-        moveTab(tabInfo.id, Math.max(msg.count, 1), true).catch((e) => {
+        return moveTab(tabInfo.id, Math.max(msg.count, 1), true).catch((e) => {
             handleError(tabInfo, "moveTabToLeft", e);
         });
     }
     static moveTabToRight(msg, sender, tabInfo) {
-        moveTab(tabInfo.id, Math.max(msg.count, 1), false).catch((e) => {
+        return moveTab(tabInfo.id, Math.max(msg.count, 1), false).catch((e) => {
             handleError(tabInfo, "moveTabToRight", e);
         });
     }
     static moveTabToNewWindow(msg, sender, tabInfo) {
-        browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
+        const windowId = tabInfo.windowId;
+        return discard(browser.tabs.query({ windowId }).then((tabs) => {
             if (tabs.length > 1) {
                 return browser.windows.create({ tabId: tabInfo.id });
             }
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "moveTabToNewWindow", e);
         });
     }
     static moveTabToNextWindow(msg, sender, tabInfo) {
-        moveTabToWindow(tabInfo, Math.max(msg.count, 1)).catch((e) => {
+        return moveTabToWindow(tabInfo, Math.max(msg.count, 1)).catch((e) => {
             handleError(tabInfo, "moveTabToNextWindow", e);
         });
     }
     static moveTabToPreviousWindow(msg, sender, tabInfo) {
-        moveTabToWindow(tabInfo, -Math.max(msg.count, 1)).catch((e) => {
+        return moveTabToWindow(tabInfo, -Math.max(msg.count, 1)).catch((e) => {
             handleError(tabInfo, "moveTabToPreviousWindow", e);
         });
     }
     static removeCurrentTab(msg, sender, tabInfo) {
-        browser.tabs.remove(tabInfo.id).catch((e) => {
+        return browser.tabs.remove(tabInfo.id).catch((e) => {
             handleError(tabInfo, "removeCurrentTab", e);
         });
     }
     static undoCloseTab(msg, sender, tabInfo) {
         const windowId = tabInfo.windowId;
-        browser.sessions.getRecentlyClosed().then((sessions) => {
+        return discard(browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter((s) => {
                 return s.tab !== undefined && s.tab.windowId === windowId;
             });
@@ -397,20 +403,20 @@ class Command {
             }
             const tab = tabSessions[Math.min(msg.count, tabSessions.length - 1)];
             return browser.sessions.restore(tab.tab.sessionId);
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "undoCloseTab", e);
         });
     }
     static duplicateTab(msg, sender, tabInfo) {
-        browser.tabs.duplicate(tabInfo.id).catch((e) => {
+        return discard(browser.tabs.duplicate(tabInfo.id)).catch((e) => {
             handleError(tabInfo, "duplicateTab", e);
         });
     }
     static openTab(msg, sender, tabInfo) {
-        browser.tabs.get(tabInfo.id).then((tab) => {
+        return discard(browser.tabs.get(tabInfo.id).then((tab) => {
             return browser.tabs.create(
                 { index: tab.index + 1, windowId: tab.windowId });
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "openTab", e);
         });
     }
@@ -419,7 +425,7 @@ class Command {
      * Commands for window manipulation
      */
     static removeCurrentWindow(msg, sender, tabInfo) {
-        browser.windows.remove(tabInfo.windowId).catch((e) => {
+        return browser.windows.remove(tabInfo.windowId).catch((e) => {
             handleError(tabInfo, "removeCurrentWindow", e);
         });
     }
@@ -428,12 +434,13 @@ class Command {
      * Commands for page load manipulation
      */
     static reload(msg, sender, tabInfo) {
-        browser.tabs.reload(tabInfo.id).catch((e) => {
+        return browser.tabs.reload(tabInfo.id).catch((e) => {
             handleError(tabInfo, "reload", e);
         });
     }
     static reloadSkipCache(msg, sender, tabInfo) {
-        browser.tabs.reload(tabInfo.id, { bypassCache: true }).catch((e) => {
+        const tabId = tabInfo.id;
+        return browser.tabs.reload(tabId, { bypassCache: true }).catch((e) => {
             handleError(tabInfo, "reloadSkipCache", e);
         });
     }
@@ -444,7 +451,7 @@ class Command {
     static zoomIn(msg, sender, tabInfo) {
         const tabId = tabInfo.id;
         const count = Math.max(msg.count, 1);
-        browser.tabs.getZoom(tabId).then((factor) => {
+        return browser.tabs.getZoom(tabId).then((factor) => {
             return browser.tabs.setZoom(
                 tabId, Math.min(factor + count / 10, 3));
         }).catch((e) => {
@@ -454,7 +461,7 @@ class Command {
     static zoomOut(msg, sender, tabInfo) {
         const tabId = tabInfo.id;
         const count = Math.max(msg.count, 1);
-        browser.tabs.getZoom(tabId).then((factor) => {
+        return browser.tabs.getZoom(tabId).then((factor) => {
             return browser.tabs.setZoom(
                 tabId, Math.max(factor - count / 10, 0.3));
         }).catch((e) => {
@@ -462,7 +469,7 @@ class Command {
         });
     }
     static zoomReset(msg, sender, tabInfo) {
-        browser.tabs.setZoom(tabInfo.id, 0).catch((e) => {
+        return browser.tabs.setZoom(tabInfo.id, 0).catch((e) => {
             handleError(tabInfo, "zoomReset", e);
         });
     }
@@ -471,27 +478,28 @@ class Command {
      * Commands for link manipulation
      */
     static openLink(msg, sender, tabInfo) {
-        browser.tabs.update(tabInfo.id, { url: msg.url }).catch((e) => {
+        const url = msg.url;
+        return discard(browser.tabs.update(tabInfo.id, { url })).catch((e) => {
             handleError(tabInfo, "openLink", e);
         });
     }
     static openLinkInTab(msg, sender, tabInfo) {
-        browser.tabs.get(tabInfo.id).then((tab) => {
+        return discard(browser.tabs.get(tabInfo.id).then((tab) => {
             const active = gOptions.activateNewTab;
             return browser.tabs.create({
                 url: msg.url, openerTabId: tab.id,
                 index: tab.index + 1, active: active
             });
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "openLinkInTab", e);
         });
     }
     static downloadLink(msg, sender, tabInfo) {
-        browser.tabs.get(tabInfo.id).then((tab) => {
+        return discard(browser.tabs.get(tabInfo.id).then((tab) => {
             return browser.downloads.download({
                 url: msg.url, incognito: tab.incognito, saveAs: true
             });
-        }).catch((e) => {
+        })).catch((e) => {
             handleError(tabInfo, "downloadLink", e);
         });
     }
