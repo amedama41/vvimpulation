@@ -998,9 +998,14 @@ class FrontendCommand {
         }
     }
     static compose(count, frameInfo, args) {
-        args.forEach((command) => {
-            invokeCommand(command, count, frameInfo);
-        });
+        const invoke = (index) => {
+            if (index === args.length) {
+                return;
+            }
+            const result = invokeCommand(args[index], count, frameInfo);
+            return Promise.resolve(result).then(() => invoke(index + 1));
+        };
+        return invoke(0);
     }
     static repeatLastCommand(count, frameInfo) {
         return frameInfo.sendMessage({
