@@ -48,12 +48,10 @@ class HintMode {
         }
     }
     onInvoking(cmd, frameInfo) {
-        return true;
     }
     onDropKeys(dropKeys) {
     }
-    onNonConsumed(key) {
-        return true;
+    onNonConsumed(key, frameInfo) {
     }
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {

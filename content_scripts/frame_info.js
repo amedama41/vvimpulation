@@ -82,6 +82,8 @@ class FrameIdInfo {
     }
 }
 
+const IGNORE_KEY_EVENT = {};
+
 class FrameInfo {
     constructor(frameId, port, modeName, keyMapping, hintPattern, pagePattern) {
         this._frameIdInfo = new FrameIdInfo(frameId);
@@ -123,7 +125,7 @@ class FrameInfo {
             return;
         }
 
-        if (this.handleKey(key)) {
+        if (this.handleKey(key) !== IGNORE_KEY_EVENT) {
             keyEvent.preventDefault();
             keyEvent.stopPropagation();
         }
@@ -140,9 +142,9 @@ class FrameInfo {
             return this._mode.onInvoking(cmd, this);
         }
         if (consumed) {
-            return true;
+            return;
         }
-        return this._mode.onNonConsumed(key);
+        return this._mode.onNonConsumed(key, this);
     }
     handleMessage(msg) {
         return this._mode.onMessageEvent(msg, this);
@@ -216,10 +218,10 @@ class FrameInfo {
         return this._port.sendMessage(msg);
     }
     forwardToParent(msg) {
-        this.forwardToFrame(this._frameIdInfo.getParentFrameId(), msg);
+        return this.forwardToFrame(this._frameIdInfo.getParentFrameId(), msg);
     }
-    forwardToFrame(frameId, data) {
-        this.forwardMessage(frameId, { command: 'forwardCommand', data });
+    forwardToFrame(frameId, msg) {
+        return this.forwardMessage(frameId, { command: 'forwardCommand', msg });
     }
 
     // Method for frontend commands.
@@ -291,6 +293,9 @@ class FrameInfo {
                 this.changeMode("NORMAL");
             }
         }
+    }
+    ignore() {
+        return IGNORE_KEY_EVENT;
     }
 
     // Method for mode classes.

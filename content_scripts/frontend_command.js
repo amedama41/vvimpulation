@@ -985,7 +985,7 @@ class FrontendCommand {
         frameInfo.showLastMessage(count === 0 ? 3000 : count * 1000);
     }
     static ignore(count, frameInfo) {
-        return true;
+        return frameInfo.ignore();
     }
 
     /**
@@ -1347,21 +1347,19 @@ function _toInsertMode(frameInfo, getIndex) {
 function invokeCommand(cmdName, count, frameInfo) {
     const cmdAndArgs = cmdName.split("|");
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdAndArgs[0]];
-    let isIgnore;
+    let result;
     if (cmdDesc.background) {
-        frameInfo.postMessage({ command: cmdName, count: count });
-        isIgnore = false;
+        result = frameInfo.sendMessage({ command: cmdName, count: count });
     }
     else if (cmdDesc.topFrame && !frameInfo.isTopFrame()) {
-        frameInfo.forwardToFrame(0, { command: cmdName, count: count });
-        isIgnore = false;
+        result = frameInfo.forwardToFrame(0, { command: cmdName, count: count });
     }
     else {
         const command = cmdAndArgs.shift();
-        isIgnore = FrontendCommand[command](count, frameInfo, cmdAndArgs);
+        result = FrontendCommand[command](count, frameInfo, cmdAndArgs);
     }
     frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
-    return isIgnore;
+    return result;
 }
 
 function focusNextKeywordLink(keyword, count, target) {

@@ -51,23 +51,22 @@ class VisualModeBase {
                 }
             }
             this.constructor.collapse(this.selection);
-            return true;
+            return;
         }
         else {
-            return !invokeCommand(cmd, count, frameInfo);
+            return invokeCommand(cmd, count, frameInfo);
         }
     }
     onDropKeys(dropKeys) {
         this.count = "0";
     }
-    onNonConsumed(key) {
+    onNonConsumed(key, frameInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
             this.count += key;
         }
         else {
             this.count = "0";
         }
-        return true;
     }
     static _extendToBlock(selection, count, direction) {
         const positionBit = Node.DOCUMENT_POSITION_CONTAINED_BY;

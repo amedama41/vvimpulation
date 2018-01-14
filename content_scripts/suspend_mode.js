@@ -23,12 +23,12 @@ class SuspendMode {
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmdName, frameInfo) {
-        return !invokeCommand(cmdName, 0, frameInfo);
+        return invokeCommand(cmdName, 0, frameInfo);
     }
     onDropKeys(dropKeys) {
     }
-    onNonConsumed(key) {
-        return false;
+    onNonConsumed(key, frameInfo) {
+        return frameInfo.ignore();
     }
 }
 

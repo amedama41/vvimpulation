@@ -87,19 +87,18 @@ class NormalMode {
     onInvoking(cmdName, frameInfo) {
         const count = parseInt(this.count, 10);
         this.count = "0";
-        return !invokeCommand(cmdName, count, frameInfo);
+        return invokeCommand(cmdName, count, frameInfo);
     }
     onDropKeys(dropKeys) {
         this.count = "0";
     }
-    onNonConsumed(key) {
+    onNonConsumed(key, frameInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
             this.count += key;
         }
         else {
             this.count = "0";
         }
-        return true;
     }
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
@@ -110,8 +109,7 @@ class NormalMode {
                 this.isRecordingMacro = false;
                 break;
             case "playMacro":
-                frameInfo.handleKey(msg.key);
-                break;
+                return frameInfo.handleKey(msg.key);
             default:
                 console.warn("Unknown command:", msg.command);
                 break;
@@ -168,8 +166,8 @@ class MessageCommand {
         return gFrameInfo.handleMessage(msg);
     }
     static forwardCommand(msg, sneder) {
-        const data = msg.data;
-        invokeCommand(data.command, data.count, gFrameInfo);
+        const cmdInfo = msg.msg;
+        return invokeCommand(cmdInfo.command, cmdInfo.count, gFrameInfo);
     }
     static collectFrameId(msg) {
         // Collect only displayed frame ids.

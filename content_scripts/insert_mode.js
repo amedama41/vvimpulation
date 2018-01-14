@@ -45,7 +45,7 @@ class InsertMode {
     onInvoking(cmd, frameInfo) {
         this.inInvoking = true;
         try {
-            return !invokeCommand(cmd, 0, frameInfo);
+            return invokeCommand(cmd, 0, frameInfo);
         }
         finally {
             this.inInvoking = false;
@@ -53,14 +53,14 @@ class InsertMode {
     }
     onDropKeys(dropKeys) {
     }
-    onNonConsumed(key) {
+    onNonConsumed(key, frameInfo) {
         if (key.length === 1
             || key === "<Space>" || key === "<S-Space>"
             || key === "<Backspace>" || key === "<Delete>"
             || key === "<Enter>") {
             this.target.undoStack.push(this.target.value);
         }
-        return false;
+        return frameInfo.ignore();
     }
 }
 
