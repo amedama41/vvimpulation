@@ -162,6 +162,7 @@ const gLastCommand = [undefined, 0];
 const gOptions = {
     keyMapping: undefined, hintPattern: undefined, hintKeyMapping: undefined
 };
+const gMacro = new MacroManager();
 
 function selectTab(tabInfo, getIndex) {
     return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
@@ -605,104 +606,6 @@ class Command {
         });
     }
 }
-
-class MacroManager {
-    constructor() {
-        this.registerMap = {};
-        this.recordRegister = undefined;
-        this.recordKeyList = undefined;
-        this.recordTabInfo = undefined;
-        this.playKeyList = undefined;
-        this.previousPlayRegister = undefined;
-        browser.storage.local.get({ registers: {} }).then(({ registers }) => {
-            this.registerMap = registers;
-        });
-    }
-    start(register, tabInfo) {
-        if (this.recordRegister) {
-            this.stop(true);
-        }
-        if (/[A-Z]/.test(register)) {
-            register = register.toLowerCase();
-            this.recordKeyList = this.registerMap[register] || [];
-        }
-        else {
-            this.recordKeyList = [];
-        }
-        this.recordRegister = register;
-        this.recordTabInfo = tabInfo;
-        this.recordTabInfo.forEachPort((port, id) => {
-            forwardModeCommand(port, "NORMAL", { command: "startMacro" });
-        });
-    }
-    stop(sendStopMessage) {
-        if (!this.recordRegister) {
-            return;
-        }
-        this.registerMap[this.recordRegister] = this.recordKeyList;
-        browser.storage.local.set({ registers: this.registerMap });
-        if (sendStopMessage) {
-            this.recordTabInfo.forEachPort((port, id) => {
-                forwardModeCommand(port, "NORMAL", { command: "stopMacro" });
-            });
-        }
-        this.recordRegister = undefined;
-        this.recordKeyList = undefined;
-        this.recordTabInfo = undefined;
-    }
-    record(key) {
-        if (this.recordKeyList) {
-            this.recordKeyList.push(key);
-        }
-        else {
-            console.warn("Not start macro");
-        }
-    }
-    play(register, frameId, tabInfo) {
-        if (this.playKeyList) {
-            return; // Prevent recursive macro playing.
-        }
-        if (register === "@") {
-            if (!this.previousPlayRegister) {
-                return;
-            }
-            register = this.previousPlayRegister;
-        }
-        else {
-            if (/[A-Z]/.test(register)) {
-                register = register.toLowerCase();
-            }
-            this.previousPlayRegister = register;
-        }
-        this.playKeyList = this.registerMap[register];
-        if (!this.playKeyList) {
-            return;
-        }
-        const sendKey = (index) => {
-            if (index == this.playKeyList.length) {
-                this.playKeyList = undefined;
-                return;
-            }
-            tabInfo.forwardModeCommand(frameId, "NORMAL", {
-                command: "playMacro", key: this.playKeyList[index]
-            }).then(() => {
-                sendKey(index + 1);
-            }).catch(() => {
-                this.playKeyList = undefined;
-            });
-        };
-        sendKey(0);
-    }
-    isRecord(tabId) {
-        return (this.recordTabInfo && this.recordTabInfo.id === tabId);
-    }
-    getRegisters() {
-        return Object.keys(this.registerMap)
-            .sort()
-            .map((register) => [register, this.registerMap[register]]);
-    }
-}
-const gMacro = new MacroManager();
 
 class ConsoleCommand {
     static find(msg, sender, tabInfo) {

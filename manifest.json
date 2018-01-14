@@ -30,6 +30,7 @@
             "background/default_options.js",
             "background/command.js",
             "background/hint_mode.js",
+            "background/macro.js",
             "background/wimpulation.js"
         ]
     },
