@@ -12,7 +12,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollTop", count });
+            return frameInfo.forwardToParent({ command: "scrollTop", count });
         }
         else {
             window.scrollTo(window.scrollX, 0);
@@ -26,7 +26,8 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollBottom", count });
+            return frameInfo.forwardToParent(
+                { command: "scrollBottom", count });
         }
         else {
             window.scrollTo(window.scrollX, window.scrollMaxY);
@@ -40,7 +41,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollUp", count });
+            return frameInfo.forwardToParent({ command: "scrollUp", count });
         }
         else {
             window.scrollByLines(Math.max(count, 4) * -1);
@@ -54,7 +55,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollDown", count });
+            return frameInfo.forwardToParent({ command: "scrollDown", count });
         }
         else {
             window.scrollByLines(Math.max(count, 4) * 1);
@@ -74,7 +75,8 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "moveHalfPageUp", count });
+            return frameInfo.forwardToParent(
+                { command: "moveHalfPageUp", count });
         }
         else {
             window.scrollBy(0, Math.max(count, 1) * -window.innerHeight / 2);
@@ -88,7 +90,8 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "moveHalfPageDown", count });
+            return frameInfo.forwardToParent(
+                { command: "moveHalfPageDown", count });
         }
         else {
             window.scrollBy(0, Math.max(count, 1) * window.innerHeight / 2);
@@ -102,7 +105,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "movePageUp", count });
+            return frameInfo.forwardToParent({ command: "movePageUp", count });
         }
         else {
             window.scrollByPages(Math.max(count, 1) * -1);
@@ -116,7 +119,8 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "movePageDown", count });
+            return frameInfo.forwardToParent(
+                { command: "movePageDown", count });
         }
         else {
             window.scrollByPages(Math.max(count, 1) * 1);
@@ -130,7 +134,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent(
+            return frameInfo.forwardToParent(
                 { command: "scrollVerticalMiddle", count });
         }
         else {
@@ -145,7 +149,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollLeft", count });
+            return frameInfo.forwardToParent({ command: "scrollLeft", count });
         }
         else {
             window.scrollBy(-20, 0);
@@ -159,7 +163,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollRight", count });
+            return frameInfo.forwardToParent({ command: "scrollRight", count });
         }
         else {
             window.scrollBy(20, 0);
@@ -173,7 +177,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollHome", count });
+            return frameInfo.forwardToParent({ command: "scrollHome", count });
         }
         else {
             window.scrollTo(0, window.scrollY);
@@ -187,7 +191,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "scrollEnd", count });
+            return frameInfo.forwardToParent({ command: "scrollEnd", count });
         }
         else {
             window.scrollTo(window.scrollMaxX, window.scrollY);
@@ -201,7 +205,7 @@ class FrontendCommand {
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent(
+            return frameInfo.forwardToParent(
                 { command: "scrollHorizontalMiddle", count });
         }
         else {
@@ -224,7 +228,8 @@ class FrontendCommand {
         // (bottom + top) / 2 - height / 2
         window.scrollBy(0, (rect.bottom + rect.top - window.innerHeight) / 2);
         if (!frameInfo.isTopFrame()) {
-            frameInfo.forwardToParent({ command: "moveTargetAtCenter", count });
+            return frameInfo.forwardToParent(
+                { command: "moveTargetAtCenter", count });
         }
     }
     static moveTargetAtBottom(count, frameInfo) {
@@ -246,10 +251,10 @@ class FrontendCommand {
         DomUtils.fixedFocus(document.documentElement);
     }
     static focusin(count, frameInfo, args) {
-        _focusin(frameInfo, args, (elem) => elem.focus());
+        return _focusin(frameInfo, args, (elem) => elem.focus());
     }
     static fixedFocusin(count, frameInfo, args) {
-        _focusin(frameInfo, args, DomUtils.fixedFocus);
+        return _focusin(frameInfo, args, DomUtils.fixedFocus);
     }
     static focusout(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -262,16 +267,16 @@ class FrontendCommand {
         }
     }
     static focusNext(count, frameInfo) {
-        _moveFocus(frameInfo, count, true, false);
+        return _moveFocus(frameInfo, count, true, false);
     }
     static focusPrevious(count, frameInfo) {
-        _moveFocus(frameInfo, count, false, false);
+        return _moveFocus(frameInfo, count, false, false);
     }
     static focusNextAndChangeMode(count, frameInfo) {
-        _moveFocus(frameInfo, count, true, true);
+        return _moveFocus(frameInfo, count, true, true);
     }
     static focusPreviousAndChangeMode(count, frameInfo) {
-        _moveFocus(frameInfo, count, false, true);
+        return _moveFocus(frameInfo, count, false, true);
     }
     static resetFocus(count, frameInfo) {
         // Suppress scroll when an html element has height 100%.
@@ -286,7 +291,7 @@ class FrontendCommand {
         if (!selection || selection.isCollapsed) {
             return;
         }
-        frameInfo.postMessage({
+        return frameInfo.sendMessage({
             command: "find", keyword: selection.toString(), backward: false,
             frameId: frameInfo.getSelfFrameId()
         });
@@ -296,7 +301,7 @@ class FrontendCommand {
         if (!selection || selection.isCollapsed) {
             return;
         }
-        frameInfo.postMessage({
+        return frameInfo.sendMessage({
             command: "find", keyword: selection.toString(), backward: true,
             frameId: frameInfo.getSelfFrameId()
         });
@@ -549,7 +554,7 @@ class FrontendCommand {
         const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
-            frameInfo.postMessage({ command: 'openLink', url: url });
+            return frameInfo.sendMessage({ command: 'openLink', url: url });
         }
     }
     static openLinkInTab(count, frameInfo) {
@@ -557,7 +562,7 @@ class FrontendCommand {
         const url = getLink(elem);
         if (url) {
             const active = (count === 0);
-            frameInfo.postMessage(
+            return frameInfo.sendMessage(
                 { command: 'openLinkInTab', url: url, active: active });
         }
     }
@@ -565,7 +570,7 @@ class FrontendCommand {
         const elem = frameInfo.getTarget();
         const url = getSource(elem);
         if (url) {
-            frameInfo.postMessage({ command: 'openLink', url: url });
+            return frameInfo.sendMessage({ command: 'openLink', url: url });
         }
     }
     static openSourceInTab(count, frameInfo) {
@@ -573,7 +578,7 @@ class FrontendCommand {
         const url = getSource(elem);
         if (url) {
             const active = (count === 0);
-            frameInfo.postMessage(
+            return frameInfo.sendMessage(
                 { command: 'openLinkInTab', url: url, active: active });
         }
     }
@@ -590,7 +595,7 @@ class FrontendCommand {
         const elem = frameInfo.getTarget();
         const url = getSource(elem);
         if (url) {
-            frameInfo.postMessage({ command: 'downloadLink', url: url });
+            return frameInfo.sendMessage({ command: 'downloadLink', url: url });
         }
     }
     static pressEnter(count, frameInfo) {
@@ -972,14 +977,15 @@ class FrontendCommand {
         });
     }
     static repeatLastCommand(count, frameInfo) {
-        frameInfo.sendMessage({ command: "getLastCommand" })
-            .then(([cmdName, lastCount]) => {
-                if (cmdName === undefined) {
-                    return;
-                }
-                invokeCommand(
-                    cmdName, count !== 0 ? count : lastCount, frameInfo);
-            });
+        return frameInfo.sendMessage({
+            command: "getLastCommand"
+        }).then(([cmdName, lastCount]) => {
+            if (cmdName === undefined) {
+                return;
+            }
+            return invokeCommand(
+                cmdName, count !== 0 ? count : lastCount, frameInfo);
+        });
     }
     static showLastMessage(count, frameInfo) {
         frameInfo.showLastMessage(count === 0 ? 3000 : count * 1000);
@@ -1032,10 +1038,10 @@ class FrontendCommand {
         }
     }
     static toHintMode(count, frameInfo) {
-        // TODO: slot 3, 4
+        // TODO: slot 4
         const TYPE_LIST = ["link", "focus", "media", "code", "link"];
         const type = TYPE_LIST[count % TYPE_LIST.length];
-        frameInfo.postMessage({ command: "toHintMode", type });
+        return frameInfo.sendMessage({ command: "toHintMode", type });
     }
     static toHintFocusMode(count, frameInfo) {
         FrontendCommand.toHintMode(1, frameInfo);
@@ -1064,20 +1070,20 @@ class FrontendCommand {
     }
     static toConsoleMode(count, frameInfo, args) {
         args.push("");
-        frameInfo.changeToConsoleMode(
+        return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "exec", args.join(" "), false);
     }
     static toConsoleModeWithURL(count, frameInfo, args) {
         args.push("");
-        frameInfo.changeToConsoleMode(
+        return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "exec", args.join(" "), true);
     }
     static toSearchMode(count, frameInfo, isBackward=false) {
-        frameInfo.changeToConsoleMode(
+        return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "forwardSearch", '');
     }
     static toBackwardSearchMode(count, frameInfo) {
-        frameInfo.changeToConsoleMode(
+        return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "backwardSearch", '');
     }
 }
@@ -1186,8 +1192,7 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
                 || url.search !== loc.search)
                 && nonPrivilegedURL(url)) {
                 openLinkMsg.url = link;
-                frameInfo.postMessage(openLinkMsg);
-                return;
+                return frameInfo.sendMessage(openLinkMsg);
             }
         }
         catch (e) {
@@ -1316,7 +1321,7 @@ function _moveFocus(frameInfo, count, isForward, changeMode) {
             node = selection.focusNode;
         }
     }
-    frameInfo.moveFocus(node, Math.max(count, 1), isForward, changeMode);
+    return frameInfo.moveFocus(node, Math.max(count, 1), isForward, changeMode);
 }
 
 function _focusin(frameInfo, args, focusElement) {
@@ -1327,7 +1332,7 @@ function _focusin(frameInfo, args, focusElement) {
             activeElement.blur();
         }
         focusElement(elem);
-        frameInfo.focusThisFrame();
+        return frameInfo.focusThisFrame();
     }
     catch (e) {
         console.warn(
