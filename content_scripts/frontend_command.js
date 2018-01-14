@@ -843,6 +843,24 @@ class FrontendCommand {
         }
         selection.removeAllRanges();
     }
+    static collapseSelectionToStart(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return;
+        }
+        const node = selection.anchorNode;
+        const offset = selection.anchorOffset;
+        selection.setBaseAndExtent(node, offset, node, offset);
+    }
+    static collapseSelectionToEnd(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return;
+        }
+        const node = selection.focusNode;
+        const offset = selection.focusOffset;
+        selection.setBaseAndExtent(node, offset, node, offset);
+    }
     static yankSelection(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection) {

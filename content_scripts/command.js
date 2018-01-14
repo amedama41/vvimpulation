@@ -153,6 +153,8 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for selection manipulation **/
     clearSelection: { description: "Clear selection" },
+    collapseSelectionToStart: { description: "Collapse selection to start point" },
+    collapseSelectionToEnd: { description: "Collapse selection to end point" },
     yankSelection: { description: "Yank selection contents" },
     deleteSelection: { description: "Delete selection contents" },
     reverseSelectionEndpoints: { description: "Reverse a selection cursor" },
