@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * Classes derived from this class must implements getAlter, prepare, and
- * collapse static methods.
+ * Classes derived from this class must implements getAlter, clean, and set
+ * static methods.
  */
 class VisualModeBase {
     constructor(frameInfo, keyMap, data) {
@@ -13,7 +13,7 @@ class VisualModeBase {
         this.selection = selection;
         this.count = "0";
         this.mapper = Utils.makeCommandMapper(keyMap);
-        this.constructor.collapse(this.selection);
+        this.constructor.set(this.selection);
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     getTarget() {
@@ -28,6 +28,7 @@ class VisualModeBase {
         return this.mapper.get(key);
     }
     onReset(frameInfo) {
+        this.constructor.clean(this.selection);
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
@@ -35,7 +36,7 @@ class VisualModeBase {
         this.count = "0";
         if (cmd.startsWith("extendSelection|")) {
             const [prefix, direction, granularity] = cmd.split("|");
-            this.constructor.prepare(this.selection);
+            this.constructor.clean(this.selection);
             if (granularity === "block") {
                 VisualModeBase._extendToBlock(this.selection, count, direction);
             }
@@ -50,7 +51,7 @@ class VisualModeBase {
                     console.warn(Utils.errorString(e));
                 }
             }
-            this.constructor.collapse(this.selection);
+            this.constructor.set(this.selection);
             return;
         }
         else {
@@ -210,8 +211,8 @@ class VisualMode extends VisualModeBase {
     static getAlter() {
         return "extend";
     }
-    static prepare(selection) {}
-    static collapse(selection) {}
+    static clean(selection) {}
+    static set(selection) {}
 }
 
 class CaretMode extends VisualModeBase {
@@ -221,10 +222,10 @@ class CaretMode extends VisualModeBase {
     static getAlter() {
         return "move";
     }
-    static prepare(selection) {
+    static clean(selection) {
         selection.collapseToStart();
     }
-    static collapse(selection) {
+    static set(selection) {
         const node = selection.focusNode;
         const offset = selection.focusOffset;
         selection.setBaseAndExtent(node, offset, node, offset);
