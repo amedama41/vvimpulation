@@ -257,6 +257,9 @@ class MessageCommand {
         HoverKiller.insertFocusRule();
         HoverKiller.setTabIndex();
     }
+    static hasFocus() {
+        return document.hasFocus();
+    }
     static showMessage(msg) {
         gFrameInfo.showMessage(msg.message, msg.duration, msg.saveMessage);
     }

@@ -62,6 +62,19 @@ class TabInfo {
                 });
         }
     }
+    focusedFrameId() {
+        return this.frameIdList((idList) => {
+            return Promise.all(idList.map((id) => this.sendMessage(id, {
+                command: "hasFocus"
+            }))).then((hasFocusList) => {
+                const index = hasFocusList.lastIndexOf(true);
+                if (index === -1) {
+                    return Promise.reject("No focused frame");
+                }
+                return idList[index];
+            });
+        });
+    }
     get lastSearchInfo() {
         return this._lastSearchInfo;
     }

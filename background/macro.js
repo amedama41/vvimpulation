@@ -72,20 +72,20 @@ class MacroManager {
         if (!this.playKeyList) {
             return;
         }
-        const sendKey = (index) => {
+        const sendKey = (index, frameId) => {
             if (index == this.playKeyList.length) {
                 this.playKeyList = undefined;
                 return;
             }
             tabInfo.forwardModeCommand(frameId, "NORMAL", {
                 command: "playMacro", key: this.playKeyList[index]
-            }).then(() => {
-                sendKey(index + 1);
+            }).then(() => tabInfo.focusedFrameId()).then((frameId) => {
+                sendKey(index + 1, frameId)
             }).catch(() => {
                 this.playKeyList = undefined;
             });
         };
-        sendKey(0);
+        sendKey(0, frameId);
     }
     isRecord(tabId) {
         return (this.recordTabInfo && this.recordTabInfo.id === tabId);
