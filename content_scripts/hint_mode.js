@@ -345,6 +345,15 @@ function getIdealRect(rectList) {
     }
     return rectList[0];
 }
+function makePattern(globalPattern, localPattern) {
+    const framePattern = "frame, iframe, object[type='text/html'], ";
+    if (localPattern) {
+        return framePattern + globalPattern + ", " + localPattern;
+    }
+    else {
+        return framePattern + globalPattern;
+    }
+}
 
 function makeHints(pattern, type, winArea, frameInfo) {
     const win = window;
@@ -357,7 +366,7 @@ function makeHints(pattern, type, winArea, frameInfo) {
 
     const scrX = win.scrollX, scrY = win.scrollY;
     const elems = win.document.querySelectorAll(
-        "frame, iframe, object[type='text/html'], " + pattern);
+        makePattern(pattern, frameInfo.getLocalHintPattern(type)));
     const isFocusType = (type === 'focus');
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
@@ -409,10 +418,8 @@ function makeHints(pattern, type, winArea, frameInfo) {
                 bottom: Math.min(winArea.bottom - rect.top, rect.height),
                 right: Math.min(winArea.right - rect.left, rect.width)
             };
-            idOrPromiseList.push(frameInfo.sendMessage({
-                command: "collectHint",
-                type: type, area: frameArea, frameId: frameId,
-                url: elem.src || elem.data || ""
+            idOrPromiseList.push(frameInfo.forwardMessage(frameId, {
+                command: "collectHint", type, pattern, area: frameArea
             }));
         }
     }

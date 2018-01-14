@@ -83,11 +83,12 @@ class FrameIdInfo {
 }
 
 class FrameInfo {
-    constructor(selfFrameId, port, modeName, keyMapping, pagePattern) {
-        this._frameIdInfo = new FrameIdInfo(selfFrameId);
+    constructor(frameId, port, modeName, keyMapping, hintPattern, pagePattern) {
+        this._frameIdInfo = new FrameIdInfo(frameId);
         this._port = port;
         this._modeEventListenerList = [];
         this._keyMap = FrameInfo._convertKeyMap(keyMapping);
+        this._hintPattern = hintPattern;
         this._pagePattern = pagePattern;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
@@ -149,8 +150,9 @@ class FrameInfo {
     currentMode() {
         return this._mode.constructor.getModeName();
     }
-    setOptions(keyMapping, pagePattern) {
+    setOptions(keyMapping, hintPattern, pagePattern) {
         this._keyMap = FrameInfo._convertKeyMap(keyMapping);
+        this._hintPattern = hintPattern;
         this._pagePattern = pagePattern;
         this.changeModeNow("NORMAL");
     }
@@ -242,6 +244,12 @@ class FrameInfo {
     }
     getTarget() {
         return this._mode.getTarget();
+    }
+    getLocalHintPattern(type) {
+        if (!this._hintPattern) {
+            return null;
+        }
+        return this._hintPattern[type];
     }
     getNextPattern() {
         return new RegExp(this._pagePattern.next, "i");

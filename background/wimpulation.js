@@ -138,12 +138,6 @@ function forwardModeCommand(port, mode, data) {
     return port.sendMessage({ command: "forwardModeCommand", mode, data });
 }
 
-function postAllFrame(msg) {
-    for (const [tabId, tabInfo] of gTabInfoMap) {
-        tabInfo.forEachPort((port, frameId) => port.postMessage(msg));
-    }
-}
-
 const gTabInfoMap = new Map();
 const gLastCommand = [undefined, 0];
 const gOptions = {
@@ -227,7 +221,7 @@ class HintMode {
         tabInfo.sendMessage(0, {
             command: "collectHint",
             type: type,
-            pattern: HintMode._makePattern(type, tabInfo.tab.url),
+            pattern: gOptions.hintPattern["global"][type]
         }).then((hintsInfoList) => {
             const targetId =
                 this.idList[this.filterIndexMap[this.currentIndex]];
@@ -324,21 +318,6 @@ class HintMode {
             index: nextIndex, autoFocus: this.autoFocus
         });
         this.currentIndex = nextDisplayedIndex;
-    }
-    static _makePattern(type, url) {
-        const hintPattern = gOptions.hintPattern;
-        const globalPattern = hintPattern["global"][type];
-        if (url === "") {
-            return globalPattern;
-        }
-        url = new URL(url);
-        const localPatternMap = hintPattern["local"][url.host];
-        if (localPatternMap && localPatternMap[type]) {
-            return globalPattern + ", " + localPatternMap[type];
-        }
-        else {
-            return globalPattern;
-        }
     }
     static _createFilterMaps(filterResult, idList) {
         const filterIndexMap = [];
@@ -721,7 +700,7 @@ class Command {
         tabInfo.sendMessage(0, {
             command: "collectHint",
             type: type,
-            pattern: HintMode._makePattern(type, sender.tab.url),
+            pattern: gOptions.hintPattern["global"][type]
         }).then((hintsInfoList) => {
             changeHintMode(
                 tabInfo, hintsInfoList,
@@ -780,14 +759,6 @@ class Command {
     /**
      * Commands for FrameInfo
      */
-    static collectHint(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(msg.frameId, {
-            command: "collectHint",
-            type: msg.type,
-            pattern: HintMode._makePattern(msg.type, msg.url),
-            area: msg.area,
-        });
-    }
     static collectFrameId(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, msg);
     }
@@ -1004,6 +975,14 @@ function normalizeHintPattern(hintPattern) {
     return hintPattern;
 }
 
+function getLocalHintPattern(url, hintPattern) {
+    if (!url) {
+        return null;
+    }
+    url = new URL(url);
+    return hintPattern["local"][url.host] || null;
+}
+
 browser.tabs.onActivated.addListener((activeInfo) => {
     const tabInfo = gTabInfoMap.get(activeInfo.tabId);
     if (!tabInfo) {
@@ -1097,16 +1076,19 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         }
         const oldConsoleDesign = gOptions.consoleDesign;
         setOptions(changes["options"].newValue);
-        postAllFrame({
-            command: "updateKeyMapping",
-            keyMapping: gOptions.keyMapping,
-            pagePattern: gOptions.pagePattern
-        });
         const newConsoleDesign = gOptions.consoleDesign;
         const setKeyMappingMsg = {
             command: "setKeyMapping", keyMapping: gOptions.consoleKeyMapping
         };
         gTabInfoMap.forEach((tabInfo, tabId) => {
+            tabInfo.forEachPort((port, frameId) => port.postMessage({
+                command: "updateOptions",
+                keyMapping: gOptions.keyMapping,
+                hintPattern: getLocalHintPattern(
+                    port.sender.url, gOptions.hintPattern),
+                pagePattern: gOptions.pagePattern
+            }));
+
             const frameId = tabInfo.consoleFrameId;
             if (frameId === undefined) {
                 return;
@@ -1154,6 +1136,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             command: "initFrame",
             frameId: frameId,
             keyMapping: gOptions.keyMapping,
+            hintPattern: getLocalHintPattern(sender.url, gOptions.hintPattern),
             pagePattern: gOptions.pagePattern,
             autoKillHover: gOptions.autoKillHover,
             mode: tabInfo.getMode(),

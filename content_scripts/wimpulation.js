@@ -338,7 +338,8 @@ function connectToBackGround(reconnectTimeout) {
     const handleNotification = (msg) => {
         if (msg.command === "initFrame") {
             gFrameInfo = new FrameInfo(
-                msg.frameId, port, msg.mode, msg.keyMapping, msg.pagePattern);
+                msg.frameId, port, msg.mode,
+                msg.keyMapping, msg.hintPattern, msg.pagePattern);
             addEventListenersJustOnce();
             if (msg.autoKillHover) {
                 doKillHover();
@@ -347,8 +348,9 @@ function connectToBackGround(reconnectTimeout) {
         else if (msg.command === "changeMode") {
             gFrameInfo.changeModeNow(msg.mode, msg.data);
         }
-        else if (msg.command === "updateKeyMapping") {
-            gFrameInfo.setOptions(msg.keyMapping, msg.pagePattern);
+        else if (msg.command === "updateOptions") {
+            gFrameInfo.setOptions(
+                msg.keyMapping, msg.hintPattern, msg.pagePattern);
         }
         else if (msg.command === "completeChildRegistration") {
             gFrameInfo.completeChildRegistration(msg);
