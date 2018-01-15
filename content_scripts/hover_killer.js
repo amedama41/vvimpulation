@@ -265,7 +265,7 @@ class Parser {
         if (info.hasNamespace) {
             result.hasNamespace = true;
         }
-        if (info.hasHover && info.type !== "a") {
+        if (info.hasHover && info.type.toLowerCase() !== "a" && !info.isLink) {
             result.hasHover = true;
             Parser._pushSelectorInfo(input, parseInfo, result, true);
             parseInfo.startIndex = input.matchedLen;
@@ -309,7 +309,8 @@ class Parser {
 
     compoundSelector(input) {
         const info = {
-            type: "*", hasNamespace: false, hasHover: false, pseudoInfoList: [],
+            type: "*", hasNamespace: false, hasHover: false, isLink: false,
+            pseudoInfoList: [],
         };
         const result = Parser._exec(this.typeSelector, input);
         if (result) {
@@ -350,6 +351,9 @@ class Parser {
         if (pseudoName === ":hover") {
             info.hasHover = true;
             info.pseudoInfoList.push([pseudoStartIndex, Parser._removeHover]);
+        }
+        else if (pseudoName === ":link" || pseudoName === ":visited") {
+            info.isLink = true;
         }
         else if (this.pseudoElement.test(pseudoName)) {
             const length = pseudoName.length;
