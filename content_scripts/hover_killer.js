@@ -70,7 +70,7 @@ const applyAllHoverRules = (sheet, func) => {
         switch (rule.type) {
             case CSSRule.STYLE_RULE:
                 const selector = rule.selectorText;
-                if (!selector.includes(":hover")) {
+                if (!/:hover/i.test(selector)) {
                     continue;
                 }
                 const style = rule.style;
@@ -106,7 +106,7 @@ const collectHoverSelectors = (sheet, hoverSelectorList) => {
 const insertFocusRule = (sheet) => {
     applyAllHoverRules(sheet, (i, rule, sheet) => {
         const orgSelector = rule.selectorText;
-        const newSelector = orgSelector.replace(/:hover\b/g, ":focus-within");
+        const newSelector = orgSelector.replace(/:hover\b/ig, ":focus-within");
         if (i !== 0) { // Avoid double insertion
             const prevRule = sheet.cssRules[i - 1];
             if (prevRule.selectorText === newSelector &&
@@ -189,7 +189,9 @@ class Parser {
         if (!this._getComplexSelectorInfo(input, infoList)) {
             throw new Error("invalid selector-list: " + input);
         }
-        if (!selectorListStr.includes(":hover", input.matchedLen)) {
+        const hasHover = /:hover/ig;
+        hasHover.lastIndex = input.matchedLen;
+        if (!hasHover.test(selectorListStr)) {
             return infoList;
         }
         const length = selectorListStr.length;
@@ -201,7 +203,8 @@ class Parser {
             if (!this._getComplexSelectorInfo(input, infoList)) {
                 throw new Error("invalid selector-list: " + input);
             }
-            if (!selectorListStr.includes(":hover", input.matchedLen)) {
+            hasHover.lastIndex = input.matchedLen;
+            if (!hasHover.test(selectorListStr)) {
                 return infoList;
             }
         }
@@ -369,12 +372,13 @@ class Parser {
             return null;
         }
         const [matched, pseudoName, isFunc] = result;
+        const lcPseudoName = pseudoName.toLowerCase();
 
         if (!isFunc) {
-            return [pseudoName, false];
+            return [lcPseudoName, false];
         }
 
-        const argsResult = this._pseudoFuncArgs(input, pseudoName);
+        const argsResult = this._pseudoFuncArgs(input, lcPseudoName);
         if (!argsResult) {
             throw new Error(`invalid pseudo function: ${input}`);
         }
@@ -382,7 +386,7 @@ class Parser {
             throw new Error(`Missing end parenthesis ${input}`);
         }
         const [hasNamespace] = argsResult;
-        return [pseudoName, hasNamespace];
+        return [lcPseudoName, hasNamespace];
     }
     _pseudoFuncArgs(input, pseudoName) {
         switch (pseudoName) {
