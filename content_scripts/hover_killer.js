@@ -51,11 +51,11 @@ const setTabIndex = (element, index, selectorInfo) => {
         if (!child) {
             return [hasChildren, hasFocusable];
         }
-        if (focus || DomUtils.hasFocusableChild(elem)) {
+        if (focus ||
+            DomUtils.isFocusable(elem) || DomUtils.hasFocusableChild(elem)) {
             return [true, true];
         }
-        if (info.isTarget &&
-            (elem.tabIndex === -1 || DomUtils.isNonFocusableAnchor(elem))) {
+        if (info.isTarget) {
             elem.tabIndex = Math.max(elem.tabIndex, 0);
             return [true, true];
         }

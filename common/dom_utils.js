@@ -234,11 +234,7 @@ return (class Edit {
             console.warn("elem is likely dead:", Utils.errorString(e));
         }
     }
-    static isFocusable(elem) {
-        const style = window.getComputedStyle(elem, null);
-        if (style.visibility === "hidden") {
-            return false;
-        }
+    static isFocusable(elem, style=window.getComputedStyle(elem, null)) {
         if (elem.disabled) {
             return false;
         }
@@ -279,7 +275,11 @@ return (class Edit {
         if (!Edit.isDisplay(node)) {
             return NodeFilter.FILTER_REJECT;
         }
-        if (Edit.isFocusable(node)) {
+        const style = window.getComputedStyle(node, null);
+        if (style.visibility === "hidden") {
+            return NodeFilter.FILTER_SKIP;
+        }
+        if (Edit.isFocusable(node, style)) {
             return NodeFilter.FILTER_ACCEPT;
         }
         else {
