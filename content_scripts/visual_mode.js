@@ -167,8 +167,8 @@ class VisualModeBase {
         const positionBit =
             Node.DOCUMENT_POSITION_CONTAINED_BY |
             Node.DOCUMENT_POSITION_CONTAINS;
-        const walker = document.createTreeWalker(
-            document.documentElement, NodeFilter.SHOW_ELEMENT, (elem) => {
+        const filter = {
+            acceptNode: (elem) => {
                 if (elem.getClientRects().length === 0) {
                     return NodeFilter.FILTER_REJECT;
                 }
@@ -187,7 +187,10 @@ class VisualModeBase {
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
-            });
+            }
+        };
+        const walker = document.createTreeWalker(
+            document.documentElement, NodeFilter.SHOW_ELEMENT, filter);
         walker.currentNode = currentBlock;
         return class {
             static nextNode() {
