@@ -8,7 +8,12 @@ class VisualModeBase {
     constructor(frameInfo, keyMap, data) {
         const selection = window.getSelection();
         if (selection.rangeCount === 0) {
-            throw new Error("No selection");
+            const point = document.caretPositionFromPoint(0, 0);
+            if (!point) {
+                throw new Error("No selection");
+            }
+            selection.setBaseAndExtent(
+                point.offsetNode, point.offset, point.offsetNode, point.offset);
         }
         this.selection = selection;
         this.count = "0";
