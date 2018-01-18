@@ -191,6 +191,7 @@ const DEFAULT_OPTIONS = {
             "G": "extendSelection|forward|documentboundary",
             "B": "extendSelection|backward|block",
             "W": "extendSelection|forward|block",
+            "_": "collapseSelectionToStart",
             "y": "compose|yankSelection|toNormalMode",
             "*": "compose|findSelectionForward|toNormalMode",
             "#": "compose|findSelectionBackward|toNormalMode",
