@@ -468,22 +468,17 @@ class FrameInfo {
                 this._consoleFrame = consoleFrame;
             };
             container.appendChild(consoleFrame);
-            document.documentElement.appendChild(container);
+            const root = document.documentElement;
+            if (root) {
+                root.appendChild(container);
+            }
             setTimeout(() => {
                 if (!this._consoleFrame) { // Retry when loading is canceled.
                     create(Math.floor(timeout * 1.5));
                 }
             }, timeout);
         };
-
-        if (document.readyState === "loading") {
-            window.addEventListener(
-                "DOMContentLoaded",
-                () => create(1000), { capture: true, once: true });
-        }
-        else {
-            create(1000);
-        }
+        create(1000);
     }
     _sendConsoleMessage(msg) {
         return this._port.sendMessage(
