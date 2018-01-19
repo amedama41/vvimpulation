@@ -68,7 +68,6 @@
     },
 
     "web_accessible_resources": [
-        "console/console.html",
-        "pages/error.html"
+        "console/console.html"
     ]
 }
