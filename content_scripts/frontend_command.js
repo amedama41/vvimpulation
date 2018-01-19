@@ -1010,7 +1010,7 @@ class FrontendCommand {
             if (index === args.length) {
                 return;
             }
-            const result = invokeCommand(args[index], count, frameInfo);
+            const result = invokeCommand(args[index], count, frameInfo, false);
             return Promise.resolve(result).then(() => invoke(index + 1));
         };
         return invoke(0);
@@ -1378,7 +1378,7 @@ function _toInsertMode(frameInfo, getIndex) {
     frameInfo.changeMode("INSERT", { editableElement: target });
 }
 
-function invokeCommand(cmdName, count, frameInfo) {
+function invokeCommand(cmdName, count, frameInfo, doesRecord=true) {
     const cmdAndArgs = cmdName.split("|");
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdAndArgs[0]];
     let result;
@@ -1392,7 +1392,9 @@ function invokeCommand(cmdName, count, frameInfo) {
         const command = cmdAndArgs.shift();
         result = FrontendCommand[command](count, frameInfo, cmdAndArgs);
     }
-    frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
+    if (doesRecord) {
+        frameInfo.postMessage({ command: "setLastCommand", cmdName, count });
+    }
     return result;
 }
 
