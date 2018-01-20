@@ -682,4 +682,10 @@ gExCommandMap.makeCommand(
             gMacro.getRegisters().map(
                 ([register, keyList]) => [register, keyList.join("")]));
     });
+gExCommandMap.makeCommand(
+    "nohlsearch", "Remove search highlighting", (args, tabInfo) => {
+        browser.find.removeHighlighting();
+        tabInfo.searchHighlighting = true;
+        return Promise.resolve(true);
+    });
 
