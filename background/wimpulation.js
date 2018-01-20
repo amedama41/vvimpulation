@@ -491,8 +491,9 @@ class Command {
      * Commands for link manipulation
      */
     static openLink(msg, sender, tabInfo) {
-        const url = msg.url;
-        return discard(browser.tabs.update(tabInfo.id, { url })).catch((e) => {
+        return discard(browser.tabs.update(tabInfo.id, {
+            url: msg.url, loadReplace: msg.replace
+        })).catch((e) => {
             handleError(tabInfo, "openLink", e);
         });
     }

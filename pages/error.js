@@ -7,6 +7,9 @@ window.addEventListener("DOMContentLoaded", (e) => {
     const div = document.getElementById("errorCode");
     div.innerText = decodeURI(params.get("errorCode"));
     const button = document.getElementById("tryAgainButton");
-    button.onclick = () => location.replace(errorURL);
+    // Use WebExtensions API because location.replace save this page in history.
+    button.onclick = () => gFrameInfo.sendMessage({
+        command: "openLink", url: errorURL, replace: true
+    });
 });
 
