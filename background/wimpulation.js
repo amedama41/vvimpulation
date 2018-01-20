@@ -15,7 +15,8 @@ class TabInfo {
         this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
-        this._lastSearchInfo = ["", false, false, 0];
+        // [keyword, caseSensitive, backward]
+        this._lastSearchInfo = ["", false, false];
     }
     reset() {
         this.mode = "NORMAL";
