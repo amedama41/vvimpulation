@@ -137,7 +137,6 @@ const makeAccessibleSheetList = () => {
                 originalLink.parentNode.removeChild(originalLink);
             }, { once: true });
             link.addEventListener("error", (e) => {
-                console.warn("can't load ", e.target.href, location.href);
                 link.parentNode.removeChild(link);
                 resolve(null);
             }, { once: true });
@@ -197,7 +196,7 @@ class Parser {
         const length = selectorListStr.length;
         while (input.matchedLen !== length) {
             if (!Parser._test(this.comma, input)) {
-                console.warn("no comma:", input);
+                console.warn("No comma:", input);
                 break;
             }
             if (!this._getComplexSelectorInfo(input, infoList)) {

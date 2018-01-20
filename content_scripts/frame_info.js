@@ -434,12 +434,12 @@ class FrameInfo {
                 case "SUSPEND":
                     return new SuspendMode(this, this._keyMap["suspend"]);
                 default:
-                    console.assert(false, "never reach here");
+                    console.assert(false, "Never reach here");
                     return new NormalMode(this, this._keyMap["normal"]);
             }
         }
         catch (e) {
-            console.warn("change mode error:", Utils.errorString(e));
+            console.warn("Change mode error:", Utils.errorString(e));
             return new NormalMode(this, this._keyMap["normal"]);
         }
     }

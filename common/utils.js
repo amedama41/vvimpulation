@@ -150,7 +150,7 @@ return class {
             const keyList = getKeyList(
                 keySeq, specialKeyPattern1, specialKeyPattern2);
             if (keyList === undefined) {
-                console.warn("invalid mapping keySeq:", keySeq);
+                console.warn("Invalid mapping keySeq:", keySeq);
                 continue;
             }
 

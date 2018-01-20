@@ -104,7 +104,10 @@ class TabInfo {
         if (p !== port) {
             // This case occurs when port is overwrite by new frame's port.
             if (p) {
-                console.warn(`missmatch ${this.id}-${frameId} port`);
+                console.debug(
+                    `Missmatch ${this.id}-${frameId} port.`,
+                    `Expected port url is ${port.sender.url}`,
+                    `but actual port url is ${p.sender.url}`);
             }
             return false;
         }
@@ -116,7 +119,7 @@ class TabInfo {
     postMessage(frameId, msg) {
         const port = this.frameInfoMap.get(frameId);
         if (!port) {
-            console.warn(`port ${this.id}-${frameId} is already disconnected`);
+            console.warn(`Port ${this.id}-${frameId} is already disconnected`);
             return false;
         }
         port.postMessage(msg);
@@ -215,7 +218,7 @@ function moveTab(tabId, distance, toLeft) {
             tabs.sort(cmpFunc);
             const currIndex = tabs.findIndex((elem) => elem.id === tabId);
             if (currIndex === -1) {
-                console.warn("not found tab", tabId);
+                console.warn("Not found tab", tabId);
                 return;
             }
             const newIdx = tabs[(currIndex + distance) % tabs.length].index;
@@ -817,15 +820,17 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         const sender = port.sender;
         const tab = sender.tab;
         if (!tab) {
-            console.warn("no tab exist");
+            console.warn("No tab exist", tab.url, sender.url);
             return;
         }
         const tabId = tab.id;
         if (tabId === browser.tabs.TAB_ID_NONE) {
-            console.warn("TAB_ID_NONE:", tab.url);
+            console.debug("TAB_ID_NONE:", tab.url);
             return;
         }
         const frameId = sender.frameId;
+
+        console.debug("Connected", tabId, frameId, sender.url);
 
         if (port.name === "console") {
             setConsolePort(
@@ -860,7 +865,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
 function invokeCommand(msg, sender) {
     const tabInfo = gTabInfoMap.get(sender.tab.id);
     if (!tabInfo) {
-        console.warn(`tabInfo for ${sender.tab.id} is not found`);
+        console.warn(`TabInfo for ${sender.tab.id} is not found`);
         return;
     }
     return Command[msg.command](msg, sender, tabInfo);
@@ -868,14 +873,14 @@ function invokeCommand(msg, sender) {
 function cleanupFrameInfo(port, error) {
     const tabId = port.sender.tab.id;
     const frameId = port.sender.frameId;
-    console.debug(`Port(${tabId}-${frameId}) is disconnected: ${error}`);
+    console.debug("Disconnected:", error, tabId, frameId, port.sender.url);
     if (gMacro.isRecord(tabId)) {
         gMacro.stop(false);
     }
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         if (frameId === 0) {
-            console.warn(`tabInfo for ${tabId} is already deleted`);
+            console.debug(`TabInfo for ${tabId} is already deleted`);
         }
         return;
     }
@@ -887,7 +892,7 @@ function cleanupFrameInfo(port, error) {
 function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
-        console.warn(`tabInfo for ${tabId} is not found`);
+        console.warn(`TabInfo for ${tabId} is not found`);
         return;
     }
     browser.tabs.insertCSS(tabId, { frameId, code: consoleDesign });
@@ -899,7 +904,7 @@ function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
 function invokeConsoleCommand(msg, sender) {
     const tabInfo = gTabInfoMap.get(sender.tab.id);
     if (!tabInfo) {
-        console.warn(`tabInfo for ${sender.tab.id} is not found`);
+        console.warn(`TabInfo for ${sender.tab.id} is not found`);
         return;
     }
     return ConsoleCommand[msg.command](msg, sender, tabInfo);

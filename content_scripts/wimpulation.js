@@ -321,7 +321,6 @@ function addEventListenersJustOnce() {
         if (!gFrameInfo) { // multiple pagehides can be occurred in some page.
             return;
         }
-        console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
         gFrameInfo.reset();
         gFrameInfo = null;
     }, true);
@@ -372,7 +371,7 @@ function connectToBackGround(reconnectTimeout) {
     port.onNotification.addListener(handleNotification);
     port.onRequest.addListener(handleRequest);
     port.onDisconnect.addListener((port, error) => {
-        console.log("Port disconnected:", error && error.toString());
+        console.info("Port disconnected:", error && error.toString());
         if (gFrameInfo) {
             gFrameInfo.reset();
         }
@@ -388,8 +387,6 @@ function connectToBackGround(reconnectTimeout) {
         port.onNotification.removeListener(handleNotification);
     });
 }
-
-console.log(location.href.substr(0, 64), document.readyState);
 
 init();
 

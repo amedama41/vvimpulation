@@ -10,7 +10,7 @@ class ConsoleMode {
 
         const { mode, defaultInput, frameId } = options;
         frameInfo.showConsole(this, mode, defaultInput, frameId).catch((e) => {
-            console.error("showConsole error: " + Utils.errorString(e));
+            console.error("ShowConsole error:", Utils.errorString(e));
             frameInfo.changeMode("NORMAL");
         });
     }
@@ -50,7 +50,7 @@ class ConsoleMode {
                 frameInfo.changeMode("NORMAL");
                 break;
             default:
-                console.log("Unknown message command:", msg.command);
+                console.warn("Unknown message command:", msg.command);
                 break;
         }
     }

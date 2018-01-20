@@ -75,7 +75,7 @@ class Port {
                 handler(this, port.error);
             }
             catch (e) {
-                console.error('disconnect handler error:', Port._toString(e));
+                console.error('Disconnect handler error:', Port._toString(e));
             }
         });
         this._clearHandlers(); // avoid circular reference
@@ -92,7 +92,7 @@ class Port {
                 this._handleNotification(msg);
                 break;
             default:
-                console.error('invalie message', msg.type, msg.command);
+                console.error('Invalie message', msg.type, msg.command);
                 break;
         }
     }
@@ -119,7 +119,7 @@ class Port {
     _handleResponse(msg) {
         const pendingInfo = this.pendingTxnMap.get(msg.id);
         if (!pendingInfo) {
-            console.warn('no request for', msg.id, msg.command);
+            console.warn('No request for', msg.id, msg.command);
             return;
         }
         this.pendingTxnMap.delete(msg.id);
@@ -136,7 +136,7 @@ class Port {
                 handler(msg.msg, this.port.sender);
             }
             catch (e) {
-                console.error('notification handler error:', Port._toString(e));
+                console.error('Notification handler error:', Port._toString(e));
             }
         });
     }
@@ -146,7 +146,7 @@ class Port {
                 this.pendingTxnMap.delete(id);
                 const command = txn[3];
                 txn[1](new Error(`Request timeout (${command})`));
-                console.warn(`request ${id} is timeout: ${command}`);
+                console.warn(`Request ${id} is timeout: ${command}`);
             }
             else {
                 txn[2] = true;
@@ -158,7 +158,9 @@ class Port {
             this.port.postMessage(msg);
         }
         catch (e) {
-            console.error('failed to send message:', Port._toString(e));
+            console.error(
+                `Failed to send message (${msg && msg.toSource()}):`,
+                Port._toString(e));
         }
     }
     static _toString(e) {

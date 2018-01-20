@@ -231,7 +231,7 @@ return (class Edit {
             window.scrollTo(x, y);
         }
         catch (e) {
-            console.warn("elem is likely dead:", Utils.errorString(e));
+            console.warn("Element is likely dead:", Utils.errorString(e));
         }
     }
     static isFocusable(elem, style=window.getComputedStyle(elem, null)) {

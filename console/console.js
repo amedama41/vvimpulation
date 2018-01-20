@@ -185,7 +185,7 @@ class History {
             history[0] = cmd;
             browser.storage.local.set(result);
         }).catch ((error) => {
-            console.error("failed to save history:", key, cmd);
+            console.error("Failed to save history:", key, cmd);
         });
     }
 };
@@ -521,7 +521,6 @@ window.addEventListener("DOMContentLoaded", (e) => {
             return;
         }
 
-        // console.debug(e.type, key, e.defaultPrevented);
         if (mode.handleKeydown(key)) {
             e.stopPropagation();
             e.preventDefault();

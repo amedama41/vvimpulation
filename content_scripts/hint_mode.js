@@ -87,7 +87,7 @@ class HintMode {
         this._blurImpl();
         const localIndex = this.indexMap[msg.index];
         if (localIndex === undefined) {
-            console.error(`unknown index (${msg.index})`);
+            console.error("Unknown index", msg.index);
             return;
         }
         const [span, elem] = this.hints[localIndex];
