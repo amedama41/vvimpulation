@@ -318,6 +318,9 @@ function addEventListenersJustOnce() {
         }
     }, true);
     window.addEventListener("pagehide", (e) => {
+        if (!gFrameInfo) { // multiple pagehides can be occurred in some page.
+            return;
+        }
         console.log(`${gFrameInfo.getSelfFrameId()}: port disconnect`);
         gFrameInfo.reset();
         gFrameInfo = null;
