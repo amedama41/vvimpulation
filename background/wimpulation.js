@@ -827,8 +827,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
 
         port.onNotification.addListener(invokeCommand);
         port.onRequest.addListener(invokeCommand);
-        port.onDisconnect.addListener(
-            cleanupFrameInfo.bind(null, tabId, frameId));
+        port.onDisconnect.addListener(cleanupFrameInfo);
 
         if (!gTabInfoMap.has(tabId)) {
             gTabInfoMap.set(tabId, new TabInfo(tab));
@@ -857,7 +856,9 @@ function invokeCommand(msg, sender) {
     }
     return Command[msg.command](msg, sender, tabInfo);
 }
-function cleanupFrameInfo(tabId, frameId, port, error) {
+function cleanupFrameInfo(port, error) {
+    const tabId = port.sender.tab.id;
+    const frameId = port.sender.frameId;
     console.debug(`Port(${tabId}-${frameId}) is disconnected: ${error}`);
     if (gMacro.isRecord(tabId)) {
         gMacro.stop(false);
