@@ -309,49 +309,55 @@ gExCommandMap.addCommand(
 gExCommandMap.addCommand(
     new OpenCommand(
         "private", "Open or search in private window", "private", gEngineMap));
-gExCommandMap.makeCommand("buffer", "Switch tab", (args, tabInfo) => {
-    if (args.length === 0) {
-        return Promise.reject("no argument");
-    }
-    const index = parseInt(args[0], 10);
-    if (Number.isNaN(index)) {
-        return Promise.reject("argument must be number");
-    }
-    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
-        browser.tabs.update(tabs[index].id, { active: true });
-        return true;
+gExCommandMap.makeCommand(
+    "buffer", "Switch tab", (args, tabInfo) => {
+        if (args.length === 0) {
+            return Promise.reject("no argument");
+        }
+        const index = parseInt(args[0], 10);
+        if (Number.isNaN(index)) {
+            return Promise.reject("argument must be number");
+        }
+        const windowId = tabInfo.windowId;
+        return browser.tabs.query({ windowId }).then((tabs) => {
+            browser.tabs.update(tabs[index].id, { active: true });
+            return true;
+        });
+    },
+    (value, tabInfo) => {
+        const filter = Utils.makeFilter(value);
+        const windowId = tabInfo.windowId;
+        return browser.tabs.query({ windowId }).then((tabs) => [
+            0, 1, tabs.map((tab, index) => [
+                tab.favIconUrl, index, tab.title, tab.url
+            ]).filter(([icon, index, title, url]) => filter.match(title))
+        ]);
     });
-}, (value, tabInfo) => {
-    const filter = Utils.makeFilter(value);
-    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => [
-        0, 1, tabs.map((tab, index) => [
-            tab.favIconUrl, index, tab.title, tab.url
-        ]).filter(([icon, index, title, url]) => filter.match(title))
-    ]);
-});
-gExCommandMap.makeCommand("winbuffer", "Switch window", (args, tabInfo) => {
-    if (args.length === 0) {
-        return Promise.reject("no argument");
-    }
-    const index = parseInt(args[0], 10);
-    if (Number.isNaN(index)) {
-        return Promise.reject("argument must be number");
-    }
-    return browser.windows.getAll().then((windows) => {
-        return browser.windows.update(windows[index].id, {
-            focused: true
-        }).then((win) => true);
+gExCommandMap.makeCommand(
+    "winbuffer", "Switch window", (args, tabInfo) => {
+        if (args.length === 0) {
+            return Promise.reject("no argument");
+        }
+        const index = parseInt(args[0], 10);
+        if (Number.isNaN(index)) {
+            return Promise.reject("argument must be number");
+        }
+        return browser.windows.getAll().then((windows) => {
+            return browser.windows.update(windows[index].id, {
+                focused: true
+            }).then((win) => true);
+        });
+    },
+    (value, tabInfo) => {
+        const filter = Utils.makeFilter(value);
+        return browser.windows.getAll().then((windows) => [
+            0, 1, windows.map((win, index) => [
+                (win.incognito ?
+                    "chrome://browser/skin/privatebrowsing/favicon.svg" : null),
+                index, win.title, win.type
+            ]).filter(([icons, index, title, type]) => filter.match(title))
+        ]);
     });
-}, (value, tabInfo) => {
-    const filter = Utils.makeFilter(value);
-    return browser.windows.getAll().then((windows) => [
-        0, 1, windows.map((win, index) => [
-            (win.incognito ?
-                "chrome://browser/skin/privatebrowsing/favicon.svg" : null),
-            index, win.title, win.type
-        ]).filter(([icons, index, title, type]) => filter.match(title))
-    ]);
-});
 class DownloadManager {
     constructor() {
         this.name = "download";
@@ -605,8 +611,8 @@ function closeTime(time) {
     const d = new Date(time);
     return `Closed at ${d.toLocaleTimeString()} on ${d.toLocaleDateString()}`;
 }
-gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
-    (args, tabInfo) => {
+gExCommandMap.makeCommand(
+    "undoTab", "Reopen closed tab", (args, tabInfo) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
             return Promise.reject("argument must be number");
@@ -636,9 +642,8 @@ gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
             ];
         });
     });
-
-gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
-    (args, tabInfo) => {
+gExCommandMap.makeCommand(
+    "undoWindow", "Reopen closed window", (args, tabInfo) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
             return Promise.reject("argument must be number");
@@ -671,13 +676,8 @@ gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
             ];
         });
     });
-gExCommandMap.makeCommand("options", "Open option page", (args, tabInfo) => {
-    browser.runtime.openOptionsPage();
-    return Promise.resolve(true);
-});
 gExCommandMap.makeCommand(
-    "registers", "Show the contents of all registers",
-    (args, tabInfo) => {
+    "registers", "Show the contents of all registers", (args, tabInfo) => {
         return Promise.resolve(
             gMacro.getRegisters().map(
                 ([register, keyList]) => [register, keyList.join("")]));
@@ -686,6 +686,11 @@ gExCommandMap.makeCommand(
     "nohlsearch", "Remove search highlighting", (args, tabInfo) => {
         browser.find.removeHighlighting();
         tabInfo.searchHighlighting = true;
+        return Promise.resolve(true);
+    });
+gExCommandMap.makeCommand(
+    "options", "Open option page", (args, tabInfo) => {
+        browser.runtime.openOptionsPage();
         return Promise.resolve(true);
     });
 
