@@ -652,14 +652,10 @@ class ConsoleCommand {
         return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
     }
     static execCommand(msg, sender, tabInfo) {
-        return browser.tabs.get(tabInfo.id).then((tab) => {
-            return gExCommandMap.execCommand(msg.cmd, tab, gOptions)
-        });
+        return gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions)
     }
     static getCandidate(msg, sender, tabInfo) {
-        return browser.tabs.get(tabInfo.id).then((tab) => {
-            return gExCommandMap.getCandidate(msg.value, tab);
-        });
+        return gExCommandMap.getCandidate(msg.value, tabInfo);
     }
     static hideConsole(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);

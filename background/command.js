@@ -68,14 +68,14 @@ class ExCommand {
         this.proc = proc;
         this.completion = completion;
     }
-    invoke(args, tab, options) {
-        return this.proc(args, tab, options);
+    invoke(args, tabInfo, options) {
+        return this.proc(args, tabInfo, options);
     }
-    complete(value, tab) {
+    complete(value, tabInfo) {
         if (!this.completion) {
             return undefined;
         }
-        return this.completion(value, tab);
+        return this.completion(value, tabInfo);
     }
 }
 
@@ -89,16 +89,16 @@ class ExCommandMap {
     makeCommand(name, description, proc, completion) {
         this.addCommand(new ExCommand(name, description, proc, completion));
     }
-    execCommand(inputCmd, tab, options) {
+    execCommand(inputCmd, tabInfo, options) {
         const args = inputCmd.trim().split(/\s+/);
         const cmdName = args.shift();
         const [cmd, reason] = this.cmdMap.getCommand(cmdName);
         if (!cmd) {
             return Promise.reject(reason);
         }
-        return cmd.invoke(args, tab, options);
+        return cmd.invoke(args, tabInfo, options);
     }
-    getCandidate(value, tab) {
+    getCandidate(value, tabInfo) {
         const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(cmdList)) {
             return Promise.resolve([
@@ -108,7 +108,7 @@ class ExCommandMap {
         }
         else {
             const cmd = cmdList;
-            const result = cmd.complete(value.substr(fixedLen), tab);
+            const result = cmd.complete(value.substr(fixedLen), tabInfo);
             if (!result) {
                 return;
             }
@@ -138,9 +138,10 @@ class OpenCommand {
         this.kind = kind;
         this.engineMap = engineMap;
     }
-    invoke(args, tab, options) {
+    invoke(args, tabInfo, options) {
         if (args.length === 0) {
-            return OpenCommand._open("about:blank", tab, this.kind, options);
+            return OpenCommand._open(
+                "about:blank", this.kind, tabInfo, options);
         }
         const [engine, reason] = this.engineMap.getCommand(args[0]);
         if (!engine) {
@@ -149,7 +150,7 @@ class OpenCommand {
         if (reason) { // Select the default engine, but args may be URL.
             const url = OpenCommand._createURL(args.join(" "));
             if (url) {
-                return OpenCommand._open(url, tab, this.kind, options);
+                return OpenCommand._open(url, this.kind, tabInfo, options);
             }
         }
         else { // If reason is null, the head of args is a search engigne name.
@@ -157,9 +158,9 @@ class OpenCommand {
         }
         const url = engine.searchUrl.replace(
             "%s", encodeURIComponent(args.join(" ")));
-        return OpenCommand._open(url, tab, this.kind, options);
+        return OpenCommand._open(url, this.kind, tabInfo, options);
     }
-    complete(value, tab) {
+    complete(value, tabInfo) {
         const [engineList, fixedLen] = this.engineMap.getCandidate(value);
         if (Array.isArray(engineList)) {
             return OpenCommand._getHistoryAndBookmark(value).then((result) => {
@@ -250,14 +251,16 @@ class OpenCommand {
             return null;
         }
     }
-    static _open(url, tab, kind, options) {
+    static _open(url, kind, tabInfo, options) {
         return (() => {
             switch (kind) {
                 case "tab":
-                    return browser.tabs.create({
-                        url,
-                        index: tab.index + 1,
-                        active: options.activateNewTab
+                    return browser.tabs.get(tabInfo.id).then((tab) => {
+                        return browser.tabs.create({
+                            url,
+                            index: tab.index + 1,
+                            active: options.activateNewTab
+                        });
                     }).then(() => true);
                 case "window":
                     return browser.windows.create({ url }).then(() => true);
@@ -265,7 +268,7 @@ class OpenCommand {
                     return browser.windows.create({ url, incognito: true })
                         .then(() => false);
                 default:
-                    return browser.tabs.update(tab.id, { url })
+                    return browser.tabs.update(tabInfo.id, { url })
                         .then(() => true);
             }
         })().catch((e) => (e || "Some error occurred").toString());
@@ -306,7 +309,7 @@ gExCommandMap.addCommand(
 gExCommandMap.addCommand(
     new OpenCommand(
         "private", "Open or search in private window", "private", gEngineMap));
-gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
+gExCommandMap.makeCommand("buffer", "Switch tab", (args, tabInfo) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
@@ -314,19 +317,19 @@ gExCommandMap.makeCommand("buffer", "Switch tab", (args, tab) => {
     if (Number.isNaN(index)) {
         return Promise.reject("argument must be number");
     }
-    return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => {
+    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => {
         browser.tabs.update(tabs[index].id, { active: true });
         return true;
     });
-}, (value, tab) => {
+}, (value, tabInfo) => {
     const filter = Utils.makeFilter(value);
-    return browser.tabs.query({ windowId: tab.windowId }).then((tabs) => [
+    return browser.tabs.query({ windowId: tabInfo.windowId }).then((tabs) => [
         0, 1, tabs.map((tab, index) => [
             tab.favIconUrl, index, tab.title, tab.url
         ]).filter(([icon, index, title, url]) => filter.match(title))
     ]);
 });
-gExCommandMap.makeCommand("winbuffer", "Switch window", (args, tab) => {
+gExCommandMap.makeCommand("winbuffer", "Switch window", (args, tabInfo) => {
     if (args.length === 0) {
         return Promise.reject("no argument");
     }
@@ -339,7 +342,7 @@ gExCommandMap.makeCommand("winbuffer", "Switch window", (args, tab) => {
             focused: true
         }).then((win) => true);
     });
-}, (value, tab) => {
+}, (value, tabInfo) => {
     const filter = Utils.makeFilter(value);
     return browser.windows.getAll().then((windows) => [
         0, 1, windows.map((win, index) => [
@@ -358,8 +361,8 @@ class DownloadManager {
         const cmdList = [
             new ExCommand(
                 "show", "Show all download item",
-                (args, tab) => {
-                    return DownloadManager._getItemList(null, args, tab)
+                (args, tabInfo) => {
+                    return DownloadManager._getItemList(null, args, tabInfo)
                         .then((items) => items.map(
                             ([icon, id, name, info]) => [id, name, info]));
                 },
@@ -388,7 +391,7 @@ class DownloadManager {
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
         this.cmdMap.setDefault("show");
     }
-    invoke(args, tab, options) {
+    invoke(args, tabInfo, options) {
         if (args.length === 0) {
             args.push("show");
         }
@@ -399,9 +402,9 @@ class DownloadManager {
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        return subcmd.invoke(args, tab, options);
+        return subcmd.invoke(args, tabInfo, options);
     }
-    complete(value, tab) {
+    complete(value, tabInfo) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
@@ -410,10 +413,10 @@ class DownloadManager {
             ];
         }
         const query = value.substr(fixedLen).trim().split(/\s+/);
-        return subcmdList.complete(query, tab)
+        return subcmdList.complete(query, tabInfo)
             .then((result) => [fixedLen, 1, result]);
     }
-    static _invokeCommand(func, args, tab) {
+    static _invokeCommand(func, args, tabInfo) {
         const ids = args
             .map((arg) => parseInt(arg, 10))
             .filter((id) => !Number.isNaN(id));
@@ -427,9 +430,9 @@ class DownloadManager {
             return (errors.length ? Promise.reject(errors.join("\n")) : true);
         });
     }
-    static _getItemList(state, query, tab) {
+    static _getItemList(state, query, tabInfo) {
         return browser.downloads.search({ query, state }).then((dlItems) => {
-            if (!tab.incognito) {
+            if (!tabInfo.incognito) {
                 dlItems = dlItems.filter((item) => !item.incognito);
             }
             return Promise.all(dlItems.map((item) => {
@@ -541,15 +544,17 @@ class HistoryManager {
         const cmdList = [
             new ExCommand(
                 "open", "Open history",
-                (args, tab) => browser.tabs.update(tab.id, { url: args[0] }),
+                (args, tabInfo) => {
+                    return browser.tabs.update(tabInfo.id, { url: args[0] });
+                },
                 HistoryManager._getItemList),
             new ExCommand(
                 "delete", "Delete hitory items with the URL",
-                (args, tab) => browser.history.deleteUrl({ url : args[0] }),
+                (args, tabInfo) => browser.history.deleteUrl({ url : args[0] }),
                 HistoryManager._getItemList),
             new ExCommand(
                 "deleteFrom", "Delete history items created after N hour ago",
-                (args, tab) => {
+                (args, tabInfo) => {
                     const n = parseFloat(args[0]);
                     if (Number.isNaN(n)) {
                         return Promise.reject("Must be number");
@@ -561,7 +566,7 @@ class HistoryManager {
         ];
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
     }
-    invoke(args, tab, options) {
+    invoke(args, tabInfo, options) {
         if (args.length === 0) {
             return Promise.reject("No subcommand");
         }
@@ -575,9 +580,9 @@ class HistoryManager {
         if (args.length === 0) {
             return Promise.reject("No arguments");
         }
-        return subcmd.invoke(args, tab, options).then(() => true);
+        return subcmd.invoke(args, tabInfo, options).then(() => true);
     }
-    complete(value, tab) {
+    complete(value, tabInfo) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
@@ -585,7 +590,7 @@ class HistoryManager {
                 subcmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ];
         }
-        return subcmdList.complete(value.substr(fixedLen), tab)
+        return subcmdList.complete(value.substr(fixedLen), tabInfo)
             .then((result) => [fixedLen, 2, result]);
     }
     static _getItemList(text) {
@@ -601,14 +606,14 @@ function closeTime(time) {
     return `Closed at ${d.toLocaleTimeString()} on ${d.toLocaleDateString()}`;
 }
 gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
-    (args, tab) => {
+    (args, tabInfo) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
             return Promise.reject("argument must be number");
         }
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter(
-                (s) => s.tab && s.tab.windowId === tab.windowId);
+                (s) => s.tab && s.tab.windowId === tabInfo.windowId);
             if (tabSessions.length === 0) {
                 return Promise.reject("no closed tab");
             }
@@ -619,10 +624,10 @@ gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
             return Promise.resolve(true);
         });
     },
-    (value, tab) => {
+    (value, tabInfo) => {
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter(
-                (s) => s.tab && s.tab.windowId === tab.windowId);
+                (s) => s.tab && s.tab.windowId === tabInfo.windowId);
             return [
                 0, 1, tabSessions.map((s, index) => [
                     s.tab.favIconUrl, index, s.tab.title,
@@ -633,7 +638,7 @@ gExCommandMap.makeCommand("undoTab", "Reopen closed tab",
     });
 
 gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
-    (args, tab) => {
+    (args, tabInfo) => {
         const index = parseInt(args[0], 10);
         if (Number.isNaN(index)) {
             return Promise.reject("argument must be number");
@@ -650,7 +655,7 @@ gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
             return Promise.resolve(true);
         });
     },
-    (value, tab) => {
+    (value, tabInfo) => {
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             return [
@@ -666,13 +671,13 @@ gExCommandMap.makeCommand("undoWindow", "Reopen closed window",
             ];
         });
     });
-gExCommandMap.makeCommand("options", "Open option page", (args, tab) => {
+gExCommandMap.makeCommand("options", "Open option page", (args, tabInfo) => {
     browser.runtime.openOptionsPage();
     return Promise.resolve(true);
 });
 gExCommandMap.makeCommand(
     "registers", "Show the contents of all registers",
-    (args, tab) => {
+    (args, tabInfo) => {
         return Promise.resolve(
             gMacro.getRegisters().map(
                 ([register, keyList]) => [register, keyList.join("")]));
