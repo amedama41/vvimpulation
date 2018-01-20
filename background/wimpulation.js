@@ -21,7 +21,10 @@ class TabInfo {
     reset() {
         this.mode = "NORMAL";
         this.frameInfoMap.clear();
-        this.consolePort = undefined;
+        if (this.consolePort) {
+            this.consolePort.disconnect();
+            this.consolePort = undefined;
+        }
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         this._searchHighlighting = true;
@@ -140,6 +143,9 @@ class TabInfo {
             0, { command: "showMessage", message, duration, saveMessage });
     }
     setConsolePort(port) {
+        if (this.consolePort) {
+            this.consolePort.disconnect();
+        }
         this.consolePort = port;
     }
     sendConsoleMessage(msg) {
