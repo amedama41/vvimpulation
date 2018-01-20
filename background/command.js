@@ -683,9 +683,9 @@ gExCommandMap.makeCommand(
                 ([register, keyList]) => [register, keyList.join("")]));
     });
 gExCommandMap.makeCommand(
-    "nohlsearch", "Remove search highlighting", (args, tabInfo) => {
+    "nohlsearch", "Remove search highlighting", (args, tabInfo, options) => {
         browser.find.removeHighlighting();
-        tabInfo.searchHighlighting = true;
+        tabInfo.searchHighlighting = options.highlightSearch;
         return Promise.resolve(true);
     });
 gExCommandMap.makeCommand(

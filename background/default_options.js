@@ -357,6 +357,7 @@ const DEFAULT_OPTIONS = {
         "autoFocus": false,
         "overlapHintLabels": true,
         "autoKillHover": true,
+        "highlightSearch": true,
         "overwriteErrorPage": true,
         "activateNewTab": false,
     }

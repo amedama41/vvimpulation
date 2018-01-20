@@ -7,7 +7,7 @@ browser.runtime.onInstalled.addListener((details) => {
 });
 
 class TabInfo {
-    constructor(tab) {
+    constructor(tab, searchHighlighting) {
         this.tab = tab;
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
@@ -16,9 +16,9 @@ class TabInfo {
         this._frameIdListCache = [undefined];
         // [keyword, caseSensitive, backward]
         this._lastSearchInfo = ["", false, false];
-        this._searchHighlighting = true;
+        this._searchHighlighting = searchHighlighting;
     }
-    reset() {
+    reset(searchHighlighting) {
         this.mode = "NORMAL";
         this.frameInfoMap.clear();
         if (this.consolePort) {
@@ -27,7 +27,7 @@ class TabInfo {
         }
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
-        this._searchHighlighting = true;
+        this._searchHighlighting = searchHighlighting;
     }
     get id() {
         return this.tab.id;
@@ -279,7 +279,7 @@ function findAllFrame(
 
 function startFind(keyword, backward, frameId, tabInfo) {
     return tabInfo.frameIdList((frameIdList) => {
-        tabInfo.searchHighlighting = true;
+        tabInfo.searchHighlighting = gOptions.highlightSearch;
         const caseSensitive = /[A-Z]/.test(keyword);
         return findAllFrame(
             tabInfo, keyword, frameId, frameIdList, caseSensitive, backward)
@@ -774,6 +774,7 @@ function setOptions(options) {
     gOptions.autoFocus = options["miscellaneous"].autoFocus;
     gOptions.overlapHintLabels = options["miscellaneous"].overlapHintLabels;
     gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
+    gOptions.highlightSearch = options["miscellaneous"].highlightSearch;
     gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
 }
 
@@ -798,6 +799,8 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
                     port.sender.url, gOptions.hintPattern),
                 pagePattern: gOptions.pagePattern
             }));
+
+            tabInfo.searchHighlighting = gOptions.highlightSearch;
 
             const frameId = tabInfo.consoleFrameId;
             if (frameId === undefined) {
@@ -836,7 +839,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         port.onDisconnect.addListener(cleanupFrameInfo);
 
         if (!gTabInfoMap.has(tabId)) {
-            gTabInfoMap.set(tabId, new TabInfo(tab));
+            gTabInfoMap.set(tabId, new TabInfo(tab, gOptions.highlightSearch));
         }
         const tabInfo = gTabInfoMap.get(tabId);
         tabInfo.update(tab);
@@ -878,7 +881,7 @@ function cleanupFrameInfo(port, error) {
     }
     tabInfo.deletePort(frameId, port);
     if (frameId === 0) {
-        tabInfo.reset();
+        tabInfo.reset(gOptions.highlightSearch);
     }
 }
 function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
