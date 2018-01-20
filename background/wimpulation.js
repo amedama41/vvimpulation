@@ -12,7 +12,6 @@ class TabInfo {
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
         this.consolePort = undefined;
-        this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         // [keyword, caseSensitive, backward]
@@ -23,7 +22,6 @@ class TabInfo {
         this.mode = "NORMAL";
         this.frameInfoMap.clear();
         this.consolePort = undefined;
-        this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         this._searchHighlighting = true;
@@ -41,7 +39,10 @@ class TabInfo {
         return this.tab.incognito;
     }
     get consoleFrameId() {
-        return this._consoleFrameId;
+        if (!this.consolePort) {
+            return undefined;
+        }
+        return this.consolePort.sender.frameId;
     }
     update(tab) {
         this.tab = tab;
@@ -138,9 +139,8 @@ class TabInfo {
         this.sendMessage(
             0, { command: "showMessage", message, duration, saveMessage });
     }
-    setConsolePort(port, frameId) {
+    setConsolePort(port) {
         this.consolePort = port;
-        this._consoleFrameId = frameId;
     }
     sendConsoleMessage(msg) {
         if (!this.consolePort) {
@@ -152,7 +152,6 @@ class TabInfo {
     clearConsolePort(port) {
         if (this.consolePort === port) {
             this.consolePort = undefined;
-            this._consoleFrameId = undefined;
         }
     }
 }
@@ -884,7 +883,7 @@ function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
     browser.tabs.insertCSS(tabId, { frameId, code: consoleDesign });
     port.onRequest.addListener(invokeConsoleCommand);
     port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
-    tabInfo.setConsolePort(port, frameId);
+    tabInfo.setConsolePort(port);
     tabInfo.sendConsoleMessage({ command: "setKeyMapping", keyMapping });
 }
 function invokeConsoleCommand(msg, sender) {
