@@ -15,6 +15,7 @@
         "clipboardRead",
         "clipboardWrite",
         "downloads",
+        "find",
         "history",
         "sessions",
         "storage",

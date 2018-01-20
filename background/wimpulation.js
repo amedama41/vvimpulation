@@ -17,6 +17,7 @@ class TabInfo {
         this._frameIdListCache = [undefined];
         // [keyword, caseSensitive, backward]
         this._lastSearchInfo = ["", false, false];
+        this._searchHighlighting = true;
     }
     reset() {
         this.mode = "NORMAL";
@@ -25,6 +26,7 @@ class TabInfo {
         this._consoleFrameId = undefined;
         this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
+        this._searchHighlighting = true;
     }
     get id() {
         return this.tab.id;
@@ -81,6 +83,12 @@ class TabInfo {
     }
     set lastSearchInfo(lastSearchInfo) {
         this._lastSearchInfo = lastSearchInfo;
+    }
+    get searchHighlighting() {
+        return this._searchHighlighting;
+    }
+    set searchHighlighting(enabled) {
+        this._searchHighlighting = enabled;
     }
     setPort(frameId, port) {
         this._frameIdListCache = undefined;
@@ -243,6 +251,14 @@ function findAllFrame(
         return tabInfo.sendMessage(frameIdList[index], msg)
             .then((result) => {
                 if (result) {
+                    if (tabInfo.searchHighlighting) {
+                        browser.find.find(keyword, {
+                            tabId: tabInfo.id, caseSensitive
+                        }).then((result) => {
+                            browser.find.highlightResults();
+                        });
+                        tabInfo.searchHighlighting = false;
+                    }
                     return true;
                 }
                 if (i === length) {
@@ -258,6 +274,7 @@ function findAllFrame(
 
 function startFind(keyword, backward, frameId, tabInfo) {
     return tabInfo.frameIdList((frameIdList) => {
+        tabInfo.searchHighlighting = true;
         const caseSensitive = /[A-Z]/.test(keyword);
         return findAllFrame(
             tabInfo, keyword, frameId, frameIdList, caseSensitive, backward)
