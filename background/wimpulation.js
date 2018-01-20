@@ -879,8 +879,8 @@ function cleanupFrameInfo(port, error) {
         }
         return;
     }
-    tabInfo.deletePort(frameId, port);
-    if (frameId === 0) {
+    const deleted = tabInfo.deletePort(frameId, port);
+    if (deleted && frameId === 0) {
         tabInfo.reset(gOptions.highlightSearch);
     }
 }
