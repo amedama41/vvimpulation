@@ -45,6 +45,9 @@ class Options {
                 "consoleDesign": this.consoleDesign.getOptions(),
                 "miscellaneous": this.miscellaneous.getOptions(),
             };
+            if (this.options.hasOwnProperty("debug")) {
+                options.debug = this.options.debug;
+            }
             this.options = options;
             browser.storage.local.set({
                 "options": this.options

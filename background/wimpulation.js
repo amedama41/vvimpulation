@@ -104,10 +104,11 @@ class TabInfo {
         if (p !== port) {
             // This case occurs when port is overwrite by new frame's port.
             if (p) {
-                console.debug(
+                debugLog(() => [
                     `Missmatch ${this.id}-${frameId} port.`,
                     `Expected port url is ${port.sender.url}`,
-                    `but actual port url is ${p.sender.url}`);
+                    `but actual port url is ${p.sender.url}`
+                ]);
             }
             return false;
         }
@@ -779,6 +780,7 @@ function setOptions(options) {
     gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
     gOptions.highlightSearch = options["miscellaneous"].highlightSearch;
     gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
+    gOptions.debug = options["debug"];
 }
 
 browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
@@ -825,12 +827,12 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         }
         const tabId = tab.id;
         if (tabId === browser.tabs.TAB_ID_NONE) {
-            console.debug("TAB_ID_NONE:", tab.url);
+            debugLog(() => ["TAB_ID_NONE:", tab.url]);
             return;
         }
         const frameId = sender.frameId;
 
-        console.debug("Connected", tabId, frameId, sender.url);
+        debugLog(() => ["Connected", tabId, frameId, sender.url]);
 
         if (port.name === "console") {
             setConsolePort(
@@ -873,14 +875,14 @@ function invokeCommand(msg, sender) {
 function cleanupFrameInfo(port, error) {
     const tabId = port.sender.tab.id;
     const frameId = port.sender.frameId;
-    console.debug("Disconnected:", error, tabId, frameId, port.sender.url);
+    debugLog(() => ["Disconnected:", error, tabId, frameId, port.sender.url]);
     if (gMacro.isRecord(tabId)) {
         gMacro.stop(false);
     }
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         if (frameId === 0) {
-            console.debug(`TabInfo for ${tabId} is already deleted`);
+            debugLog(() => [`TabInfo for ${tabId} is already deleted`]);
         }
         return;
     }
@@ -940,5 +942,11 @@ function makeConsoleCSS(consoleDesign) {
         color: ${consoleDesign.selectedInformationColor};
     }
     `;
+}
+
+function debugLog(getArgs) {
+    if (gOptions.debug) {
+        console.debug(...getArgs());
+    }
 }
 
