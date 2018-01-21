@@ -158,6 +158,7 @@ const COMMAND_DESCRIPTIONS = {
     yankSelection: { description: "Yank selection contents" },
     deleteSelection: { description: "Delete selection contents" },
     reverseSelectionEndpoints: { description: "Reverse a selection cursor" },
+    viewSelectionSource: { description: "View the source of a selection" },
 
     /** Commands for element manipulation **/
     selectElement: { description: "Select the target" },

@@ -196,6 +196,7 @@ const DEFAULT_OPTIONS = {
             "*": "compose|findSelectionForward|toNormalMode",
             "#": "compose|findSelectionBackward|toNormalMode",
             "d": "deleteSelection",
+            "<C-]>": "compose|viewSelectionSource|toNormalMode",
             "o": "reverseSelectionEndpoints",
             "<C-U>": "moveHalfPageUp",
             "<C-D>": "moveHalfPageDown",

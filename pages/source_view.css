@@ -1,0 +1,13 @@
+body {
+    counter-reset: line;
+}
+
+#source > code::before {
+    content: counter(line) " ";
+    counter-increment: line;
+    color: gray;
+    text-align: right;
+    width: 5ch;
+    display: inline-block;
+}
+

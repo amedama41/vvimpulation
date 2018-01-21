@@ -885,6 +885,19 @@ class FrontendCommand {
         selection.setBaseAndExtent(
             focusNode, focusOffset, anchorNode, anchorOffset);
     }
+    static viewSelectionSource(count, frameInfo) {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+            return;
+        }
+        const range = selection.getRangeAt(0);
+        const source = range.commonAncestorContainer.outerHTML;
+        const url = browser.runtime.getURL("pages/source_view.html")
+        return frameInfo.sendMessage({
+            command: "openLinkInTab",
+            url: `${url}?source=${btoa(unescape(encodeURIComponent(source)))}`
+        });
+    }
 
     /**
      * Commands for element manipulation
