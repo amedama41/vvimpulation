@@ -783,6 +783,7 @@ function setOptions(options) {
     gOptions.autoFocus = options["miscellaneous"].autoFocus;
     gOptions.overlapHintLabels = options["miscellaneous"].overlapHintLabels;
     gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
+    gOptions.onlyVisibility = options["miscellaneous"].onlyVisibility;
     gOptions.highlightSearch = options["miscellaneous"].highlightSearch;
     gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
     gOptions.debug = options["debug"];
@@ -807,7 +808,8 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
                 keyMapping: gOptions.keyMapping,
                 hintPattern: getLocalHintPattern(
                     port.sender.url, gOptions.hintPattern),
-                pagePattern: gOptions.pagePattern
+                pagePattern: gOptions.pagePattern,
+                onlyVisibility: gOptions.onlyVisibility,
             }));
 
             tabInfo.searchHighlighting = gOptions.highlightSearch;
@@ -859,9 +861,13 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         port.postMessage({
             command: "initFrame",
             frameId: frameId,
-            keyMapping: gOptions.keyMapping,
-            hintPattern: getLocalHintPattern(sender.url, gOptions.hintPattern),
-            pagePattern: gOptions.pagePattern,
+            options: {
+                keyMapping: gOptions.keyMapping,
+                hintPattern: getLocalHintPattern(
+                    sender.url, gOptions.hintPattern),
+                pagePattern: gOptions.pagePattern,
+                onlyVisibility: gOptions.onlyVisibility,
+            },
             autoKillHover: gOptions.autoKillHover,
             mode: tabInfo.getMode(),
         });

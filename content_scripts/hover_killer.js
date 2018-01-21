@@ -96,9 +96,19 @@ const applyAllHoverRules = (sheet, func) => {
     }
 }
 
-const collectHoverSelectors = (sheet, hoverSelectorList) => {
+const hasVisibleProperty = (style) => {
+    const VISIBLE_PROPERTY_LIST = [
+        "display", "visibility", "opacity",
+        "position", "transform", "height", "width"
+    ];
+    return Array.from(style).some(
+        (prop) => VISIBLE_PROPERTY_LIST.includes(prop));
+}
+const collectHoverSelectors = (sheet, hoverSelectorList, onlyVisibility) => {
     applyAllHoverRules(sheet, (i, rule, sheet) => {
-        hoverSelectorList.push(rule.selectorText);
+        if (!onlyVisibility || hasVisibleProperty(rule.style)) {
+            hoverSelectorList.push(rule.selectorText);
+        }
         return i;
     });
 }
@@ -457,11 +467,11 @@ return class HoverKillerImpl {
         });
     }
 
-    static setTabIndex() {
+    static setTabIndex(onlyVisibility) {
         const sheetList = Array.from(document.styleSheets).filter(accessible);
         const hoverSelectorList = [];
         sheetList.forEach((sheet) => {
-            collectHoverSelectors(sheet, hoverSelectorList);
+            collectHoverSelectors(sheet, hoverSelectorList, onlyVisibility);
         });
         const parser = new Parser();
         const parseInfoList = hoverSelectorList.map((selector) => {
@@ -483,9 +493,9 @@ return class HoverKillerImpl {
         });
     }
 
-    static killHover() {
+    static killHover(onlyVisibility) {
         HoverKillerImpl.insertFocusRule();
-        HoverKillerImpl.setTabIndex();
+        HoverKillerImpl.setTabIndex(onlyVisibility);
     }
 
     static makeParser() {

@@ -85,13 +85,14 @@ class FrameIdInfo {
 const IGNORE_KEY_EVENT = {};
 
 class FrameInfo {
-    constructor(frameId, port, modeName, keyMapping, hintPattern, pagePattern) {
+    constructor(frameId, port, modeName, options) {
         this._frameIdInfo = new FrameIdInfo(frameId);
         this._port = port;
         this._modeEventListenerList = [];
-        this._keyMap = FrameInfo._convertKeyMap(keyMapping);
-        this._hintPattern = hintPattern;
-        this._pagePattern = pagePattern;
+        this._keyMap = FrameInfo._convertKeyMap(options.keyMapping);
+        this._hintPattern = options.hintPattern;
+        this._pagePattern = options.pagePattern;
+        this._onlyVisibility = options.onlyVisibility;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
@@ -152,10 +153,11 @@ class FrameInfo {
     currentMode() {
         return this._mode.constructor.getModeName();
     }
-    setOptions(keyMapping, hintPattern, pagePattern) {
-        this._keyMap = FrameInfo._convertKeyMap(keyMapping);
-        this._hintPattern = hintPattern;
-        this._pagePattern = pagePattern;
+    setOptions(options) {
+        this._keyMap = FrameInfo._convertKeyMap(options.keyMapping);
+        this._hintPattern = options.hintPattern;
+        this._pagePattern = options.pagePattern;
+        this._onlyVisibility = options.onlyVisibility
         this.changeModeNow("NORMAL");
     }
     completeChildRegistration(msg) {
@@ -184,6 +186,9 @@ class FrameInfo {
         return this.forwardMessage(childFrameId, {
             command: "moveFocus", recursive: true, count, isForward, changeMode
         });
+    }
+    killHover() {
+        HoverKiller.killHover(this._onlyVisibility);
     }
 
     // Method related to frame id.

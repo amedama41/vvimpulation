@@ -254,8 +254,7 @@ class MessageCommand {
         }
     }
     static killHover(msg) {
-        HoverKiller.insertFocusRule();
-        HoverKiller.setTabIndex();
+        gFrameInfo.killHover();
     }
     static hasFocus() {
         return document.hasFocus();
@@ -329,10 +328,11 @@ function addEventListenersJustOnce() {
 
 function doKillHover() {
     if (document.readyState === "loading") {
-        window.addEventListener("load", HoverKiller.killHover, { once: true });
+        window.addEventListener(
+            "load", (e) => gFrameInfo.killHover(), { once: true });
     }
     else {
-        HoverKiller.killHover();
+        gFrameInfo.killHover();
     }
 }
 
@@ -340,9 +340,8 @@ function connectToBackGround(reconnectTimeout) {
     const port = new Port(browser.runtime.connect({ name: "wimpulation" }));
     const handleNotification = (msg) => {
         if (msg.command === "initFrame") {
-            gFrameInfo = new FrameInfo(
-                msg.frameId, port, msg.mode,
-                msg.keyMapping, msg.hintPattern, msg.pagePattern);
+            gFrameInfo =
+                new FrameInfo(msg.frameId, port, msg.mode, msg.options);
             addEventListenersJustOnce();
             if (msg.autoKillHover) {
                 doKillHover();
@@ -352,8 +351,7 @@ function connectToBackGround(reconnectTimeout) {
             gFrameInfo.changeModeNow(msg.mode, msg.data);
         }
         else if (msg.command === "updateOptions") {
-            gFrameInfo.setOptions(
-                msg.keyMapping, msg.hintPattern, msg.pagePattern);
+            gFrameInfo.setOptions(msg);
         }
         else if (msg.command === "completeChildRegistration") {
             gFrameInfo.completeChildRegistration(msg);
