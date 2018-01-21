@@ -12,8 +12,7 @@ class VisualModeBase {
             if (!point) {
                 throw new Error("No selection");
             }
-            selection.setBaseAndExtent(
-                point.offsetNode, point.offset, point.offsetNode, point.offset);
+            selection.collapse(point.offsetNode, point.offset);
         }
         this.selection = selection;
         this.count = "0";
@@ -240,9 +239,7 @@ class CaretMode extends VisualModeBase {
         selection.collapseToStart();
     }
     static set(selection) {
-        const node = selection.focusNode;
-        const offset = selection.focusOffset;
-        selection.setBaseAndExtent(node, offset, node, offset);
+        selection.collapse(selection.focusNode, selection.focusOffset);
         selection.modify("extend", "forward", "character");
     }
 }

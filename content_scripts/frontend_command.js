@@ -848,18 +848,14 @@ class FrontendCommand {
         if (!selection || selection.rangeCount === 0) {
             return;
         }
-        const node = selection.anchorNode;
-        const offset = selection.anchorOffset;
-        selection.setBaseAndExtent(node, offset, node, offset);
+        selection.collapse(selection.anchorNode, selection.anchorOffset);
     }
     static collapseSelectionToEnd(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
             return;
         }
-        const node = selection.focusNode;
-        const offset = selection.focusOffset;
-        selection.setBaseAndExtent(node, offset, node, offset);
+        selection.collapse(selection.focusNode, selection.focusOffset);
     }
     static yankSelection(count, frameInfo) {
         const selection = window.getSelection();
@@ -908,8 +904,7 @@ class FrontendCommand {
         if (!selection) {
             return;
         }
-        const node = frameInfo.getTarget();
-        selection.setBaseAndExtent(node, 0, node, 0);
+        selection.collapse(frameInfo.getTarget(), 0);
     }
     static yankInnerText(count, frameInfo) {
         if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
