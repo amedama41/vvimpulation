@@ -823,7 +823,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         const sender = port.sender;
         const tab = sender.tab;
         if (!tab) {
-            console.warn("No tab exist", tab.url, sender.url);
+            console.warn("No tab exist", sender.url);
             return;
         }
         const tabId = tab.id;
