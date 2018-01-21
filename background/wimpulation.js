@@ -653,6 +653,10 @@ class Command {
             return tabInfo.postMessage(childFrameId, {
                 command: "completeChildRegistration", frameId: sender.frameId
             });
+        }).catch((e) => {
+            // This can be occurred when the child frame is already removed.
+            debugLog(() => [Utils.errorString(e)]);
+            return false;
         });
     }
 }
