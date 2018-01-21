@@ -62,6 +62,10 @@ const COMMAND_DESCRIPTIONS = {
     openTab: { background: true, description: "Open a new tab" },
 
     /** Commands for window manipulation **/
+    snapWindowToLeft: { background: true, description: "Snap the current window to screen left" },
+    snapWindowToRight: { background: true, description: "Snap the current window to screen right" },
+    snapWindowToTop: { background: true, description: "Snap the current window to screen top" },
+    snapWindowToBottom: { background: true, description: "Snap the current window to screen bottom" },
     removeCurrentWindow: { background: true, description: "Close the current window" },
 
     /** Commands for page load manipulation **/

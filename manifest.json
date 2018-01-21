@@ -5,6 +5,13 @@
 
     "description": "Provides keyboard navigation like Vim.",
 
+    "applications": {
+        "gecko": {
+            "id": "{b8b81a2f-da03-461c-a8cd-377d84f6d5b7}",
+            "strict_min_version": "57.0"
+        }
+    },
+
     "icons": {
         "48": "icons/icon48.png",
         "96": "icons/icon96.png"

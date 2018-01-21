@@ -321,6 +321,58 @@ function focusFrame(tabInfo, frameId, count) {
     });
 }
 
+function makeNewPosition(position) {
+    const screen = window.screen;
+    if (position === "left" || position === "right") {
+        const width = Math.floor((screen.width - screen.availLeft) / 2);
+        return {
+            left: screen.availLeft + (position === "left" ? 0 : width),
+            top: screen.availTop,
+            width: width,
+            height: screen.height,
+        };
+    }
+    if (position === "top" || position === "bottom") {
+        const height = Math.floor((screen.height - screen.availTop) / 2);
+        return {
+            left: screen.availLeft,
+            top: screen.availTop + (position === "top" ? 0 : height),
+            width: screen.width,
+            height: height,
+        };
+    }
+}
+
+function snapWindow(windowId, position) {
+    const key = "positionInfo";
+    return browser.sessions.getWindowValue(windowId, key).then((posInfo) => {
+        if (posInfo === undefined || posInfo.position === "") {
+            return browser.windows.get(windowId).then((win) => {
+                const posInfo = {
+                    position, orgPos: {
+                        left: win.left, top: win.top,
+                        width: win.width, height: win.height
+                    }
+                };
+                return [posInfo, makeNewPosition(position)];
+            });
+        }
+        if (posInfo.position === position) {
+            posInfo.position = "";
+            return [posInfo, posInfo.orgPos];
+        }
+        if (posInfo.position !== position) {
+            posInfo.position = position;
+            return [posInfo, makeNewPosition(position)];
+        }
+    }).then(([posInfo, newPos]) => {
+        return browser.sessions.setWindowValue(windowId, key, posInfo)
+            .then(() => newPos);
+    }).then((newPos) => {
+        return browser.windows.update(windowId, newPos);
+    });
+}
+
 class Command {
     /**
      * Commands for search
@@ -464,6 +516,26 @@ class Command {
     /**
      * Commands for window manipulation
      */
+    static snapWindowToLeft(msg, sender, tabInfo) {
+        return discard(snapWindow(tabInfo.windowId, "left")).catch((e) => {
+            handleError(tabInfo, "snapWindowToLeft", e);
+        });
+    }
+    static snapWindowToRight(msg, sender, tabInfo) {
+        return discard(snapWindow(tabInfo.windowId, "right")).catch((e) => {
+            handleError(tabInfo, "snapWindowToRight", e);
+        });
+    }
+    static snapWindowToTop(msg, sender, tabInfo) {
+        return discard(snapWindow(tabInfo.windowId, "top")).catch((e) => {
+            handleError(tabInfo, "snapWindowToTop", e);
+        });
+    }
+    static snapWindowToBottom(msg, sender, tabInfo) {
+        return discard(snapWindow(tabInfo.windowId, "bottom")).catch((e) => {
+            handleError(tabInfo, "snapWindowToBottom", e);
+        });
+    }
     static removeCurrentWindow(msg, sender, tabInfo) {
         return browser.windows.remove(tabInfo.windowId).catch((e) => {
             handleError(tabInfo, "removeCurrentWindow", e);
