@@ -1,7 +1,14 @@
 'use strict';
 
+let gHintModeUniqueId = 0;
+
 class HintMode {
-    constructor(tabInfo, idList, typeInfo, autoFocus, overlap, keyMapping) {
+    static getUniqueId() {
+        const id = gHintModeUniqueId;
+        gHintModeUniqueId = (gHintModeUniqueId + 1) % Number.MAX_SAFE_INTEGER;
+        return id;
+    }
+    constructor(tabInfo, id, idList, typeInfo, autoFocus, overlap, keyMapping) {
         this.typeInfo = typeInfo;
         this.filter = "";
         this.filterIndexMap = []; // displayed index => global index
@@ -10,7 +17,7 @@ class HintMode {
         this.autoFocus = autoFocus;
         this.overlap = overlap;
         this.mapper = Utils.makeCommandMapper(keyMapping);
-        this._changeMode(tabInfo, idList);
+        this._changeMode(tabInfo, id, idList);
     }
     handle(key, sender, tabInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
@@ -65,20 +72,21 @@ class HintMode {
     }
     reconstruct(tabInfo) {
         const { type, pattern } = this.typeInfo;
+        const id = HintMode.getUniqueId();
         tabInfo.sendMessage(0, {
-            command: "collectHint", type, pattern
+            command: "collectHint", id, type, pattern
         }).then((hintsInfoList) => {
             const targetId =
                 this.idList[this.filterIndexMap[this.currentIndex]];
             return tabInfo.forwardModeCommand(targetId, "HINT", {
-                command: "getTargetIndex"
+                command: "getTargetIndex", id
             }).then((targetIndex) => [hintsInfoList, targetId, targetIndex]);
         }).then(([hintsInfoList, targetId, targetIndex]) => {
             if (hintsInfoList.length === 0) {
                 changeNormalMode(tabInfo);
                 return;
             }
-            this._changeMode(tabInfo, hintsInfoList, targetId, targetIndex);
+            this._changeMode(tabInfo, id, hintsInfoList, targetId, targetIndex);
         }).catch((e) => {
             handleError(tabInfo, "reconstruct", e);
         });
@@ -168,7 +176,7 @@ class HintMode {
         });
         this.currentIndex = nextDisplayedIndex;
     }
-    _changeMode(tabInfo, idList, targetId, targetIndex=null) {
+    _changeMode(tabInfo, id, idList, targetId, targetIndex=null) {
         if (targetIndex === null) {
             targetId = idList[0];
             targetIndex = 0;
@@ -176,20 +184,22 @@ class HintMode {
         const labelMap = {};
         let globalTargetIndex = 0;
         let counter = 0;
-        idList.forEach((id, index) => {
-            if (!labelMap[id]) {
-                labelMap[id] = [];
+        idList.forEach((frameId, index) => {
+            if (!labelMap[frameId]) {
+                labelMap[frameId] = [];
             }
-            labelMap[id].push(index);
-            if (id === targetId && counter++ === targetIndex) {
+            labelMap[frameId].push(index);
+            if (frameId === targetId && counter++ === targetIndex) {
                 globalTargetIndex = index;
             }
         });
         this._setIdList(idList, globalTargetIndex);
         const setZIndex = this.overlap;
-        tabInfo.forEachPort((port, id) => {
-            const data = { labelList: (labelMap[id] || []), setZIndex };
-            if (id === targetId) {
+        tabInfo.forEachPort((port, frameId) => {
+            const data = {
+                labelList: (labelMap[frameId] || []), setZIndex, id
+            };
+            if (frameId === targetId) {
                 data.initIndex = targetIndex;
             }
             port.postMessage({ command: "changeMode", mode: "HINT", data });

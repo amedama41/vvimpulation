@@ -1,11 +1,11 @@
 'use strict';
 
-var gHintElementList = [];
+const gHintElementListMap = {};
 
 class HintMode {
-    constructor(frameInfo, data={ labelList: [], setZIndex: false }) {
-        this.hints = gHintElementList;
-        gHintElementList = [];
+    constructor(frameInfo, data={ labelList: [], setZIndex: false, id: null }) {
+        this.hints = gHintElementListMap[data.id] || [];
+        delete gHintElementListMap[data.id];
         this.focusIndex = undefined;
         const labelList = data.labelList;
 
@@ -197,12 +197,13 @@ class HintMode {
             span.style.removeProperty("z-index");
         });
     }
-    _getTargetIndex() {
+    _getTargetIndex(msg) {
         if (this.focusIndex === undefined) {
             return null;
         }
         const [span, elem] = this.hints[this.focusIndex];
-        const index = gHintElementList.findIndex((e) => e[1] === elem);
+        const hintList = gHintElementListMap[msg.id] || [];
+        const index = hintList.findIndex((e) => e[1] === elem);
         if (index === -1) {
             return null;
         }
@@ -353,7 +354,7 @@ function makePattern(globalPattern, localPattern) {
     }
 }
 
-function makeHints(pattern, type, winArea, frameInfo) {
+function makeHints(id, pattern, type, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
 
@@ -417,12 +418,14 @@ function makeHints(pattern, type, winArea, frameInfo) {
                 right: Math.min(winArea.right - rect.left, rect.width)
             };
             idOrPromiseList.push(frameInfo.forwardMessage(frameId, {
-                command: "collectHint", type, pattern, area: frameArea
+                command: "collectHint", id, type, pattern, area: frameArea
             }));
         }
     }
 
-    gHintElementList = hints;
+    if (hints.length > 0) { // Avoid memory leak due to no mode change.
+        gHintElementListMap[id] = hints;
+    }
 
     return Promise.all(idOrPromiseList).then((list) => {
         return list.reduce((result, idOrList) => {

@@ -565,15 +565,16 @@ class Command {
     static toHintMode(msg, sender, tabInfo) {
         const type = msg.type;
         const pattern = gOptions.hintPattern["global"][type];
+        const id = HintMode.getUniqueId();
         tabInfo.sendMessage(0, {
-            command: "collectHint", type, pattern
+            command: "collectHint", id, type, pattern
         }).then((hintsInfoList) => {
             if (hintsInfoList.length === 0) {
                 changeNormalMode(tabInfo);
                 return;
             }
             tabInfo.setMode("HINT", new HintMode(
-                tabInfo, hintsInfoList, { type, pattern },
+                tabInfo, id, hintsInfoList, { type, pattern },
                 gOptions.autoFocus,
                 gOptions.overlapHintLabels, gOptions.hintKeyMapping));
         }).catch((e) => {
