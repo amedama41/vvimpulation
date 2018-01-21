@@ -144,15 +144,6 @@ class KeyMapping {
     setOptions(keyMapping) {
         KEY_MAPPING_TYPES.forEach((mode) => {
             const mapping = keyMapping[mode] || {};
-            if (mode === "visual") {
-                convertVisualKeyMapping(mapping);
-            }
-            if (mode === "hint") {
-                convertHintKeyMapping(mapping);
-            }
-            if (mode === "console") {
-                convertConsoleKeyMapping(mapping);
-            }
             this.options[mode] =
                 Object.keys(mapping).map((key) => [key, mapping[key]]);
         });

@@ -831,13 +831,11 @@ function removeOverwriteErrorPageListener() {
 function setOptions(options) {
     const getOption = (name) => options[name] || DEFAULT_OPTIONS[name];
     gOptions.keyMapping = options["keyMapping"];
-    convertVisualKeyMapping(gOptions.keyMapping["visual"]);
-    gOptions.consoleKeyMapping =
-        convertConsoleKeyMapping(gOptions.keyMapping["console"]);
+    gOptions.consoleKeyMapping = gOptions.keyMapping["console"];
     delete gOptions.keyMapping["console"];
     gOptions.hintPattern = normalizeHintPattern(options["hintPattern"]);
-    gOptions.hintKeyMapping = Utils.toPreparedCmdMap(
-        convertHintKeyMapping(options.keyMapping["hint"]));
+    gOptions.hintKeyMapping =
+        Utils.toPreparedCmdMap(options.keyMapping["hint"]);
     delete gOptions.keyMapping["hint"];
     if (gOptions.keyMapping["suspend"] === undefined) {
         gOptions.keyMapping["suspend"] =
