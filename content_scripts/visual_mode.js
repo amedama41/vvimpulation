@@ -42,9 +42,10 @@ class VisualModeBase {
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
-        const count = Math.max(parseInt(this.count, 10), 1);
+        let count = parseInt(this.count, 10);
         this.count = "0";
         if (cmd.startsWith("extendSelection|")) {
+            count = Math.max(count, 1);
             const [prefix, direction, granularity] = cmd.split("|");
             this.constructor.clean(this.selection);
             if (granularity === "block") {
