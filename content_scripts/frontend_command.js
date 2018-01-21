@@ -1262,7 +1262,7 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
 }
 
 function emulateClick(target, ctrl, alt, shift, meta) {
-    if (!ctrl && target.target) {
+    if (!ctrl && target.target === "_blank") {
         target.target = "_top";
     }
     emulateMouseEvent(target, "click", 0, ctrl, alt, shift, meta);
