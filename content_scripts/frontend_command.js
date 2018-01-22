@@ -919,7 +919,12 @@ class FrontendCommand {
         if (!selection) {
             return;
         }
-        selection.collapse(frameInfo.getTarget(), 0);
+        const TARGET_TYPE_LIST = [Node.ELEMENT_NODE, Node.TEXT_NODE];
+        const target = frameInfo.getTarget();
+        // Ignore comment nodes.
+        const index = Array.from(target.childNodes).findIndex(
+            (child) => TARGET_TYPE_LIST.includes(child.nodeType));
+        selection.collapse(target, Math.max(index, 0));
     }
     static yankInnerText(count, frameInfo) {
         if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
