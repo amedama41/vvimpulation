@@ -1,5 +1,6 @@
 window.addEventListener("DOMContentLoaded", (e) => {
-    const source = decodeURIComponent(escape(atob(location.search.substr(8))));
+    const params = new URLSearchParams(location.search.substr(1));
+    const source = params.get("source");
     const fragment = document.createDocumentFragment();
     source.split("\n").forEach((line) => {
         const code = document.createElement("code");

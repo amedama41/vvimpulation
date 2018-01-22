@@ -895,7 +895,7 @@ class FrontendCommand {
         const url = browser.runtime.getURL("pages/source_view.html")
         return frameInfo.sendMessage({
             command: "openLinkInTab",
-            url: `${url}?source=${btoa(unescape(encodeURIComponent(source)))}`
+            url: `${url}?source=${encodeURIComponent(source)}`
         });
     }
 
