@@ -696,7 +696,7 @@ class Command {
         if (tabInfo.getMode() !== "HINT") {
             return;
         }
-        tabInfo.modeInfo.stopFilter(msg.result, msg.filter, sender, tabInfo);
+        tabInfo.modeInfo.stopFilter(msg.filter, sender, tabInfo);
     }
 
     /**

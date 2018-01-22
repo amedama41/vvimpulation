@@ -41,8 +41,8 @@ class HintMode {
             forwardModeCommand(port, "HINT", msg);
         });
     }
-    stopFilter(result, filter, sender, tabInfo) {
-        if (!result) {
+    stopFilter(filter, sender, tabInfo) {
+        if (filter === null) {
             this.applyFilter(this.filter, sender, tabInfo);
             return;
         }

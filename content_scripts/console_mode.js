@@ -44,8 +44,8 @@ class ConsoleMode {
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
             case "hideConsole":
-                if (msg.reason) {
-                    frameInfo.showMessage(msg.reason);
+                if (msg.value) {
+                    frameInfo.showMessage(msg.value);
                 }
                 frameInfo.changeMode("NORMAL");
                 break;

@@ -210,7 +210,7 @@ function search(keyword, backward, frameId, mode) {
 
 class ConsoleCommand {
     static closeConsoleMode(mode) {
-        mode.stopConsole(false);
+        mode.stopConsole();
     }
     static execute(mode) {
         mode.execute();
@@ -278,7 +278,7 @@ class ConsoleCommand {
 
     static deleteCharBackward(mode) {
         if (!DomUtils.deleteCharBackward(mode.getTarget())) {
-            mode.stopConsole(false);
+            mode.stopConsole();
         }
     }
     static deleteWordBackward(mode) {
@@ -322,17 +322,17 @@ class ConsoleMode {
         this.onStart();
         this._input.focus();
     }
-    stopConsole(result, reason=null) {
+    stopConsole(value=null) {
         this._isOpened = false;
         this.onStop();
         this._input.value = "";
-        this.sendMessage({ command: "hideConsole", result, reason });
+        this.sendMessage({ command: "hideConsole", value });
     }
     execute() {
         this._inExec = true;
-        this.onExec().then(([result, reason]) => {
+        this.onExec().then(([result, value]) => {
             this._inExec = false;
-            this.stopConsole(result, reason);
+            this.stopConsole(value);
         });
     }
     sendMessage(msg) {
