@@ -135,7 +135,10 @@ class KeyMapping {
         }
         return KEY_MAPPING_TYPES.reduce((options, mode) => {
             options[mode] = this.options[mode].reduce((mapping, [key, cmd]) => {
-                mapping[key.trim()] = cmd.trim();
+                key = key.trim();
+                if (key) {
+                    mapping[key] = cmd.trim();
+                }
                 return mapping;
             }, {});
             return options;
