@@ -891,11 +891,13 @@ class FrontendCommand {
             return;
         }
         const range = selection.getRangeAt(0);
-        const source = range.commonAncestorContainer.outerHTML;
+        const node = range.commonAncestorContainer;
+        const target =
+            (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement);
         const url = browser.runtime.getURL("pages/source_view.html")
         return frameInfo.sendMessage({
             command: "openLinkInTab",
-            url: `${url}?source=${encodeURIComponent(source)}`
+            url: `${url}?source=${encodeURIComponent(target.outerHTML)}`
         });
     }
 
