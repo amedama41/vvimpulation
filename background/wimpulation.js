@@ -324,20 +324,20 @@ function focusFrame(tabInfo, frameId, count) {
 function makeNewPosition(position) {
     const screen = window.screen;
     if (position === "left" || position === "right") {
-        const width = Math.floor((screen.width - screen.availLeft) / 2);
+        const width = Math.floor(screen.availWidth / 2);
         return {
             left: screen.availLeft + (position === "left" ? 0 : width),
             top: screen.availTop,
             width: width,
-            height: screen.height,
+            height: screen.availHeight,
         };
     }
     if (position === "top" || position === "bottom") {
-        const height = Math.floor((screen.height - screen.availTop) / 2);
+        const height = Math.floor(screen.availHeight / 2);
         return {
             left: screen.availLeft,
             top: screen.availTop + (position === "top" ? 0 : height),
-            width: screen.width,
+            width: screen.availWidth,
             height: height,
         };
     }
