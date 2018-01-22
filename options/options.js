@@ -120,7 +120,7 @@ class KeyMapping {
         const button = document.getElementById("key-mapping-table-add-button");
         button.addEventListener("click", (e) => {
             this.options[this.currentMode].push(["", ""]);
-            this._updateKeyMappingSection();
+            this._updateKeyMappingSection(true);
         });
 
         const input = document.getElementById("key-mapping-suspend-input");
@@ -170,7 +170,7 @@ class KeyMapping {
         datalist.innerHTML = "";
         datalist.appendChild(fragment);
     }
-    _updateKeyMappingSection() {
+    _updateKeyMappingSection(scrollToBottom=false) {
         const modeKeyMapping = this.options[this.currentMode];
         const fragment = document.createDocumentFragment();
         const template = document.getElementById("key-mapping-table-template");
@@ -186,6 +186,9 @@ class KeyMapping {
         const table = document.getElementById("key-mapping-table-contents");
         table.innerHTML = "";
         table.appendChild(fragment);
+        if (scrollToBottom) {
+            table.scrollTop = table.scrollTopMax;
+        }
     }
     _setEventListener(inputs, index) {
         inputs[0].addEventListener("change", (e) => {
