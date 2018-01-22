@@ -238,7 +238,8 @@ return (class Edit {
         if (elem.disabled) {
             return false;
         }
-        if ((elem.tabIndex === -1 || Edit.isNonFocusableAnchor(elem)) &&
+        // If elem is not an HTMLElement, tabIndex is undefined.
+        if ((!(elem.tabIndex > -1) || Edit.isNonFocusableAnchor(elem)) &&
             !Scroll.isScrollable(elem, style) &&
             elem !== document.documentElement) {
             return false;
