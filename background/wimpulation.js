@@ -270,6 +270,9 @@ function findAllFrame(
                 return true;
             }
             if (i === length) {
+                if (tabInfo.searchHighlighting) {
+                    browser.find.removeHighlighting();
+                }
                 tabInfo.showMessage(
                     "Pattern not found: " + keyword, 3000, false);
                 return false;
