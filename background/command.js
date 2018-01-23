@@ -94,9 +94,16 @@ class ExCommandMap {
         const cmdName = args.shift();
         const [cmd, reason] = this.cmdMap.getCommand(cmdName);
         if (!cmd) {
-            return Promise.reject(reason);
+            return Promise.resolve([false, reason]);
         }
-        return cmd.invoke(args, tabInfo, options);
+        try {
+            return Promise.resolve(cmd.invoke(args, tabInfo, options))
+                .then((result) => [true, result])
+                .catch((error) => [false, (error && error.toString())]);
+        }
+        catch (e) {
+            return Promise.reject(e);
+        }
     }
     getCandidate(value, tabInfo) {
         const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -129,6 +136,10 @@ function setEngine(engineMap, searchEngine) {
             keyword, Object.assign({ name: keyword }, engines[keyword]));
     });
     engineMap.setDefault(searchEngine.defaultEngine);
+}
+
+function discardResult(promise) {
+    return promise.then(() => null);
 }
 
 class OpenCommand {
@@ -252,7 +263,7 @@ class OpenCommand {
         }
     }
     static _open(url, kind, tabInfo, options) {
-        return (() => {
+        return discardResult((() => {
             switch (kind) {
                 case "tab":
                     return browser.tabs.get(tabInfo.id).then((tab) => {
@@ -261,17 +272,16 @@ class OpenCommand {
                             index: tab.index + 1,
                             active: options.activateNewTab
                         });
-                    }).then(() => true);
+                    });
                 case "window":
-                    return browser.windows.create({ url }).then(() => true);
+                    return browser.windows.create({ url });
                 case "private":
                     return browser.windows.create({ url, incognito: true })
-                        .then(() => false);
+                        .then(() => Promise.reject());
                 default:
-                    return browser.tabs.update(tabInfo.id, { url })
-                        .then(() => true);
+                    return browser.tabs.update(tabInfo.id, { url });
             }
-        })().catch((e) => (e || "Some error occurred").toString());
+        })());
     }
     static _getHistoryAndBookmark(value) {
         return Promise.all([
@@ -319,10 +329,9 @@ gExCommandMap.makeCommand(
             return Promise.reject("argument must be number");
         }
         const windowId = tabInfo.windowId;
-        return browser.tabs.query({ windowId }).then((tabs) => {
-            browser.tabs.update(tabs[index].id, { active: true });
-            return true;
-        });
+        return discardResult(browser.tabs.query({ windowId }).then((tabs) => {
+            return browser.tabs.update(tabs[index].id, { active: true });
+        }));
     },
     (value, tabInfo) => {
         const filter = Utils.makeFilter(value);
@@ -342,11 +351,9 @@ gExCommandMap.makeCommand(
         if (Number.isNaN(index)) {
             return Promise.reject("argument must be number");
         }
-        return browser.windows.getAll().then((windows) => {
-            return browser.windows.update(windows[index].id, {
-                focused: true
-            }).then((win) => true);
-        });
+        return discardResult(browser.windows.getAll().then((windows) => {
+            return browser.windows.update(windows[index].id, { focused: true });
+        }));
     },
     (value, tabInfo) => {
         const filter = Utils.makeFilter(value);
@@ -433,7 +440,7 @@ class DownloadManager {
             ids.map((id) => func(id).then(() => "").catch((error) => error));
         return Promise.all(promiseList).then((errors) => {
             errors = errors.filter((error) => error);
-            return (errors.length ? Promise.reject(errors.join("\n")) : true);
+            return (errors.length ? Promise.reject(errors.join("\n")) : null);
         });
     }
     static _getItemList(state, query, tabInfo) {
@@ -586,7 +593,7 @@ class HistoryManager {
         if (args.length === 0) {
             return Promise.reject("No arguments");
         }
-        return subcmd.invoke(args, tabInfo, options).then(() => true);
+        return discardResult(subcmd.invoke(args, tabInfo, options));
     }
     complete(value, tabInfo) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -626,8 +633,8 @@ gExCommandMap.makeCommand(
             if (!(index < tabSessions.length)) {
                 return Promise.reject("invalid index");
             }
-            browser.sessions.restore(tabSessions[index].tab.sessionId);
-            return Promise.resolve(true);
+            const sessionId = tabSessions[index].tab.sessionId;
+            return discardResult(browser.sessions.restore(sessionId));
         });
     },
     (value, tabInfo) => {
@@ -656,8 +663,8 @@ gExCommandMap.makeCommand(
             if (!(index < winSessions.length)) {
                 return Promise.reject("invalid index");
             }
-            browser.sessions.restore(winSessions[index].window.sessionId);
-            return Promise.resolve(true);
+            const sessionId = winSessions[index].window.sessionId;
+            return discardResult(browser.sessions.restore(sessionId));
         });
     },
     (value, tabInfo) => {
@@ -678,19 +685,17 @@ gExCommandMap.makeCommand(
     });
 gExCommandMap.makeCommand(
     "registers", "Show the contents of all registers", (args, tabInfo) => {
-        return Promise.resolve(
-            gMacro.getRegisters().map(
-                ([register, keyList]) => [register, keyList.join("")]));
+        return gMacro.getRegisters().map(
+            ([register, keyList]) => [register, keyList.join("")]);
     });
 gExCommandMap.makeCommand(
     "nohlsearch", "Remove search highlighting", (args, tabInfo, options) => {
         browser.find.removeHighlighting();
         tabInfo.searchHighlighting = options.highlightSearch;
-        return Promise.resolve(true);
+        return null;
     });
 gExCommandMap.makeCommand(
     "options", "Open option page", (args, tabInfo) => {
-        browser.runtime.openOptionsPage();
-        return Promise.resolve(true);
+        return browser.runtime.openOptionsPage();
     });
 
