@@ -375,6 +375,13 @@ function snapWindow(windowId, position) {
 
 class Command {
     /**
+     * Commands for console command execution
+     */
+    static execCommand(msg, sender, tabInfo) {
+        return gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions)
+    }
+
+    /**
      * Commands for search
      */
     static find(msg, sender, tabInfo) {
@@ -734,12 +741,6 @@ class Command {
 }
 
 class ConsoleCommand {
-    static find(msg, sender, tabInfo) {
-        return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
-    }
-    static execCommand(msg, sender, tabInfo) {
-        return gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions)
-    }
     static getCandidate(msg, sender, tabInfo) {
         return gExCommandMap.getCandidate(msg.value, tabInfo);
     }

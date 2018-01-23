@@ -173,40 +173,7 @@ class History {
         const param = { [key]: [] };
         return browser.storage.local.get(param);
     }
-    static save(key, cmd) {
-        History.load(key).then((result) => {
-            const history = result[key];
-            if (history.length > 0 && history[0] === cmd) {
-                // Not save the same command as previous.
-                return;
-            }
-            history.length = Math.min(history.length + 1, 100);
-            history.copyWithin(1, 0, history.length);
-            history[0] = cmd;
-            browser.storage.local.set(result);
-        }).catch ((error) => {
-            console.error("Failed to save history:", key, cmd);
-        });
-    }
 };
-
-function search(keyword, backward, frameId, mode) {
-    return mode.sendMessage({
-        command: "find", keyword, backward, frameId
-    }).then((result) => {
-        if (!browser.extension.inIncognitoContext) {
-            History.save("search_history", keyword);
-        }
-        if (result) {
-            return [true, null];
-        }
-        else {
-            return [false, "Pattern not found: " + keyword];
-        }
-    }).catch((error) => {
-        return [false, error];
-    });
-}
 
 class ConsoleCommand {
     static closeConsoleMode(mode) {
@@ -307,12 +274,10 @@ class ConsoleCommand {
 class ConsoleMode {
     constructor(options, port, input, container, keyMapping) {
         this._isOpened = false;
-        this._inExec = false;
         this._port = port;
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultInput;
-        this._frameId = options.frameId;
         this._mapper = keyMapping;
 
         this.onInit(container, options);
@@ -329,20 +294,13 @@ class ConsoleMode {
         this.sendMessage({ command: "hideConsole", value });
     }
     execute() {
-        this._inExec = true;
-        this.onExec().then(([result, value]) => {
-            this._inExec = false;
-            this.stopConsole(value);
-        });
+        this.stopConsole(this._input.value);
     }
     sendMessage(msg) {
         return this._port.sendMessage(msg);
     }
     get isOpened() {
         return this._isOpened;
-    }
-    get inExec() {
-        return this._inExec;
     }
     handleKeydown(key) {
         const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
@@ -353,12 +311,6 @@ class ConsoleMode {
     }
     getTarget() {
         return this._input;
-    }
-    getFrameId() {
-        return this._frameId;
-    }
-    isBackward() {
-        return this._input.parentNode.getAttribute("mode") === "backwardSearch";
     }
 }
 class ExMode extends ConsoleMode {
@@ -383,31 +335,6 @@ class ExMode extends ConsoleMode {
     get completer() {
         return this._completer;
     }
-    onExec() {
-        const value = this.getTarget().value;
-        if (value === "") {
-            return Promise.resolve([false, null]);
-        }
-        const prefix = value.charAt(0);
-        if (prefix === "/" || prefix === "?") {
-            return search(
-                value.substr(1), prefix === '?', super.getFrameId(), this);
-        }
-
-        return this.sendMessage({ command: "execCommand", cmd: value })
-            .then((result) => {
-                if (result && !browser.extension.inIncognitoContext) { // TODO
-                    History.save("command_history", value);
-                }
-                if (typeof(result) === "boolean") {
-                    return [true, null];
-                }
-                return [true, result];
-            })
-            .catch((error) => {
-                return [false, error];
-            });
-    }
 }
 class SearchMode extends ConsoleMode {
     onInit(container, options) {
@@ -423,14 +350,6 @@ class SearchMode extends ConsoleMode {
     get history() {
         return this._history;
     }
-    onExec() {
-        const value = this.getTarget().value;
-        if (value === "") {
-            return Promise.resolve([false, null]);
-        }
-        return search(value, this.isBackward(), super.getFrameId(), this);
-    }
-
 }
 class HintFilterMode extends ConsoleMode {
     onInit(container, options) {
@@ -446,10 +365,6 @@ class HintFilterMode extends ConsoleMode {
             super.sendMessage({ command: 'applyFilter', filter });
             this._prevFilter = filter;
         }
-    }
-    onExec() {
-        const filter = this.getTarget().value;
-        return Promise.resolve([true, filter]);
     }
 }
 
@@ -540,8 +455,7 @@ window.addEventListener("DOMContentLoaded", (e) => {
         if (document.activeElement === input) { // If other window is focused
             return;
         }
-        // If inExec, stopConsole is called by ConsoleMode.execute
-        if (mode.isOpened && !mode.inExec) {
+        if (mode.isOpened) {
             mode.stopConsole()
         }
     });

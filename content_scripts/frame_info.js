@@ -313,11 +313,11 @@ class FrameInfo {
     get consoleFrame() {
         return this._consoleFrame;
     }
-    showConsole(requestMode, mode, defaultInput, frameId) {
+    showConsole(requestMode, mode, defaultInput) {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
         }
-        const options = { mode, defaultInput, frameId };
+        const options = { mode, defaultInput };
         return this._sendConsoleMessage({ command: "setConsoleMode", options })
             .then((result) => {
                 if (this._mode !== requestMode) { // Maybe mode is changed.
