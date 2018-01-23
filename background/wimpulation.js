@@ -282,7 +282,7 @@ function findAllFrame(
     return findFrame(0);
 }
 
-function continueFind(tabInfo, frameId, isNext) {
+function continueSearch(tabInfo, frameId, isNext) {
     const [keyword, caseSensitive, backward] = tabInfo.lastSearchInfo;
     if (keyword === "") {
         return Promise.resolve();
@@ -409,15 +409,21 @@ class Command {
             handleError(tabInfo, "search", e);
         });
     }
-    static findNext(msg, sender, tabInfo) {
-        return continueFind(tabInfo, sender.frameId, true).catch((e) => {
-            handleError(tabInfo, "findNext", e);
+    static searchNext(msg, sender, tabInfo) {
+        return continueSearch(tabInfo, sender.frameId, true).catch((e) => {
+            handleError(tabInfo, "searchNext", e);
         });
     }
-    static findPrevious(msg, sender, tabInfo) {
-        return continueFind(tabInfo, sender.frameId, false).catch((e) => {
-            handleError(tabInfo, "findPrevious", e);
+    static searchPrevious(msg, sender, tabInfo) {
+        return continueSearch(tabInfo, sender.frameId, false).catch((e) => {
+            handleError(tabInfo, "searchPrevious", e);
         });
+    }
+    static findNext(...args) {
+        return Command.searchNext(...args);
+    }
+    static findPrevious(...args) {
+        return Command.searchPrevious(...args);
     }
 
     /**

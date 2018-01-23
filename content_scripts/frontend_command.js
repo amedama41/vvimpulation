@@ -307,7 +307,7 @@ class FrontendCommand {
             frameId: frameInfo.getSelfFrameId()
         });
     }
-    static findSelectionForward(count, frameInfo) {
+    static searchSelectionForward(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
             return;
@@ -317,7 +317,7 @@ class FrontendCommand {
             frameId: frameInfo.getSelfFrameId()
         });
     }
-    static findSelectionBackward(count, frameInfo) {
+    static searchSelectionBackward(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
             return;
@@ -326,6 +326,12 @@ class FrontendCommand {
             command: "search", keyword: selection.toString(), backward: true,
             frameId: frameInfo.getSelfFrameId()
         });
+    }
+    static findSelectionForward(...args) {
+        return FrontendCommand.searchSelectionForward(...args);
+    }
+    static findSelectionBackward(...args) {
+        return FrontendCommand.searchSelectionBackward(...args);
     }
     static findNextPage(count, frameInfo) {
         const NEXT_KEYWORD = frameInfo.getNextPattern();

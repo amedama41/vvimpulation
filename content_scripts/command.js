@@ -29,10 +29,14 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for search **/
     search: { description: "Search a text. This takes an argument such as search|<search text>" },
-    findNext: { background: true, description: "Repeat the latest '/' or '?'" },
-    findPrevious: { background: true, description: "Repeat the latest '/' or '?' in opposite direction" },
-    findSelectionForward: { description: "Find selection text as keyword forward" },
-    findSelectionBackward: { description: "Find selection text as keyword backward" },
+    searchNext: { background: true, description: "Repeat the latest '/' or '?'" },
+    searchPrevious: { background: true, description: "Repeat the latest '/' or '?' in opposite direction" },
+    searchSelectionForward: { description: "Search selection text as keyword forward" },
+    searchSelectionBackward: { description: "Search selection text as keyword backward" },
+    findNext: { background: true, description: "This command is deprecated. Use searchNext" },
+    findPrevious: { background: true, description: "This command is deprecated. Use searchPrevious" },
+    findSelectionForward: { description: "This command is deprecated. Use searchSelectionForward" },
+    findSelectionBackward: { description: "This command is deprecated. Use searchSelectionBackward" },
     findNextPage: { description: "Find a next label link" },
     findPreviousPage: { description: "Find a previous label link" },
 
