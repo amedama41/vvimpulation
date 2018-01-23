@@ -381,7 +381,7 @@ class Command {
     static execCommand(msg, sender, tabInfo) {
         const promise = gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions);
         return promise.then(([result, message]) => {
-            if (result && !browser.extension.inIncognitoContext) { // TODO
+            if (result && !tabInfo.incognito) { // TODO
                 saveHistory("command_history", msg.cmd);
             }
             if (message) {
