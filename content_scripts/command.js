@@ -24,7 +24,11 @@ const COMMAND_DESCRIPTIONS = {
     moveTargetAtCenter: { description: "Display the target at the center of the screen" },
     moveTargetAtBottom: { description: "Display the target at the bottom of the screen" },
 
+    /** * Commands for console command execution **/
+    execCommand: { description: "Execute a console command. This takes an argument such as execCommand|<console command>" },
+
     /** Commands for search **/
+    search: { description: "Search a text. This takes an argument such as search|<search text>" },
     findNext: { background: true, description: "Repeat the latest '/' or '?'" },
     findPrevious: { background: true, description: "Repeat the latest '/' or '?' in opposite direction" },
     findSelectionForward: { description: "Find selection text as keyword forward" },

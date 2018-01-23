@@ -284,15 +284,36 @@ class FrontendCommand {
     }
 
     /**
+     * Commands for console command execution
+     **/
+    static execCommand(count, frameInfo, args) {
+        if (args.length === 0) {
+            return;
+        }
+        return frameInfo.sendMessage({
+            command: "execCommand", cmd: args[0]
+        });
+    }
+
+    /**
      * Commands for search
      **/
+    static search(count, frameInfo, args) {
+        if (args.length === 0) {
+            return;
+        }
+        return frameInfo.sendMessage({
+            command: "search", keyword: args[0], backward: false,
+            frameId: frameInfo.getSelfFrameId()
+        });
+    }
     static findSelectionForward(count, frameInfo) {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
             return;
         }
         return frameInfo.sendMessage({
-            command: "find", keyword: selection.toString(), backward: false,
+            command: "search", keyword: selection.toString(), backward: false,
             frameId: frameInfo.getSelfFrameId()
         });
     }
@@ -302,7 +323,7 @@ class FrontendCommand {
             return;
         }
         return frameInfo.sendMessage({
-            command: "find", keyword: selection.toString(), backward: true,
+            command: "search", keyword: selection.toString(), backward: true,
             frameId: frameInfo.getSelfFrameId()
         });
     }

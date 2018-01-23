@@ -46,10 +46,9 @@ class ConsoleMode {
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
             case "hideConsole":
-                this._invoke(msg.value, frameInfo).then((message) => {
-                    if (message) {
-                        frameInfo.showMessage(message);
-                    }
+                this._execute(msg.value, frameInfo).catch((error) => {
+                    frameInfo.showMessage(error);
+                }).then((message) => {
                     frameInfo.changeModeNow("NORMAL");
                 });
                 break;
@@ -58,13 +57,13 @@ class ConsoleMode {
                 break;
         }
     }
-    _invoke(value, frameInfo) {
+    _execute(value, frameInfo) {
         if (!value || value.trim() === "") {
             return Promise.resolve();
         }
         switch (this._mode) {
             case "exec":
-                return this._execute(value, frameInfo);
+                return this._executeConsoleCommand(value, frameInfo);
             case "forwardSearch":
                 return this._search(value, false, frameInfo);
             case "backwardSearch":
@@ -73,52 +72,16 @@ class ConsoleMode {
                 return Promise.resolve("Invalid mode");
         }
     }
-    _execute(cmd, frameInfo) {
+    _executeConsoleCommand(cmd, frameInfo) {
         const prefix = cmd.charAt(0);
         if (prefix === "/" || prefix === "?") {
             return this._search(cmd.substr(1), prefix === '?', frameInfo);
         }
-        return frameInfo.sendMessage({
-            command: "execCommand", cmd
-        }).then((result) => {
-            if (result && !browser.extension.inIncognitoContext) { // TODO
-                ConsoleMode._save("command_history", cmd);
-            }
-            if (typeof(result) === "boolean") {
-                return null;
-            }
-            return result;
-        }).catch((error) => {
-            return error;
-        });
+        return frameInfo.sendMessage({ command: "execCommand", cmd });
     }
     _search(keyword, backward, frameInfo) {
         return frameInfo.sendMessage({
-            command: "find", keyword, backward, frameId: this._frameId
-        }).then((result) => {
-            if (!browser.extension.inIncognitoContext) {
-                ConsoleMode._save("search_history", keyword);
-            }
-            if (!result) {
-                return "Pattern not found: " + keyword;
-            }
-        }).catch((error) => {
-            return error;
-        });
-    }
-    static _save(key, item) {
-        browser.storage.local.get({ [key]: [] }).then((result) => {
-            const history = result[key];
-            if (history.length > 0 && history[0] === item) {
-                // Not save the same command as previous.
-                return;
-            }
-            history.length = Math.min(history.length + 1, 100);
-            history.copyWithin(1, 0, history.length);
-            history[0] = item;
-            browser.storage.local.set(result);
-        }).catch ((error) => {
-            console.error("Failed to save history:", key, item);
+            command: "search", keyword, backward, frameId: this._frameId
         });
     }
 }

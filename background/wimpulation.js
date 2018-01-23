@@ -249,7 +249,7 @@ function moveTabToWindow(tabInfo, distance) {
 }
 
 function findAllFrame(
-    tabInfo, keyword, frameId, frameIdList, caseSensitive, backward) {
+    tabInfo, frameId, frameIdList, keyword, caseSensitive, backward) {
     const msg = { command: "find", keyword, caseSensitive, backward };
     const diff = (backward ? -1 : 1);
     const length = frameIdList.length;
@@ -257,41 +257,29 @@ function findAllFrame(
     const findFrame = (i) => {
         const index = (startIndex + i * diff + length) % length;
         msg.reset = (i !== 0);
-        return tabInfo.sendMessage(frameIdList[index], msg)
-            .then((result) => {
-                if (result) {
-                    if (tabInfo.searchHighlighting) {
-                        browser.find.find(keyword, {
-                            tabId: tabInfo.id, caseSensitive
-                        }).then((result) => {
-                            browser.find.highlightResults();
-                        });
-                        tabInfo.searchHighlighting = false;
-                    }
-                    return true;
+        return tabInfo.sendMessage(frameIdList[index], msg).then((result) => {
+            if (result) {
+                if (tabInfo.searchHighlighting) {
+                    browser.find.find(keyword, {
+                        tabId: tabInfo.id, caseSensitive
+                    }).then((result) => {
+                        browser.find.highlightResults();
+                    });
+                    tabInfo.searchHighlighting = false;
                 }
-                if (i === length) {
-                    return false;
-                }
-                else {
-                    return findFrame(i + 1);
-                }
-            });
+                return true;
+            }
+            if (i === length) {
+                tabInfo.showMessage(
+                    "Pattern not found: " + keyword, 3000, false);
+                return false;
+            }
+            else {
+                return findFrame(i + 1);
+            }
+        });
     };
     return findFrame(0);
-}
-
-function startFind(keyword, backward, frameId, tabInfo) {
-    return tabInfo.frameIdList((frameIdList) => {
-        tabInfo.searchHighlighting = gOptions.highlightSearch;
-        const caseSensitive = /[A-Z]/.test(keyword);
-        return findAllFrame(
-            tabInfo, keyword, frameId, frameIdList, caseSensitive, backward)
-            .then((result) => {
-                tabInfo.lastSearchInfo = [keyword, caseSensitive, backward];
-                return result;
-            });
-    });
 }
 
 function continueFind(tabInfo, frameId, isNext) {
@@ -301,14 +289,24 @@ function continueFind(tabInfo, frameId, isNext) {
     }
     return tabInfo.frameIdList((frameIdList) => {
         return findAllFrame(
-            tabInfo, keyword, frameId, frameIdList,
-            caseSensitive, (isNext ? backward : !backward))
-            .then((result) => {
-                if (!result) {
-                    const message = "Pattern not found: " + keyword;
-                    tabInfo.showMessage(message, 3000, false);
-                }
-            });
+            tabInfo, frameId, frameIdList,
+            keyword, caseSensitive, (isNext ? backward : !backward));
+    });
+}
+
+function saveHistory(key, item) {
+    browser.storage.local.get({ [key]: [] }).then((result) => {
+        const history = result[key];
+        if (history.length > 0 && history[0] === item) {
+            // Not save the same command as previous.
+            return;
+        }
+        history.length = Math.min(history.length + 1, 100);
+        history.copyWithin(1, 0, history.length);
+        history[0] = item;
+        browser.storage.local.set(result);
+    }).catch ((error) => {
+        console.error("Failed to save history:", key, item);
     });
 }
 
@@ -378,14 +376,38 @@ class Command {
      * Commands for console command execution
      */
     static execCommand(msg, sender, tabInfo) {
-        return gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions)
+        const promise = gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions);
+        return promise.then((result) => {
+            if (result && !browser.extension.inIncognitoContext) { // TODO
+                saveHistory("command_history", msg.cmd);
+            }
+            if (typeof(result) !== "boolean") {
+                tabInfo.showMessage(result, 3000, false);
+            }
+        }).catch((e) => {
+            handleError(tabInfo, "execCommand", e);
+        });
     }
 
     /**
      * Commands for search
      */
-    static find(msg, sender, tabInfo) {
-        return startFind(msg.keyword, msg.backward, msg.frameId, tabInfo);
+    static search(msg, sender, tabInfo) {
+        const { keyword, backward, frameId } = msg;
+        const caseSensitive = /[A-Z]/.test(keyword);
+        return tabInfo.frameIdList((frameIdList) => {
+            tabInfo.searchHighlighting = gOptions.highlightSearch;
+            return findAllFrame(
+                tabInfo, frameId, frameIdList,
+                keyword, caseSensitive, backward);
+        }).then((result) => {
+            tabInfo.lastSearchInfo = [keyword, caseSensitive, backward];
+            if (!tabInfo.incognito) {
+                saveHistory("search_history", keyword);
+            }
+        }).catch((e) => {
+            handleError(tabInfo, "search", e);
+        });
     }
     static findNext(msg, sender, tabInfo) {
         return continueFind(tabInfo, sender.frameId, true).catch((e) => {
