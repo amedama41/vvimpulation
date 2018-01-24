@@ -37,28 +37,28 @@ class FrontendCommand {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollTop -= Math.max(count, 20);
+            elem.scrollTop -= (count === 0 ? 60 : count);
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
             return frameInfo.forwardToParent({ command: "scrollUp", count });
         }
         else {
-            window.scrollByLines(Math.max(count, 4) * -1);
+            window.scrollBy(0, (count === 0 ? 60 : count) * -1);
         }
     }
     static scrollDown(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getVerticalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollTop += Math.max(count, 20);
+            elem.scrollTop += (count === 0 ? 60 : count);
             return;
         }
         if (window.scrollMaxY === 0 && !frameInfo.isTopFrame()) {
             return frameInfo.forwardToParent({ command: "scrollDown", count });
         }
         else {
-            window.scrollByLines(Math.max(count, 4) * 1);
+            window.scrollBy(0, (count === 0 ? 60 : count) * 1);
         }
     }
     static scrollLineUp(count, frameInfo) {
@@ -145,28 +145,28 @@ class FrontendCommand {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollLeft -= Math.max(count, 20);
+            elem.scrollLeft -= (count === 0 ? 20 : count);
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
             return frameInfo.forwardToParent({ command: "scrollLeft", count });
         }
         else {
-            window.scrollBy(-Math.max(count, 20), 0);
+            window.scrollBy(-(count === 0 ? 20 : count), 0);
         }
     }
     static scrollRight(count, frameInfo) {
         const baseElem = getScrollBaseElement(frameInfo.getTarget());
         const elem = Scroll.getHorizontalScrollableElem(baseElem);
         if (elem) {
-            elem.scrollLeft += Math.max(count, 20);
+            elem.scrollLeft += (count === 0 ? 20 : count);
             return;
         }
         if (window.scrollMaxX === 0 && !frameInfo.isTopFrame()) {
             return frameInfo.forwardToParent({ command: "scrollRight", count });
         }
         else {
-            window.scrollBy(Math.max(count, 20), 0);
+            window.scrollBy((count === 0 ? 20 : count), 0);
         }
     }
     static scrollHome(count, frameInfo) {
