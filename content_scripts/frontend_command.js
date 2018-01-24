@@ -152,7 +152,7 @@ class FrontendCommand {
             return frameInfo.forwardToParent({ command: "scrollLeft", count });
         }
         else {
-            window.scrollBy(-20, 0);
+            window.scrollBy(-Math.max(count, 20), 0);
         }
     }
     static scrollRight(count, frameInfo) {
@@ -166,7 +166,7 @@ class FrontendCommand {
             return frameInfo.forwardToParent({ command: "scrollRight", count });
         }
         else {
-            window.scrollBy(20, 0);
+            window.scrollBy(Math.max(count, 20), 0);
         }
     }
     static scrollHome(count, frameInfo) {
@@ -736,7 +736,7 @@ class FrontendCommand {
         if (options.length === 0) {
             return;
         }
-        const index = Math.min(count, options.length - 1);
+        const index = Math.min(Math.max(count, 1), options.length) - 1;
         options[index].selected = !options[index].selected;
     }
 
@@ -1121,17 +1121,17 @@ class FrontendCommand {
     static toHintMode(count, frameInfo) {
         // TODO: slot 4
         const TYPE_LIST = ["link", "focus", "media", "code", "link"];
-        const type = TYPE_LIST[count % TYPE_LIST.length];
+        const type = TYPE_LIST[(Math.max(count, 1) - 1) % TYPE_LIST.length];
         return frameInfo.sendMessage({ command: "toHintMode", type });
     }
     static toHintFocusMode(count, frameInfo) {
-        FrontendCommand.toHintMode(1, frameInfo);
-    }
-    static toHintMediaMode(count, frameInfo) {
         FrontendCommand.toHintMode(2, frameInfo);
     }
-    static toHintCodeMode(count, frameInfo) {
+    static toHintMediaMode(count, frameInfo) {
         FrontendCommand.toHintMode(3, frameInfo);
+    }
+    static toHintCodeMode(count, frameInfo) {
+        FrontendCommand.toHintMode(4, frameInfo);
     }
     static toVisualMode(count, frameInfo) {
         frameInfo.changeMode("VISUAL");

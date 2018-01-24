@@ -531,7 +531,8 @@ class Command {
             if (tabSessions.length === 0) {
                 return;
             }
-            const tab = tabSessions[Math.min(msg.count, tabSessions.length - 1)];
+            const count = Math.max(msg.count, 1)
+            const tab = tabSessions[Math.min(count, tabSessions.length) - 1];
             return browser.sessions.restore(tab.tab.sessionId);
         })).catch((e) => {
             handleError(tabInfo, "undoCloseTab", e);
