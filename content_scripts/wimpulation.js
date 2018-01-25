@@ -8,7 +8,7 @@ const NORMAL_MODE_KYE_ARG_COMMAND_INFO = {
         command: "startMacro",
     },
     "@": {
-        acceptKey: /^[0-9a-zA-Z@]$/,
+        acceptKey: /^[:0-9a-zA-Z@]$/,
         command: "playMacro",
     },
     "m": {

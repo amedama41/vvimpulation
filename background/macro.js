@@ -3,6 +3,7 @@
 class MacroManager {
     constructor() {
         this.registerMap = {};
+        this.recordConsoleCommand = undefined;
         this.recordRegister = undefined;
         this.recordKeyList = undefined;
         this.recordTabInfo = undefined;
@@ -11,6 +12,9 @@ class MacroManager {
         browser.storage.local.get({ registers: {} }).then(({ registers }) => {
             this.registerMap = registers;
         });
+    }
+    set lastConsoleCommand(cmd) {
+        this.recordConsoleCommand = cmd;
     }
     start(register, tabInfo) {
         if (this.recordRegister) {
@@ -52,7 +56,7 @@ class MacroManager {
             console.warn("Not start macro");
         }
     }
-    play(register, frameId, tabInfo) {
+    play(register, frameId, tabInfo, options) {
         if (this.playKeyList) {
             return; // Prevent recursive macro playing.
         }
@@ -68,6 +72,14 @@ class MacroManager {
             }
             this.previousPlayRegister = register;
         }
+
+        if (register === ":") {
+            if (this.recordConsoleCommand) {
+                tabInfo.executeCommand(this.recordConsoleCommand, options);
+            }
+            return;
+        }
+
         this.playKeyList = this.registerMap[register];
         if (!this.playKeyList) {
             return;

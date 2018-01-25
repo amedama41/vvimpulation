@@ -146,6 +146,15 @@ class TabInfo {
         this.sendMessage(
             0, { command: "showMessage", message, duration, saveMessage });
     }
+    executeCommand(command, options) {
+        const promise = gExCommandMap.execCommand(command, this, options);
+        return promise.then(([result, message]) => {
+            if (message) {
+                this.showMessage(message, 3000, false);
+            }
+            return result;
+        });
+    }
     setConsolePort(port) {
         if (this.consolePort) {
             this.consolePort.disconnect();
@@ -379,13 +388,10 @@ class Command {
      * Commands for console command execution
      */
     static execCommand(msg, sender, tabInfo) {
-        const promise = gExCommandMap.execCommand(msg.cmd, tabInfo, gOptions);
-        return promise.then(([result, message]) => {
+        return tabInfo.executeCommand(msg.cmd, gOptions).then((result) => {
+            gMacro.lastConsoleCommand = msg.cmd;
             if (result && !tabInfo.incognito) { // TODO
                 saveHistory("command_history", msg.cmd);
-            }
-            if (message) {
-                tabInfo.showMessage(message, 3000, false);
             }
         }).catch((e) => {
             handleError(tabInfo, "execCommand", e);
@@ -719,7 +725,7 @@ class Command {
         gMacro.stop(true);
     }
     static playMacro(msg, sender, tabInfo) {
-        gMacro.play(msg.key, sender.frameId, tabInfo);
+        gMacro.play(msg.key, sender.frameId, tabInfo, gOptions);
     }
 
     /**
