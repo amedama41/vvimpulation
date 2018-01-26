@@ -102,8 +102,7 @@ class Port {
                 return Promise.resolve(handler(msg.msg, this.port.sender));
             }
             catch (e) {
-                // can not send an Error object by postMessage.
-                return Promise.reject(Port._toString(e));
+                return Promise.reject(e);
             }
         });
         Promise.race(promiseList).then((response) => {
@@ -111,8 +110,10 @@ class Port {
                 type: 'response', id: msg.id, result: 0, msg: response
             });
         }).catch((error) => {
+            // Can not send an Error object by postMessage.
+            const errorString = Port._toString(error);
             this._safePostMessage({
-                type: 'response', id: msg.id, result: 1, msg: error
+                type: 'response', id: msg.id, result: 1, msg: errorString
             });
         });
     }
@@ -164,11 +165,14 @@ class Port {
         }
     }
     static _toString(e) {
+        if (e === undefined || e === null) {
+            return e;
+        }
         if (e instanceof Error) {
             return `${e.message} (${e.fileName}:${e.lineNumber})`;
         }
         else {
-            return e.toString();
+            return e.toSource();
         }
     }
 }
