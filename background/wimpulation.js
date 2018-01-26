@@ -737,6 +737,12 @@ class Command {
         }
         return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
     }
+    static resetHintMode(msg, sender, tabInfo) {
+        if (tabInfo.getMode() !== "HINT") {
+            return;
+        }
+        return tabInfo.modeInfo.reset(sender, tabInfo);
+    }
     static stopFilter(msg, sender, tabInfo) {
         if (tabInfo.getMode() !== "HINT") {
             return;

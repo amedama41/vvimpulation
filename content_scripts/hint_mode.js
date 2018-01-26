@@ -41,7 +41,10 @@ class HintMode {
         frameInfo.postMessage({ command: "forwardHintKeyEvent", key });
         return [true, undefined, undefined, undefined];
     }
-    onReset() {
+    onReset(frameInfo, allFrame) {
+        if (!allFrame) {
+            frameInfo.postMessage({ command: "resetHintMode" });
+        }
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
             container.parentNode.removeChild(container);

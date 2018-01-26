@@ -35,6 +35,15 @@ class HintMode {
             changeNormalMode(tabInfo, sender.frameId, [key]);
         }
     }
+    reset(sender, tabInfo) {
+        const changeModeMsg = { command: "changeMode", mode: "NORMAL" };
+        tabInfo.setMode("NORMAL");
+        tabInfo.forEachPort((port, frameId) => {
+            if (frameId !== sender.frameId) {
+                port.postMessage(changeModeMsg);
+            }
+        });
+    }
     applyFilter(filter, sender, tabInfo) {
         const msg = { command: "applyFilter", filter };
         tabInfo.forEachPort((port, id) => {

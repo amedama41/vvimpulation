@@ -348,7 +348,7 @@ function connectToBackGround(reconnectTimeout) {
             }
         }
         else if (msg.command === "changeMode") {
-            gFrameInfo.changeModeNow(msg.mode, msg.data);
+            gFrameInfo.changeModeNow(msg.mode, msg.data, true);
         }
         else if (msg.command === "updateOptions") {
             gFrameInfo.setOptions(msg);

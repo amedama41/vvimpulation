@@ -108,7 +108,7 @@ class FrameInfo {
         window.addEventListener("message", this._messageHandler, true);
     }
     reset() {
-        this._resetMode();
+        this._resetMode(true);
         this._port.disconnect();
         window.removeEventListener("message", this._messageHandler, true);
         this._messageHandler = null; // Avoid circular reference
@@ -233,8 +233,8 @@ class FrameInfo {
     changeMode(mode, data=undefined) {
         setTimeout(() => { this.changeModeNow(mode, data); }, 0);
     }
-    changeModeNow(mode, data=undefined) {
-        this._resetMode();
+    changeModeNow(mode, data=undefined, allFrame=false) {
+        this._resetMode(allFrame);
         this._mode = this._createMode(mode, data);
     }
     changeToConsoleMode(frameId, mode, defaultInput, passURL=false) {
@@ -448,13 +448,13 @@ class FrameInfo {
             return new NormalMode(this, this._keyMap["normal"]);
         }
     }
-    _resetMode() {
+    _resetMode(allFrame) {
         for (const [target, eventType, handler, options]
             of this._modeEventListenerList) {
             target.removeEventListener(eventType, handler, options);
         }
         this._modeEventListenerList = [];
-        this._mode.onReset(this);
+        this._mode.onReset(this, allFrame);
     }
     _createConsoleFrame() {
         const create = (timeout) => {
