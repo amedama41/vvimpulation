@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Classes derived from this class must implements getAlter, clean, and set
+ * Classes derived from this class must implements getAlter, and reset
  * static methods.
  */
 class VisualModeBase {
@@ -14,10 +14,27 @@ class VisualModeBase {
             }
             selection.collapse(point.offsetNode, point.offset);
         }
+
         this.selection = selection;
         this.count = "0";
         this.mapper = Utils.makeCommandMapper(keyMap);
-        this.constructor.set(this.selection);
+        this.caret = VisualModeBase._createCaret();
+        this.cancelBlink = false;
+        this.blinkTimerId = setInterval(() => {
+            if (this.cancelBlink) {
+                this.cancelBlink = false;
+                return;
+            }
+            if (this.selection.type !== "Caret") {
+                return;
+            }
+            const isHidden = (this.caret.style.visibility === "hidden");
+            this.caret.style.setProperty(
+                "visibility",  (isHidden ? "visible" : "hidden"), "important");
+        }, 500);
+
+        this._updateCaret();
+        document.documentElement.appendChild(this.caret);
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     getTarget() {
@@ -32,21 +49,17 @@ class VisualModeBase {
         return this.mapper.get(key);
     }
     onReset(frameInfo) {
-        try {
-            this.constructor.clean(this.selection);
-        }
-        catch (e) {
-            // Ignore. If there is no selection, some exception can be thrown.
-        }
+        clearInterval(this.blinkTimerId);
+        document.documentElement.removeChild(this.caret);
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
         let count = parseInt(this.count, 10);
         this.count = "0";
+        let result = undefined;
         if (cmd.startsWith("extendSelection|")) {
             count = Math.max(count, 1);
             const [prefix, direction, granularity] = cmd.split("|");
-            this.constructor.clean(this.selection);
             if (granularity === "block") {
                 VisualModeBase._extendToBlock(this.selection, count, direction);
             }
@@ -61,12 +74,12 @@ class VisualModeBase {
                     console.warn(Utils.errorString(e));
                 }
             }
-            this.constructor.set(this.selection);
-            return;
         }
         else {
-            return invokeCommand(cmd, count, frameInfo);
+            result = invokeCommand(cmd, count, frameInfo);
         }
+        this._updateCaret();
+        return result;
     }
     onDropKeys(dropKeys) {
         this.count = "0";
@@ -78,6 +91,46 @@ class VisualModeBase {
         else {
             this.count = "0";
         }
+    }
+    _updateCaret() {
+        this.constructor.reset(this.selection);
+
+        if (this.selection.type !== "Caret") {
+            this.caret.style.setProperty("visibility", "hidden", "important");
+            return;
+        }
+
+        const style = this.caret.style;
+        const range = this.selection.getRangeAt(0);
+        const elem = (() => {
+            const node = range.commonAncestorContainer;
+            return (node.nodeType === Node.TEXT_NODE ? node.parentNode : node);
+        })();
+        const win = window;
+
+        const rect = (() => {
+            const rects = range.getClientRects();
+            return (rects.length > 0 ? rects[0] : elem.getBoundingClientRect());
+        })();
+        style.setProperty("left", rect.left + win.scrollX + "px", "important");
+        style.setProperty("top", rect.top + win.scrollY + "px", "important");
+        style.setProperty("height", (rect.height || 12) + "px", "important");
+
+        const elemStyle = win.getComputedStyle(elem, null);
+        style.setProperty("background-color", elemStyle.color, "important");
+
+        style.setProperty("visibility", "visible", "important");
+        this.cancelBlink = true;
+    }
+    static _createCaret() {
+        const caret = document.createElement("div");
+        caret.style = `
+        display: block !important;
+        position: absolute !important;
+        width: 1.5px !important;
+        z-index: 2147483646 !important;
+        `;
+        return caret;
     }
     static _extendToBlock(selection, count, direction) {
         const positionBit = Node.DOCUMENT_POSITION_CONTAINED_BY;
@@ -224,8 +277,7 @@ class VisualMode extends VisualModeBase {
     static getAlter() {
         return "extend";
     }
-    static clean(selection) {}
-    static set(selection) {}
+    static reset(selection) {}
 }
 
 class CaretMode extends VisualModeBase {
@@ -235,12 +287,8 @@ class CaretMode extends VisualModeBase {
     static getAlter() {
         return "move";
     }
-    static clean(selection) {
-        selection.collapseToStart();
-    }
-    static set(selection) {
+    static reset(selection) {
         selection.collapse(selection.focusNode, selection.focusOffset);
-        selection.modify("extend", "forward", "character");
     }
 }
 
