@@ -16,7 +16,18 @@ class InsertMode {
             if (this.inInvoking) {
                 return;
             }
-            frameInfo.changeMode("NORMAL");
+            if (document.activeElement !== e.target) {
+                frameInfo.changeMode("NORMAL");
+            }
+            else if (!frameInfo.isTopFrame()) {
+                frameInfo.forwardMessage(0, {
+                    command: "hasFocus"
+                }).then((hasTopFrameFocus) => {
+                    if (hasTopFrameFocus) { // This means other frame has focus.
+                        frameInfo.changeModeNow("NORMAL");
+                    }
+                });
+            }
         }, true);
     }
     static getModeName() {
