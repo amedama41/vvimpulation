@@ -211,7 +211,9 @@ class VisualModeBase {
     static _getTextBlock(elem) {
         let parent =
             (elem.nodeType === Node.TEXT_NODE ? elem.parentElement : elem);
-        while (parent) {
+        const body = document.body;
+        const documentElement = document.documentElement;
+        while (parent && parent !== body && parent !== documentElement) {
             if (!VisualModeBase._hasNonEmptyTextNode(parent) &&
                 parent.childElementCount !== 1) {
                 return elem;
