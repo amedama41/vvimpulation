@@ -306,7 +306,7 @@ const DEFAULT_OPTIONS = {
             "link": "*[onmousedown], *[onmouseup], *[onmouseover], *[onmouseout], *[onmousemove], *[onclick], *[oncommand], *[role='link'], *[role='button'], *[role='checkbox'], *[role='radio'], *[role='option'], *[role='menuitem'], *[role='menuitemcheckbox'], *[role='menuitemradio'], input:not([type='hidden']):not([disabled]):not([readonly]), *[contenteditable='true'], *[contenteditable=''], a, button, select, textarea, area, summary, *[tabindex]:not([tabindex='-1'])",
             "focus": "body *",
             "media": "img, canvas, video, object, embed",
-            "code": "pre, code, textarea[readonly], h1, h2, h3, h4, h5, h6"
+            "code": "pre, code, textarea[readonly], h1, h2, h3, h4, h5, h6, p"
         },
         "local": {
             "twitter.com": {
