@@ -42,9 +42,18 @@ ul.tab:after {
     font-family: monospace;
     font-size: medium;
 }
-#key-mapping-table-header > span {
+#key-mapping-table-header {
+    height: 1.3em;
+}
+#key-mapping-table-header-scroll {
+    overflow-y: scroll;
+    visibility: hidden;
+}
+#key-mapping-table-header-scroll > span {
     display: inline-block;
     border: 2px double gray;
+    height: 1.3em;
+    visibility: visible;
 }
 .key-mapping-key {
     width: 10em;
@@ -57,7 +66,7 @@ ul.tab:after {
 }
 #key-mapping-table-contents {
     height: 400px;
-    overflow-y: auto;
+    overflow-y: scroll;
     border: 1px solid gray;
 }
 #key-mapping-table-manipulation {
