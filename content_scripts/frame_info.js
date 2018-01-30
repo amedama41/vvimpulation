@@ -35,7 +35,8 @@ class FrameIdInfo {
     handleFrameMessage(msgEvent, port) {
         const sourceWindow = msgEvent.source;
         const data = msgEvent.data;
-        if (sourceWindow.parent !== window
+        // sourceWindow may be null in PDF viewer
+        if (!sourceWindow || sourceWindow.parent !== window
             || !data.command || data.command !== "registerChild"
             || !data.frameId || !Number.isInteger(data.frameId)) {
             return;
