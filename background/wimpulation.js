@@ -853,8 +853,9 @@ function overwriteErrorPage(details) {
             return;
         }
         const url = browser.runtime.getURL("pages/error.html");
+        const errorURL = encodeURIComponent(details.url);
         browser.tabs.update(tabId, {
-            url: `${url}?errorURL=${details.url}&errorCode=${details.error}`,
+            url: `${url}?errorURL=${errorURL}&errorCode=${details.error}`,
             loadReplace: true
         });
     });
