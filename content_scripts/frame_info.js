@@ -484,7 +484,7 @@ class FrameInfo {
                 }
             }, timeout);
         };
-        create(1000);
+        create(2000);
     }
     _sendConsoleMessage(msg) {
         return this._port.sendMessage(
