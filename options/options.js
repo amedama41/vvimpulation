@@ -52,7 +52,7 @@ class Options {
             browser.storage.local.set({
                 "options": this.options
             }).then(() => {
-                Options.setErrorMessage("Saved options");
+                Options.setErrorMessage("Saved options", 3000);
             }).catch((error) => {
                 Options.setErrorMessage(error);
             });
@@ -73,7 +73,7 @@ class Options {
     importOptions() {
         const files = document.getElementById("import-file");
         if (files.files.length === 0) {
-            Options.setErrorMessage("No file is specified");
+            Options.setErrorMessage("No file is specified", 3000);
             return;
         }
         const jsonFile = files.files[0];
@@ -97,9 +97,17 @@ class Options {
         this.setOptions(DEFAULT_OPTIONS);
         Options.setErrorMessage("Restore options (These are not saved yet)");
     }
-    static setErrorMessage(message) {
+    static setErrorMessage(message, timeout=0) {
+        const timerId = Options.timerId || 0;
+        if (timerId !== 0) {
+            clearTimeout(timerId);
+        }
         const error = document.getElementById("option-bar-error");
         error.innerText = message;
+        if (timeout !== 0) {
+            Options.timerId =
+                setTimeout(() => { error.innerText = "" }, timeout);
+        }
     }
 }
 
