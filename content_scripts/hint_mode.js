@@ -404,7 +404,12 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
             span.style.left = (Math.max(rect.left, winArea.left) + scrX) + "px";
             span.style.top  = (Math.max(rect.top, winArea.top) + scrY) + "px";
             span.className = tagName;
-            addClassList(elem, span);
+            if (isFrame) {
+                span.classList.add("wimpulation-is-frame");
+            }
+            else {
+                addClassList(elem, span);
+            }
             hints.push([span, elem]);
             idOrPromiseList.push(selfFrameId);
         }

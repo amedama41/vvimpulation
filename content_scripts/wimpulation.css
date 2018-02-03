@@ -7,8 +7,8 @@
     position: static !important;
 }
 #wimpulation-hint-container > span {
-    opacity: 0.8 !important;
-    background-color: MistyRose !important;
+    opacity: 1 !important;
+    background-color: mistyrose !important;
     color: black !important;
     box-shadow: 1px 1px 1px !important;
     display: inline !important;
@@ -31,10 +31,20 @@
 #wimpulation-hint-container > .INPUT,
 #wimpulation-hint-container > .TEXTAREA,
 #wimpulation-hint-container > .BUTTON,
-#wimpulation-hint-container > .SELECT,
-#wimpulation-hint-container > .PRE,
+#wimpulation-hint-container > .SELECT {
+    background-color: gainsboro !important;
+}
+#wimpulation-hint-container > .IMG {
+    background-color: lightcyan !important;
+}
+#wimpulation-hint-container > .VIDEO {
+    background-color: gold !important;
+}
 #wimpulation-hint-container > .CANVAS {
-    background-color: Lavender !important;
+    background-color: lavender !important;
+}
+#wimpulation-hint-container > .wimpulation-is-frame {
+    background-color: palegoldenrod !important;
 }
 #wimpulation-hint-container > .wimpulation-has-clickevent {
     text-decoration: underline !important;
