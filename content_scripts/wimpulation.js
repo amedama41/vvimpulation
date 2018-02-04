@@ -185,11 +185,6 @@ class MessageCommand {
             [ gFrameInfo.getSelfFrameId() ]));
     }
     static focusFrame(msg) {
-        // Keep focus in this frame, not in a child frame.
-        const activeElement = document.activeElement;
-        if (activeElement && activeElement.contentWindow) {
-            activeElement.blur();
-        }
         return gFrameInfo.focusThisFrame();
     }
     static focusChildFrame(msg) {

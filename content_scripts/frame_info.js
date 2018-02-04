@@ -171,8 +171,7 @@ class FrameInfo {
         if (!frame) {
             return;
         }
-        FrameInfo._exactlyFocus(frame);
-        return this.focusThisFrame();
+        return this.focusThisFrame().then(() => frame.focus());
     }
     moveFocusRecursively(child, count, isForward, changeMode) {
         const activeElement = document.activeElement;
@@ -203,8 +202,12 @@ class FrameInfo {
         return this._frameIdInfo.getChildFrameId(childWindow);
     }
     focusThisFrame() {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.contentWindow) {
+            activeElement.blur();
+        }
         if (this.isTopFrame() || document.hasFocus()) {
-            return;
+            return Promise.resolve();
         }
         return this.forwardMessage(this._frameIdInfo.getParentFrameId(), {
             command: "focusChildFrame",

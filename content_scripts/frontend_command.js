@@ -251,10 +251,12 @@ class FrontendCommand {
         DomUtils.fixedFocus(document.documentElement);
     }
     static focusin(count, frameInfo, args) {
-        return _focusin(frameInfo, args, (elem) => elem.focus());
+        const elem = frameInfo.getTarget();
+        return frameInfo.focusThisFrame().then(() => elem.focus());
     }
     static fixedFocusin(count, frameInfo, args) {
-        return _focusin(frameInfo, args, DomUtils.fixedFocus);
+        const elem = frameInfo.getTarget();
+        return frameInfo.focusThisFrame().then(() => DomUtils.fixedFocus(elem));
     }
     static focusout(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -1393,22 +1395,6 @@ function _moveFocus(frameInfo, count, isForward, changeMode) {
         }
     }
     return frameInfo.moveFocus(node, Math.max(count, 1), isForward, changeMode);
-}
-
-function _focusin(frameInfo, args, focusElement) {
-    const elem = frameInfo.getTarget();
-    try {
-        const activeElement = document.activeElement;
-        if (activeElement && activeElement.contentWindow) {
-            activeElement.blur();
-        }
-        focusElement(elem);
-        return frameInfo.focusThisFrame();
-    }
-    catch (e) {
-        console.warn(
-            `Element ${elem} is likely dead:`, Utils.errorString(e));
-    }
 }
 
 function _toInsertMode(frameInfo, getIndex) {
