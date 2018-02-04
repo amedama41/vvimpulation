@@ -36,6 +36,7 @@ class VisualModeBase {
         this._updateCaret();
         document.documentElement.appendChild(this.caret);
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
+        frameInfo.focusThisFrame();
     }
     getTarget() {
         const node = this.selection.focusNode;
