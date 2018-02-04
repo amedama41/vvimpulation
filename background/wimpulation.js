@@ -557,6 +557,21 @@ class Command {
             handleError(tabInfo, "openTab", e);
         });
     }
+    static toggleTabPinnging(msg, sender, tabInfo) {
+        return discard(browser.tabs.get(tabInfo.id).then((tab) => {
+            return browser.tabs.update(tabInfo.id, { pinned: !tab.pinned });
+        })).catch((e) => {
+            handleError(tabInfo, "toggleTabPinnging", e);
+        });
+    }
+    static toggleTabMute(msg, sender, tabInfo) {
+        return discard(browser.tabs.get(tabInfo.id).then((tab) => {
+            const info = tab.mutedInfo;
+            return browser.tabs.update(tabInfo.id, { muted: !info.muted });
+        })).catch((e) => {
+            handleError(tabInfo, "toggleTabMute", e);
+        });
+    }
 
     /**
      * Commands for window manipulation
