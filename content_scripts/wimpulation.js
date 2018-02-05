@@ -56,6 +56,9 @@ class NormalMode {
 
         if (key === "0" && this.count !== "0" && // Is continuation of count?
             !this.mapper.hasPendingKeys()) {
+            if (this.isRecordingMacro) {
+                frameInfo.postMessage({ command: "recordMacro", key });
+            }
             return [false, undefined, undefined, undefined];
         }
         const [consumed, optCmd, cmd, dropKeys] = this.mapper.get(key);
