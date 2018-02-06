@@ -24,7 +24,7 @@ const COMMAND_DESCRIPTIONS = {
     moveTargetAtCenter: { description: "Display the target at the center of the screen" },
     moveTargetAtBottom: { description: "Display the target at the bottom of the screen" },
 
-    /** * Commands for console command execution **/
+    /** Commands for console command execution **/
     execCommand: { description: "Execute a console command. This takes an argument such as execCommand|<console command>" },
 
     /** Commands for search **/
