@@ -37,6 +37,19 @@ class VisualModeBase {
         document.documentElement.appendChild(this.caret);
         frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
         frameInfo.focusThisFrame();
+        frameInfo.setEventListener(document, "blur", (e, frameInfo) => {
+            if (e.target !== document) {
+                return;
+            }
+            frameInfo.forwardMessage(0, {
+                command: "hasFocus"
+            }).then((hasTopFrameFocus) => {
+                if (hasTopFrameFocus || document.activeElement.contentWindow) {
+                    // This means other frame has focus.
+                    frameInfo.changeModeNow("NORMAL");
+                }
+            });
+        }, true);
     }
     getTarget() {
         const node = this.selection.focusNode;
