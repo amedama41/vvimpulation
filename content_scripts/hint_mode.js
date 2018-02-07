@@ -271,39 +271,44 @@ function getRectsInAncestorVisibleArea(elem, rectList, style) {
     }
     return rectList;
 }
-function getClientRects(elem) {
+function getViewpointRects(elem, winArea) {
     const rects = elem.getClientRects();
     // Some anchor elements can be zero size even though they includes children.
-    if (rects.length === 1 && rects[0].width === 0 && rects[0].height === 0 &&
-        elem.childElementCount === 0) {
-        return [];
+    if (rects.length === 1) {
+        if (rects[0].width === 0 && rects[0].height === 0 &&
+            elem.childElementCount === 0) {
+            return [];
+        }
+    }
+    // Already checked single rect of list by using getBoundingClientRect
+    else if (rects.length > 1) {
+        return getRectsInArea(rects, winArea);
     }
     return rects;
 }
-function getRectsOfAreaElement(area) {
-    const rect = area.getBoundingClientRect();
+function getViewpointRectsOfArea(area, rect, winArea) {
     if (rect.width === 0 && rect.height === 0) { // if area's display is none
         return [];
     }
     switch (area.shape) {
         case "rect": {
             const coords = area.coords.split(",").map((c) => parseInt(c, 10));
-            return [{
+            return getRectsInArea([{
                 left: rect.left + coords[0],
                 top: rect.top + coords[1],
                 right: rect.left + coords[2],
                 bottom: rect.top + coords[3]
-            }];
+            }], winArea);
         }
         case "circle": {
             const [x, y, r] =
                 area.coords.split(",").map((c) => parseInt(c, 10));
-            return [{
+            return getRectsInArea([{
                 left: rect.left + x - r,
                 top: rect.top + y - r,
                 right: rect.left + x + r,
                 bottom: rect.top + y + r
-            }];
+            }], winArea);
         }
         case "poly": {
             let [minX, minY, maxX, maxY, ...coords] =
@@ -314,12 +319,12 @@ function getRectsOfAreaElement(area) {
                 maxX = Math.max(maxX, coords[i + 2]);
                 maxY = Math.max(maxY, coords[i + 3]);
             }
-            return [{
+            return getRectsInArea([{
                 left: rect.left + minX,
                 top: rect.top + minY,
                 right: rect.left + maxX,
                 bottom: rect.top + maxY
-            }];
+            }], winArea);
         }
         default:
             return [rect];
@@ -371,13 +376,19 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
     const isFocusType = (type === 'focus');
     for (let i = 0, length = elems.length; i < length; i++) {
         const elem = elems[i];
+        // Use getBoundingClientRect for first check because
+        // getBoundingClientRect is just slightly faster than getClientRects.
+        const bRect = elem.getBoundingClientRect();
+        if (isOutOfArea(bRect, winArea)) {
+            continue;
+        }
 
         const isAreaElem = (elem instanceof HTMLAreaElement);
-        // use getClientRects instead of getBoundingClientRect in order to
-        // acquire the collect position for text wrapped elements.
-        let rectList =
-            (isAreaElem ? getRectsOfAreaElement(elem) : getClientRects(elem));
-        rectList = getRectsInArea(rectList, winArea);
+        // Use list of Rect instead of the rect from getBoundingClientRect in
+        // order to acquire the collect position for text wrapped elements.
+        let rectList = (isAreaElem
+            ? getViewpointRectsOfArea(elem, bRect, winArea)
+            : getViewpointRects(elem, winArea));
         if (rectList.length === 0) {
             continue;
         }
