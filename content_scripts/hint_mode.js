@@ -402,12 +402,20 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
-        if (!isAreaElem) {
-            // if some of ancestors are scrollable, elem may not be displayed.
-            rectList = getRectsInAncestorVisibleArea(elem, rectList, style)
-            if (rectList.length === 0) {
-                continue;
+        // If some of ancestors are scrollable, the elem may not be displayed.
+        if (isAreaElem) {
+            const name = elem.parentNode.name;
+            const img = doc.querySelector(`img[usemap='#${name}']`);
+            if (img) {
+                rectList = getRectsInAncestorVisibleArea(
+                    img, rectList, win.getComputedStyle(img, null));
             }
+        }
+        else {
+            rectList = getRectsInAncestorVisibleArea(elem, rectList, style)
+        }
+        if (rectList.length === 0) {
+            continue;
         }
 
         const rect = getIdealRect(rectList);
