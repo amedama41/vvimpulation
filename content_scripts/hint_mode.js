@@ -311,13 +311,14 @@ function getViewpointRectsOfArea(area, rect, winArea) {
             }], winArea);
         }
         case "poly": {
-            let [minX, minY, maxX, maxY, ...coords] =
+            const [x, y, ...coords] =
                 area.coords.split(",").map((c) => parseInt(c, 10));
-            for (let i = 0; i < coords.length; i += 4) {
+            let minX = x, maxX = x, minY = y, maxY = y;
+            for (let i = 0; i < coords.length; i += 2) {
                 minX = Math.min(minX, coords[i + 0]);
                 minY = Math.min(minY, coords[i + 1]);
-                maxX = Math.max(maxX, coords[i + 2]);
-                maxY = Math.max(maxY, coords[i + 3]);
+                maxX = Math.max(maxX, coords[i + 0]);
+                maxY = Math.max(maxY, coords[i + 1]);
             }
             return getRectsInArea([{
                 left: rect.left + minX,
