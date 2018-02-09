@@ -590,9 +590,7 @@ class FrontendCommand {
         const elem = frameInfo.getTarget();
         const url = getLink(elem);
         if (url) {
-            const active = (count === 0);
-            return frameInfo.sendMessage(
-                { command: 'openLinkInTab', url: url, active: active });
+            return frameInfo.sendMessage({ command: 'openLinkInTab', url });
         }
     }
     static openSource(count, frameInfo) {
@@ -606,9 +604,7 @@ class FrontendCommand {
         const elem = frameInfo.getTarget();
         const url = getSource(elem);
         if (url) {
-            const active = (count === 0);
-            return frameInfo.sendMessage(
-                { command: 'openLinkInTab', url: url, active: active });
+            return frameInfo.sendMessage({ command: 'openLinkInTab', url });
         }
     }
     static yankLink(count, frameInfo) {
