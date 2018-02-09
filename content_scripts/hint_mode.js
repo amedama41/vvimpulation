@@ -241,13 +241,13 @@ function isOutOfArea(rect, winArea) {
         || rect.left > winArea.right
         || rect.right < winArea.left);
 }
-function getRectsInAncestorVisibleArea(elem, rectList, style) {
+function updatePosInfoBasedOnAncestorCovering(elem, posInfo, style) {
     const root = document.documentElement;
     const body = document.body;
     // If an html element has height 100%, the size of documentElement and body
     // are different from the visual size. So, ignore them.
     if (elem === root || elem === body) {
-        return rectList;
+        return;
     }
     let isAbsolute = false;
     for (let ancestor = elem.parentNode;
@@ -264,12 +264,14 @@ function getRectsInAncestorVisibleArea(elem, rectList, style) {
             continue;
         }
         isAbsolute = false;
-        rectList = getRectsInArea(rectList, ancestor.getBoundingClientRect());
-        if (rectList.length === 0) {
+        const rect = ancestor.getBoundingClientRect();
+        posInfo.rectList = getRectsInArea(posInfo.rectList, rect);
+        if (posInfo.rectList.length === 0) {
             return [];
         }
+        posInfo.minX = Math.max(posInfo.minX, rect.left - 8);
+        posInfo.minY = Math.max(posInfo.minY, rect.top - 8);
     }
-    return rectList;
 }
 function getViewpointRects(elem, winArea) {
     const rects = elem.getClientRects();
@@ -387,7 +389,7 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
         const isAreaElem = (elem instanceof HTMLAreaElement);
         // Use list of Rect instead of the rect from getBoundingClientRect in
         // order to acquire the collect position for text wrapped elements.
-        let rectList = (isAreaElem
+        const rectList = (isAreaElem
             ? getViewpointRectsOfArea(elem, bRect, winArea)
             : getViewpointRects(elem, winArea));
         if (rectList.length === 0) {
@@ -402,27 +404,28 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
+        const posInfo = { rectList, minX: winArea.left, minY: winArea.top };
         // If some of ancestors are scrollable, the elem may not be displayed.
         if (isAreaElem) {
             const name = elem.parentNode.name;
             const img = doc.querySelector(`img[usemap='#${name}']`);
             if (img) {
-                rectList = getRectsInAncestorVisibleArea(
-                    img, rectList, win.getComputedStyle(img, null));
+                updatePosInfoBasedOnAncestorCovering(
+                    img, posInfo, win.getComputedStyle(img, null));
             }
         }
         else {
-            rectList = getRectsInAncestorVisibleArea(elem, rectList, style)
+            updatePosInfoBasedOnAncestorCovering(elem, posInfo, style)
         }
-        if (rectList.length === 0) {
+        if (posInfo.rectList.length === 0) {
             continue;
         }
 
-        const rect = getIdealRect(rectList);
+        const rect = getIdealRect(posInfo.rectList);
         if (!isFrame || isFocusType) {
             const span = doc.createElement("span");
-            span.style.left = (Math.max(rect.left, winArea.left) + scrX) + "px";
-            span.style.top  = (Math.max(rect.top, winArea.top) + scrY) + "px";
+            span.style.left = (Math.max(rect.left, posInfo.minX) + scrX) + "px";
+            span.style.top  = (Math.max(rect.top, posInfo.minY) + scrY) + "px";
             span.className = tagName;
             if (isFrame) {
                 span.classList.add("wimpulation-is-frame");
