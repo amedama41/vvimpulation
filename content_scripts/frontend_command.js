@@ -667,7 +667,7 @@ class FrontendCommand {
             body, "mouseover", coord, false, false, false, false, elem);
         emulateMouseEvent(
             body, "mouseenter", coord, false, false, false, false, elem);
-        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
+        emulateMouseEvent(body, "mousemove", coord, false, false, false, false);
     }
     static mouseoutTo(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -689,7 +689,7 @@ class FrontendCommand {
             elem, "mouseout", coord, false, false, false, false, body);
         emulateMouseEvent(
             elem, "mouseleave", coord, false, false, false, false, body);
-        emulateMouseEvent(elem, "mousemove", coord, false, false, false, false);
+        emulateMouseEvent(body, "mousemove", coord, false, false, false, false);
     }
     static mousemove(count, frameInfo) {
         const elem = frameInfo.getTarget();
