@@ -309,6 +309,7 @@ function addEventListenersJustOnce() {
     }
     window.addEventListener(
         "keydown", (e) => gFrameInfo.handleKeydown(e), true);
+    window.addEventListener("keyup", (e) => gFrameInfo.handleKeyup(e), true);
     window.addEventListener("pageshow", (e) => {
         if (!gFrameInfo && e.persisted) {
             init();

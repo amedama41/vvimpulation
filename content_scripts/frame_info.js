@@ -91,6 +91,7 @@ class FrameInfo {
         this._port = port;
         this._modeEventListenerList = [];
         this._keyMap = FrameInfo._convertKeyMap(options.keyMapping);
+        this._doesIgnoreKeyupEvent = false;
         this._hintPattern = options.hintPattern;
         this._pagePattern = options.pagePattern;
         this._onlyVisibility = options.onlyVisibility;
@@ -124,6 +125,7 @@ class FrameInfo {
         }
         const key = Utils.getRegulatedKey(keyEvent);
         if (!key) {
+            this._doesIgnoreKeyupEvent = true;
             return;
         }
 
@@ -131,6 +133,16 @@ class FrameInfo {
             keyEvent.preventDefault();
             keyEvent.stopPropagation();
         }
+        else {
+            this._doesIgnoreKeyupEvent = true;
+        }
+    }
+    handleKeyup(keyEvent) {
+        if (keyEvent.isTrusted && !this._doesIgnoreKeyupEvent) {
+            keyEvent.preventDefault();
+            keyEvent.stopPropagation();
+        }
+        this._doesIgnoreKeyupEvent = false;
     }
     handleKey(key) {
         const [consumed, optCmd, cmd, dropKeys] = this._mode.consume(key, this);
