@@ -223,11 +223,13 @@ class VisualModeBase {
         return true;
     }
     static _getTextBlock(elem) {
+        const root = document.body || document.documentElement;
+        if (elem === root || !root.contains(elem)) {
+            return root.firstChild;
+        }
         let parent =
             (elem.nodeType === Node.TEXT_NODE ? elem.parentElement : elem);
-        const body = document.body;
-        const documentElement = document.documentElement;
-        while (parent && parent !== body && parent !== documentElement) {
+        while (parent && parent !== root) {
             if (!VisualModeBase._hasNonEmptyTextNode(parent) &&
                 parent.childElementCount !== 1) {
                 return elem;
