@@ -1013,12 +1013,10 @@ class FrontendCommand {
         frameInfo.showMessage(infoList, duration);
     }
     static smartOpen(count, frameInfo) {
-        smartOpenImpl(count, frameInfo, { command: 'openLink' });
+        smartOpenImpl(count, frameInfo, 'openLink');
     }
     static smartOpenInTab(count, frameInfo) {
-        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
-        smartOpenImpl(
-            count, frameInfo, { command: 'openLinkInTab', active: !shift });
+        smartOpenImpl(count, frameInfo, 'openLinkInTab');
     }
     static smartYank(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -1248,7 +1246,7 @@ function nonPrivilegedURL(url) {
     ];
     return !privilegedProtocols.includes(url.protocol);
 }
-function smartOpenImpl(count, frameInfo, openLinkMsg) {
+function smartOpenImpl(count, frameInfo, command) {
     const elem = frameInfo.getTarget();
     const link = getLink(elem);
     if (link) {
@@ -1260,8 +1258,7 @@ function smartOpenImpl(count, frameInfo, openLinkMsg) {
             if ((url.host !== loc.host || url.pathname !== loc.pathname
                 || url.search !== loc.search)
                 && nonPrivilegedURL(url)) {
-                openLinkMsg.url = link;
-                return frameInfo.sendMessage(openLinkMsg);
+                return frameInfo.sendMessage({ command, url: link });
             }
         }
         catch (e) {
