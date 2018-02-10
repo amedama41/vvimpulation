@@ -1247,6 +1247,12 @@ function nonPrivilegedURL(url) {
     return !privilegedProtocols.includes(url.protocol);
 }
 function smartOpenImpl(count, frameInfo, command) {
+    const click = (count, elem) => {
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
+        emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "mouseup", 0, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "click", 0, ctrl, alt, shift, meta);
+    };
     const elem = frameInfo.getTarget();
     const link = getLink(elem);
     if (link) {
@@ -1268,7 +1274,7 @@ function smartOpenImpl(count, frameInfo, command) {
     if (elem instanceof HTMLInputElement) {
         const type = elem.type;
         if (type === "checkbox" || type === "radio" || type === "file") {
-            FrontendCommand.mouseclick(count, frameInfo);
+            click(count, elem);
         }
         else {
             FrontendCommand.pressEnter(count, frameInfo);
@@ -1287,7 +1293,7 @@ function smartOpenImpl(count, frameInfo, command) {
             new Event("change", { bubbles: true, cancelable: false }));
         return;
     }
-    return FrontendCommand.mouseclick(count, frameInfo);
+    click(count, elem);
 }
 
 function emulateClick(target, ctrl, alt, shift, meta) {
