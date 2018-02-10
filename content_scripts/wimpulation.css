@@ -63,6 +63,9 @@
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
     visibility: hidden !important;
 }
+#wimpulation-hint-container.wimpulation-hint-is-transparent > span {
+    opacity: 0.2 !important;
+}
 
 #wimpulation-console-container > iframe {
     background-color: transparent !important;

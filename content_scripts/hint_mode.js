@@ -76,6 +76,10 @@ class HintMode {
                 return this._setZIndex(msg, frameInfo);
             case "clearZIndex":
                 return this._clearZIndex(msg, frameInfo);
+            case "setOpacity":
+                return this._setOpacity(msg, frameInfo);
+            case "clearOpacity":
+                return this._clearOpacity(msg, frameInfo);
             case "getTargetIndex":
                 return this._getTargetIndex(msg, frameInfo);
             case "invoke":
@@ -198,6 +202,18 @@ class HintMode {
         this.hints.forEach(([span, elem], index) => {
             span.style.removeProperty("z-index");
         });
+    }
+    _setOpacity() {
+        const container = document.getElementById("wimpulation-hint-container");
+        if (container) {
+            container.classList.add("wimpulation-hint-is-transparent");
+        }
+    }
+    _clearOpacity() {
+        const container = document.getElementById("wimpulation-hint-container");
+        if (container) {
+            container.classList.remove("wimpulation-hint-is-transparent");
+        }
     }
     _getTargetIndex(msg) {
         if (this.focusIndex === undefined) {

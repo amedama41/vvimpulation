@@ -230,6 +230,7 @@ const DEFAULT_OPTIONS = {
             "/": "startFilter",
             "zz": "toggleOverlap",
             "zf": "toggleAutoFocus",
+            "<C-G>": "toggleTransparency",
             "fi": "invokeCommand|0|focusin",
             "fI": "invokeCommand|0|compose|setTabIndex|focusin",
             "fo": "invokeCommand|0|focusout",

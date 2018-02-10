@@ -16,6 +16,7 @@ class HintMode {
         this.currentIndex = 0; // current displayed index
         this.autoFocus = autoFocus;
         this.overlap = overlap;
+        this.opacity = false;
         this.mapper = Utils.makeCommandMapper(keyMapping);
         this._changeMode(tabInfo, id, idList);
     }
@@ -118,6 +119,13 @@ class HintMode {
         const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
         tabInfo.showMessage(message, 3000, false);
     }
+    toggleTransparency(tabInfo) {
+        this.opacity = !this.opacity;
+        const msg = { command: (this.opacity ? "setOpacity" : "clearOpacity") };
+        tabInfo.forEachPort((port, id) => {
+            forwardModeCommand(port, "HINT", msg);
+        });
+    }
     invokeCommand(tabInfo, args) {
         const match = /^(\d+)\|(.*$)/.exec(args);
         const [count, commandName] =
@@ -219,6 +227,7 @@ class HintMode {
         this.filterIndexMap = this.idList.map((id, index) => index);
         this.filter = "";
         this.currentIndex = index;
+        this.opacity = false;
         this.mapper.reset();
     }
     static _createFilterMaps(filterResult, idList) {
