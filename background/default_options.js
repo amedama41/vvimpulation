@@ -72,7 +72,7 @@ const DEFAULT_OPTIONS = {
             "g0": "firstTab",
             "g$": "lastTab",
             "<C-^>": "lastActivatedTab",
-            "zp": "toggleTabPinnging",
+            "zp": "toggleTabPinning",
             "<": "moveTabToLeft",
             ">": "moveTabToRight",
             "==": "moveTabToNewWindow",

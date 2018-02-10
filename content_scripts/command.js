@@ -68,7 +68,7 @@ const COMMAND_DESCRIPTIONS = {
     undoCloseTab: { background: true, description: "Reopen the latest closed tab" },
     duplicateTab: { background: true, description: "Open the current page in a new tab" },
     openTab: { background: true, description: "Open a new tab" },
-    toggleTabPinnging: { background: true, description: "Switch the current tab pinning" },
+    toggleTabPinning: { background: true, description: "Switch the current tab pinning" },
     toggleTabMute: { background: true, description: "Switch the current tab mute" },
 
     /** Commands for window manipulation **/
