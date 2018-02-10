@@ -944,12 +944,22 @@ class FrontendCommand {
         if (!selection) {
             return;
         }
-        const TARGET_TYPE_LIST = [Node.ELEMENT_NODE, Node.TEXT_NODE];
         const target = frameInfo.getTarget();
-        // Ignore comment nodes.
-        const index = Array.from(target.childNodes).findIndex(
-            (child) => TARGET_TYPE_LIST.includes(child.nodeType));
-        selection.collapse(target, Math.max(index, 0));
+        const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT, {
+            acceptNode: (text) => {
+                const node = text.parentNode;
+                if (!DomUtils.isDisplay(node)) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                const style = window.getComputedStyle(node, null);
+                if (style.visibility === "hidden") {
+                    return NodeFilter.FILTER_SKIP;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        const textNode = walker.firstChild();
+        selection.collapse((textNode ? textNode : target), 0);
     }
     static yankInnerText(count, frameInfo) {
         if (DomUtils.setToClipboard(frameInfo.getTarget().innerText)) {
