@@ -720,8 +720,11 @@ class Command {
     static setLastCommand(msg, sender, tabInfo) {
         if (msg.cmdName !== "repeatLastCommand") {
             gLastCommand[0] = msg.cmdName;
+            gLastCommand[1] = msg.count;
         }
-        gLastCommand[1] = msg.count;
+        else if (msg.count !== 0) {
+            gLastCommand[0] = msg.count;
+        }
     }
     static getLastCommand(msg, sender, tabInfo) {
         return gLastCommand;
