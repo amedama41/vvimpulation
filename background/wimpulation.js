@@ -1044,7 +1044,7 @@ function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
     }
     browser.tabs.insertCSS(tabId, { frameId, code: consoleDesign });
     port.onRequest.addListener(invokeConsoleCommand);
-    port.onDisconnect.addListener(cleanupConsolePort.bind(null, tabId));
+    port.onDisconnect.addListener(cleanupConsolePort);
     tabInfo.setConsolePort(port);
     tabInfo.sendConsoleMessage({ command: "setKeyMapping", keyMapping });
 }
@@ -1056,7 +1056,8 @@ function invokeConsoleCommand(msg, sender) {
     }
     return ConsoleCommand[msg.command](msg, sender, tabInfo);
 }
-function cleanupConsolePort(tabId, port, error) {
+function cleanupConsolePort(port, error) {
+    const tabId = port.sender.tab.id;
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         return;
