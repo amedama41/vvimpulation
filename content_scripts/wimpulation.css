@@ -60,6 +60,9 @@
     z-index: 2147483647 !important;
     transform: scale(1.1);
 }
+[wimpulation-hint-active-element] {
+    outline: 1px solid red !important;
+}
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
     visibility: hidden !important;
 }

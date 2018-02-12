@@ -25,9 +25,7 @@ class HintMode {
             this._setZIndex();
         }
         if (Number.isInteger(data.initIndex)) {
-            const [span, elem] = this.hints[data.initIndex];
-            HintMode._setActive(span);
-            this.focusIndex = data.initIndex;
+            this._setActive(data.initIndex);
         }
     }
     static getModeName() {
@@ -44,6 +42,10 @@ class HintMode {
     onReset(frameInfo, allFrame) {
         if (!allFrame) {
             frameInfo.postMessage({ command: "resetHintMode" });
+        }
+        if (this.focusIndex !== undefined) {
+            const [span, elem] = this.hints[this.focusIndex];
+            elem.removeAttribute("wimpulation-hint-active-element");
         }
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
@@ -97,9 +99,7 @@ class HintMode {
             console.error("Unknown index", msg.index);
             return;
         }
-        const [span, elem] = this.hints[localIndex];
-        HintMode._setActive(span);
-        this.focusIndex = localIndex;
+        this._setActive(localIndex);
         if (msg.autoFocus) {
             invokeCommand("fixedFocusin", 0, frameInfo);
         }
@@ -117,6 +117,7 @@ class HintMode {
         if (span.style.zIndex) {
             span.style.setProperty("z-index", span.style.zIndex, "important");
         }
+        elem.removeAttribute("wimpulation-hint-active-element");
     }
     _startFilter(msg, frameInfo) {
         frameInfo.showConsole(this, "hintFilter", msg.filter, 0);
@@ -227,11 +228,14 @@ class HintMode {
         }
         return index;
     }
-    static _setActive(span) {
+    _setActive(index) {
+        const [span, elem] = this.hints[index];
         span.id = "wimpulation-hint-active";
         if (span.style.zIndex) {
             span.style.setProperty("z-index", span.style.zIndex);
         }
+        elem.setAttribute("wimpulation-hint-active-element", "");
+        this.focusIndex = index;
     }
     static _setContainerPosition(container) {
         const style = window.getComputedStyle(document.documentElement, null);
