@@ -326,12 +326,12 @@ function addEventListenersJustOnce() {
 }
 
 function doKillHover() {
-    if (document.readyState === "loading") {
-        window.addEventListener(
-            "load", (e) => gFrameInfo.killHover(), { once: true });
+    if (document.readyState === "complete") {
+        gFrameInfo.killHover();
     }
     else {
-        gFrameInfo.killHover();
+        window.addEventListener(
+            "load", (e) => gFrameInfo.killHover(), { once: true });
     }
 }
 
