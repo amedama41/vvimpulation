@@ -29,6 +29,11 @@ class HintMode {
         if (optCmd) {
             this._invoke(optCmd, tabInfo);
         }
+        else if (dropKeyList && !cmd) {
+            dropKeyList.push(key);
+            changeNormalMode(tabInfo, sender.frameId, dropKeyList);
+            return;
+        }
         if (cmd) {
             this._invoke(cmd, tabInfo);
         }
