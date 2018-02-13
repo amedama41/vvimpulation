@@ -61,7 +61,7 @@
     transform: scale(1.1);
 }
 [wimpulation-hint-active-element] {
-    outline: 1px solid red !important;
+    box-shadow: red 0 0 1px 2px !important;
 }
 #wimpulation-hint-container > span.wimpulation-filtered-hint {
     visibility: hidden !important;
