@@ -461,11 +461,19 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
             if (frameId === undefined) {
                 continue;
             }
+            const paddingTop = parseInt(style.paddingTop, 10);
+            const paddingLeft = parseInt(style.paddingLeft, 10);
+            const frameTop = rect.top + paddingTop;
+            const frameLeft = rect.left + paddingLeft;
+            const frameHeight =
+                rect.height - (paddingTop + parseInt(style.paddingBottom, 10));
+            const frameWidth =
+                rect.width - (paddingLeft + parseInt(style.paddingRight, 10));
             const frameArea = {
-                top: Math.max(winArea.top - rect.top, 0),
-                left: Math.max(winArea.left - rect.left, 0),
-                bottom: Math.min(winArea.bottom - rect.top, rect.height),
-                right: Math.min(winArea.right - rect.left, rect.width)
+                top: Math.max(winArea.top - frameTop, 0),
+                left: Math.max(winArea.left - frameLeft, 0),
+                bottom: Math.min(winArea.bottom - frameTop, frameHeight),
+                right: Math.min(winArea.right - frameLeft, frameWidth),
             };
             idOrPromiseList.push(frameInfo.forwardMessage(frameId, {
                 command: "collectHint", id, type, pattern, area: frameArea
