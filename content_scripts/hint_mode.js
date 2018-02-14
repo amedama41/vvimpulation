@@ -374,6 +374,27 @@ function getIdealRect(rectList) {
     }
     return rectList[0];
 }
+function calcFrameArea(frameRect, style, winArea) {
+    const paddingTop =
+        parseInt(style.paddingTop, 10) + parseInt(style.borderTopWidth, 10);
+    const paddingLeft =
+        parseInt(style.paddingLeft, 10) + parseInt(style.borderLeftWidth, 10);
+    const paddingBottom =
+        parseInt(style.paddingBottom, 10) +
+        parseInt(style.borderBottomWidth, 10);
+    const paddingRight =
+        parseInt(style.paddingRight, 10) + parseInt(style.borderRightWidth, 10);
+    const frameTop = frameRect.top + paddingTop;
+    const frameLeft = frameRect.left + paddingLeft;
+    const frameHeight = frameRect.height - (paddingTop + paddingBottom);
+    const frameWidth = frameRect.width - (paddingLeft + paddingRight);
+    return {
+        top: Math.max(winArea.top - frameTop, 0),
+        left: Math.max(winArea.left - frameLeft, 0),
+        bottom: Math.min(winArea.bottom - frameTop, frameHeight),
+        right: Math.min(winArea.right - frameLeft, frameWidth),
+    };
+}
 function makePattern(globalPattern, localPattern) {
     const framePattern = "frame, iframe, object[type='text/html'], ";
     if (localPattern) {
@@ -461,20 +482,7 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
             if (frameId === undefined) {
                 continue;
             }
-            const paddingTop = parseInt(style.paddingTop, 10);
-            const paddingLeft = parseInt(style.paddingLeft, 10);
-            const frameTop = rect.top + paddingTop;
-            const frameLeft = rect.left + paddingLeft;
-            const frameHeight =
-                rect.height - (paddingTop + parseInt(style.paddingBottom, 10));
-            const frameWidth =
-                rect.width - (paddingLeft + parseInt(style.paddingRight, 10));
-            const frameArea = {
-                top: Math.max(winArea.top - frameTop, 0),
-                left: Math.max(winArea.left - frameLeft, 0),
-                bottom: Math.min(winArea.bottom - frameTop, frameHeight),
-                right: Math.min(winArea.right - frameLeft, frameWidth),
-            };
+            const frameArea = calcFrameArea(rect, style, winArea);
             idOrPromiseList.push(frameInfo.forwardMessage(frameId, {
                 command: "collectHint", id, type, pattern, area: frameArea
             }));
