@@ -253,7 +253,15 @@ class HintMode {
 }
 
 function getRectsInArea(rectList, area) {
-    return rectList.filter((rect) => !isOutOfArea(rect, area));
+    const MARGIN = 16;
+    return rectList.filter((rect) => {
+        const xMargin = Math.min(MARGIN, rect.width / 2, area.width / 2);
+        const yMargin = Math.min(MARGIN, rect.height / 2, area.height / 2);
+        return !isOutOfArea(rect, {
+            left: area.left + xMargin, right: area.right - xMargin,
+            top: area.top + yMargin, bottom: area.bottom - yMargin,
+        });
+    });
 }
 function isOutOfArea(rect, winArea) {
     return (rect.top > winArea.bottom
@@ -293,44 +301,40 @@ function updatePosInfoBasedOnAncestorCovering(elem, posInfo, style) {
         posInfo.minY = Math.max(posInfo.minY, rect.top - 8);
     }
 }
-function getViewpointRects(elem, winArea) {
-    const rects = elem.getClientRects();
+function getRects(elem, rect) {
     // Some anchor elements can be zero size even though they includes children.
-    if (rects.length === 1) {
-        if (rects[0].width === 0 && rects[0].height === 0 &&
-            elem.childElementCount === 0) {
-            return [];
-        }
+    if (rect.width === 0 && rect.height === 0 && elem.childElementCount === 0) {
+        return [];
     }
-    // Already checked single rect of list by using getBoundingClientRect
-    else if (rects.length > 1) {
-        return getRectsInArea(rects, winArea);
-    }
-    return rects;
+    return elem.getClientRects();
 }
-function getViewpointRectsOfArea(area, rect, winArea) {
+function getRectsOfArea(area, rect) {
     if (rect.width === 0 && rect.height === 0) { // if area's display is none
         return [];
     }
     switch (area.shape) {
         case "rect": {
             const coords = area.coords.split(",").map((c) => parseInt(c, 10));
-            return getRectsInArea([{
+            return [{
                 left: rect.left + coords[0],
                 top: rect.top + coords[1],
                 right: rect.left + coords[2],
-                bottom: rect.top + coords[3]
-            }], winArea);
+                bottom: rect.top + coords[3],
+                width: coords[2] - coords[0],
+                height: coords[3] - coords[1],
+            }];
         }
         case "circle": {
             const [x, y, r] =
                 area.coords.split(",").map((c) => parseInt(c, 10));
-            return getRectsInArea([{
+            return [{
                 left: rect.left + x - r,
                 top: rect.top + y - r,
                 right: rect.left + x + r,
-                bottom: rect.top + y + r
-            }], winArea);
+                bottom: rect.top + y + r,
+                width: 2 * r,
+                height: 2 * r,
+            }];
         }
         case "poly": {
             const [x, y, ...coords] =
@@ -342,12 +346,14 @@ function getViewpointRectsOfArea(area, rect, winArea) {
                 maxX = Math.max(maxX, coords[i + 0]);
                 maxY = Math.max(maxY, coords[i + 1]);
             }
-            return getRectsInArea([{
+            return [{
                 left: rect.left + minX,
                 top: rect.top + minY,
                 right: rect.left + maxX,
-                bottom: rect.top + maxY
-            }], winArea);
+                bottom: rect.top + maxY,
+                width: maxX - minX,
+                height: maxY - minY,
+            }];
         }
         default:
             return [rect];
@@ -393,6 +399,8 @@ function calcFrameArea(frameRect, style, winArea) {
         left: Math.max(winArea.left - frameLeft, 0),
         bottom: Math.min(winArea.bottom - frameTop, frameHeight),
         right: Math.min(winArea.right - frameLeft, frameWidth),
+        width: frameWidth,
+        height: frameHeight,
     };
 }
 function makePattern(globalPattern, localPattern) {
@@ -430,9 +438,8 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
         const isAreaElem = (elem instanceof HTMLAreaElement);
         // Use list of Rect instead of the rect from getBoundingClientRect in
         // order to acquire the collect position for text wrapped elements.
-        const rectList = (isAreaElem
-            ? getViewpointRectsOfArea(elem, bRect, winArea)
-            : getViewpointRects(elem, winArea));
+        const rectList = getRectsInArea(
+            (isAreaElem ? getRectsOfArea : getRects)(elem, bRect), winArea);
         if (rectList.length === 0) {
             continue;
         }

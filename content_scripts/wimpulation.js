@@ -157,7 +157,8 @@ class MessageCommand {
     static collectHint(msg) {
         const winArea = msg.area || {
             top: 0, left: 0,
-            bottom: window.innerHeight, right: window.innerWidth
+            bottom: window.innerHeight, right: window.innerWidth,
+            width: window.innerWidth, height: window.innerHeight,
         };
         return makeHints(msg.id, msg.pattern, msg.type, winArea, gFrameInfo);
     }
