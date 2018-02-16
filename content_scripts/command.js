@@ -184,6 +184,7 @@ const COMMAND_DESCRIPTIONS = {
     deleteChildElements: { description: "Delete the child elements of the target" },
     setTabIndex: { description: "Set N tabindex to the target" },
     removeTabIndex: { description: "Remove tabindex from the target" },
+    showElementInfo: { description: "Show the information of the target element" },
 
     /** Commands for various applications **/
     showPageInfo: { topFrame: true, description: "Show the current page information" },
