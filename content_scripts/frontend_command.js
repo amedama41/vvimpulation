@@ -1078,6 +1078,13 @@ class FrontendCommand {
                 infoList.push([attr + ":", value]);
             }
         });
+        if (elem.tagName === "SELECT") {
+            Array.from(elem.options).forEach((option, i) => {
+                infoList.push([
+                    `option${i + 1}:`, `${option.label} - ${option.value}`
+                ]);
+            });
+        }
         frameInfo.showMessage(infoList, (count === 0 ? 3000 : count * 1000));
     }
 
