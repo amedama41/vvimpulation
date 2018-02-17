@@ -12,9 +12,9 @@ class HintMode {
         const container = document.createElement("div");
         const indexMap = {};
         container.id = "wimpulation-hint-container";
-        this.hints.forEach(([span, elem], index) => {
-            span.textContent = labelList[index];
-            container.insertBefore(span, container.firstElementChild);
+        this.hints.forEach(([highlight, elem], index) => {
+            highlight.firstElementChild.textContent = labelList[index];
+            container.insertBefore(highlight, container.firstElementChild);
             indexMap[labelList[index]] = index;
         });
         HintMode._setContainerPosition(container);
@@ -32,7 +32,7 @@ class HintMode {
         return "HINT";
     }
     getTarget() {
-        const [span, elem] = this.hints[this.focusIndex];
+        const [highlight, elem] = this.hints[this.focusIndex];
         return elem;
     }
     consume(key, frameInfo) {
@@ -44,8 +44,7 @@ class HintMode {
             frameInfo.postMessage({ command: "resetHintMode" });
         }
         if (this.focusIndex !== undefined) {
-            const [span, elem] = this.hints[this.focusIndex];
-            elem.removeAttribute("wimpulation-hint-active-element");
+            const [highlight, elem] = this.hints[this.focusIndex];
         }
         const container = document.querySelector("#wimpulation-hint-container");
         if (container) {
@@ -112,12 +111,12 @@ class HintMode {
         if (this.focusIndex === undefined) {
             return;
         }
-        const [span, elem] = this.hints[this.focusIndex];
-        span.id = "";
-        if (span.style.zIndex) {
-            span.style.setProperty("z-index", span.style.zIndex, "important");
+        const [highlight, elem] = this.hints[this.focusIndex];
+        highlight.id = "";
+        if (highlight.style.zIndex) {
+            highlight.style.setProperty(
+                "z-index", highlight.style.zIndex, "important");
         }
-        elem.removeAttribute("wimpulation-hint-active-element");
     }
     _startFilter(msg, frameInfo) {
         frameInfo.showConsole(this, "hintFilter", msg.filter, 0);
@@ -127,7 +126,7 @@ class HintMode {
         frameInfo.hideConsole();
     }
     _applyFilter(msg) {
-        const className = "wimpulation-filtered-hint";
+        const FILTER_CLASS_NAME = "wimpulation-filtered-hint";
         const filter = Utils.makeFilter(msg.filter);
         const getText = (elem) => {
             const innerText = elem.innerText;
@@ -144,29 +143,29 @@ class HintMode {
             }
             return "";
         };
-        this.hints.forEach(([span, elem]) => {
+        this.hints.forEach(([highlight, elem]) => {
             if (filter.match(getText(elem))) {
-                span.classList.remove(className);
+                highlight.classList.remove(FILTER_CLASS_NAME);
             }
             else {
-                span.classList.add(className);
+                highlight.classList.add(FILTER_CLASS_NAME);
             }
         });
     }
     _getFilterResult(msg, frameInfo) {
-        const className = "wimpulation-filtered-hint";
+        const FILTER_CLASS_NAME = "wimpulation-filtered-hint";
         const result = Object.keys(this.indexMap).map((index) => {
             // Object.keys returns an array of string
             index = parseInt(index, 10);
-            const [span, elem] = this.hints[this.indexMap[index]];
-            return [index, !span.classList.contains(className)];
+            const [highlight, elem] = this.hints[this.indexMap[index]];
+            return [index, !highlight.classList.contains(FILTER_CLASS_NAME)];
         });
         return result;
     }
     _setHintLabel(msg, frameInfo) {
         const labelList = msg.labelList;
-        this.hints.forEach(([span, elem], index) => {
-            span.textContent = labelList[index];
+        this.hints.forEach(([highlight, elem], index) => {
+            highlight.firstElementChild.textContent = labelList[index];
         });
         this._blurImpl();
         this.focusIndex = undefined;
@@ -194,14 +193,14 @@ class HintMode {
             }
             return getZIndex(elem.parentElement, zIndex, style.zIndex);
         };
-        this.hints.forEach(([span, elem], index) => {
-            span.style.setProperty(
+        this.hints.forEach(([highlight, elem], index) => {
+            highlight.style.setProperty(
                 "z-index", getZIndex(elem, "auto", "auto"), "important");
         });
     }
     _clearZIndex() {
-        this.hints.forEach(([span, elem], index) => {
-            span.style.removeProperty("z-index");
+        this.hints.forEach(([highlight, elem], index) => {
+            highlight.style.removeProperty("z-index");
         });
     }
     _setOpacity() {
@@ -220,7 +219,7 @@ class HintMode {
         if (this.focusIndex === undefined) {
             return null;
         }
-        const [span, elem] = this.hints[this.focusIndex];
+        const [highlight, elem] = this.hints[this.focusIndex];
         const hintList = gHintElementListMap[msg.id] || [];
         const index = hintList.findIndex((e) => e[1] === elem);
         if (index === -1) {
@@ -229,12 +228,11 @@ class HintMode {
         return index;
     }
     _setActive(index) {
-        const [span, elem] = this.hints[index];
-        span.id = "wimpulation-hint-active";
-        if (span.style.zIndex) {
-            span.style.setProperty("z-index", span.style.zIndex);
+        const [highlight, elem] = this.hints[index];
+        highlight.id = "wimpulation-hint-active";
+        if (highlight.style.zIndex) {
+            highlight.style.setProperty("z-index", highlight.style.zIndex);
         }
-        elem.setAttribute("wimpulation-hint-active-element", "");
         this.focusIndex = index;
     }
     static _setContainerPosition(container) {
@@ -471,17 +469,28 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
 
         const rect = getIdealRect(posInfo.rectList);
         if (!isFrame || isFocusType) {
-            const span = doc.createElement("span");
-            span.style.left = (Math.max(rect.left, posInfo.minX) + scrX) + "px";
-            span.style.top  = (Math.max(rect.top, posInfo.minY) + scrY) + "px";
-            span.className = tagName;
+            const highlight = doc.createElement("div");
+            const hStyle = highlight.style;
+            hStyle.setProperty("left", (bRect.left + scrX) + "px", "important");
+            hStyle.setProperty("top", (bRect.top + scrY) + "px", "important");
+            hStyle.setProperty("width", bRect.width + "px", "important");
+            hStyle.setProperty("height", bRect.height + "px", "important");
+
+            const label = doc.createElement("span");
+            const labelLeft = (Math.max(rect.left, posInfo.minX) - bRect.left);
+            const labelTop = (Math.max(rect.top, posInfo.minY) - bRect.top);
+            label.style.setProperty("left", labelLeft + "px", "important");
+            label.style.setProperty("top", labelTop + "px", "important");
+            label.className = tagName;
             if (isFrame) {
-                span.classList.add("wimpulation-is-frame");
+                label.classList.add("wimpulation-is-frame");
             }
             else {
-                addClassList(elem, span);
+                addClassList(elem, label);
             }
-            hints.push([span, elem]);
+            highlight.appendChild(label);
+
+            hints.push([highlight, elem]);
             idOrPromiseList.push(selfFrameId);
         }
         if (isFrame) {

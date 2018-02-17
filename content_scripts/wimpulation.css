@@ -6,13 +6,24 @@
     height: 0px !important;
     position: static !important;
 }
-#wimpulation-hint-container > span {
+#wimpulation-hint-container > div {
+    display: block !important;
+    position: absolute !important;
+    z-index: 2147483646 !important;
+    opacity: 1 !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: crimson 0 0 2px 2px !important;
+    visibility: hidden !important;
+}
+#wimpulation-hint-container > div > span {
     opacity: 1 !important;
     background-color: mistyrose !important;
     color: black !important;
     box-shadow: 1px 1px 1px !important;
     display: inline !important;
-    z-index: 2147483646 !important;
     position: absolute !important;
     visibility: visible !important;
     border: 1px solid !important;
@@ -24,49 +35,49 @@
     width: initial !important;
 }
 
-#wimpulation-hint-container > .A,
-#wimpulation-hint-container > .AREA {
+#wimpulation-hint-container > div > .A,
+#wimpulation-hint-container > div > .AREA {
     background-color: white !important;
 }
-#wimpulation-hint-container > .INPUT,
-#wimpulation-hint-container > .TEXTAREA,
-#wimpulation-hint-container > .BUTTON,
-#wimpulation-hint-container > .SELECT {
+#wimpulation-hint-container > div > .INPUT,
+#wimpulation-hint-container > div > .TEXTAREA,
+#wimpulation-hint-container > div > .BUTTON,
+#wimpulation-hint-container > div > .SELECT {
     background-color: gainsboro !important;
 }
-#wimpulation-hint-container > .IMG {
+#wimpulation-hint-container > div > .IMG {
     background-color: lightcyan !important;
 }
-#wimpulation-hint-container > .VIDEO {
+#wimpulation-hint-container > div > .VIDEO {
     background-color: gold !important;
 }
-#wimpulation-hint-container > .CANVAS {
+#wimpulation-hint-container > div > .CANVAS {
     background-color: lavender !important;
 }
-#wimpulation-hint-container > .wimpulation-is-frame {
+#wimpulation-hint-container > div > .wimpulation-is-frame {
     background-color: palegoldenrod !important;
 }
-#wimpulation-hint-container > .wimpulation-has-clickevent {
+#wimpulation-hint-container > div > .wimpulation-has-clickevent {
     text-decoration: underline !important;
 }
-#wimpulation-hint-container > .wimpulation-has-mousemoveevent {
+#wimpulation-hint-container > div > .wimpulation-has-mousemoveevent {
     font-style: italic !important;
 }
-#wimpulation-hint-container > .wimpulation-has-tabindex {
+#wimpulation-hint-container > div > .wimpulation-has-tabindex {
     border: 2px double !important;
 }
 #wimpulation-hint-container > #wimpulation-hint-active {
-    color: red !important;
     z-index: 2147483647 !important;
-    transform: scale(1.1);
+    visibility: visible !important;
 }
-[wimpulation-hint-active-element] {
-    box-shadow: red 0 0 1px 2px !important;
+#wimpulation-hint-container > #wimpulation-hint-active > span {
+    color: crimson !important;
+    transform: scale(1.3) !important;
 }
-#wimpulation-hint-container > span.wimpulation-filtered-hint {
+#wimpulation-hint-container > div.wimpulation-filtered-hint > span {
     visibility: hidden !important;
 }
-#wimpulation-hint-container.wimpulation-hint-is-transparent > span {
+#wimpulation-hint-container.wimpulation-hint-is-transparent div > span {
     opacity: 0.2 !important;
 }
 
