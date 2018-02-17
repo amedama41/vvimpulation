@@ -128,7 +128,7 @@ return class {
         if (keyEvent.altKey) modifiers += "A-";
         if (keyEvent.ctrlKey) modifiers += "C-";
         if (keyEvent.metaKey) modifiers += "M-";
-        if (keyEvent.shiftKey && isSpecialKey) modifiers += "S-";
+        if (keyEvent.shiftKey && (isSpecialKey || modifiers)) modifiers += "S-";
 
         if (!isSpecialKey && modifiers.length !== 0) {
             key = key.toUpperCase();
