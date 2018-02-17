@@ -20,6 +20,40 @@ VVimpulation also use all host permissions in order to get search suggestions in
 
 ## Release Notes
 
+### 1.2
+
+Command
+- Add showElementInfo command.
+- Add toggleTransparency hint command.
+- Add toggleTabPinning command.
+- Add toggleTabMute command.
+
+Enhancement
+- Distinguish key patterns with shift and other modifiers from the patterns without shift.
+- Exclude elements on edge of viewpoint from hint target.
+- Change to the normal mode from the hint more smoothly.
+- Highlight a current active hint target element.
+- Prevent page auto focus to steal a focus from the console.
+- Block extendSelection always traverse the sub tree under body or html node.
+- Avoid to set caret at the head of a non-displayed text.
+- Generate mousedown and mouseup events in smartOpen commands.
+- Optimize the speed of displaying hint labels for huge pages.
+- Handle keyup events in order to suppress keyup event actions defined by pages.
+- Finish visual mode when other frame is focused.
+- Show hint label on the position not covered by the ancestors.
+- Change hint label color.
+- Check ancestor covering for area elements.
+- Add tr into default code hint pattern.
+
+Bugfix
+- Calculate frame areas taking into account the frame padding and border.
+- Fix the timing to do automatic killHover.
+- Fix the issue that the count of repeatLastCommand may be reset.
+- Fix the mousemove target of mousein / mouseout commands.
+- Fix calculation for poly shape area's rectangle.
+- Fix that tiny-macro can not record 0.
+- Fix error page when the URL has ampersands.
+
 ### 1.1
 
 Command
