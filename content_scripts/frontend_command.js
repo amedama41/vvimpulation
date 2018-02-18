@@ -1154,7 +1154,12 @@ class FrontendCommand {
                 return;
             }
             const result = invokeCommand(args[index], count, frameInfo, false);
-            return Promise.resolve(result).then(() => invoke(index + 1));
+            if (result instanceof Promise) {
+                return result.then(() => invoke(index + 1));
+            }
+            else {
+                return invoke(index + 1);
+            }
         };
         return invoke(0);
     }
