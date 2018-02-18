@@ -445,7 +445,12 @@ class FrameInfo {
                 case "INSERT":
                     return new InsertMode(this, this._keyMap["insert"], data);
                 case "HINT":
-                    return new HintMode(this, data);
+                    if (this.isTopFrame()) {
+                        return new HintMode(this, data);
+                    }
+                    else {
+                        return new ChildFrameHintMode(this);
+                    }
                 case "VISUAL":
                     return new VisualMode(this, this._keyMap["visual"], data);
                 case "CARET":

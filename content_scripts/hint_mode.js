@@ -1,133 +1,92 @@
 'use strict';
 
-const gHintElementListMap = {};
-
-class HintMode {
-    constructor(frameInfo, data={ labelList: [], setZIndex: false, id: null }) {
-        this.hints = gHintElementListMap[data.id] || [];
-        delete gHintElementListMap[data.id];
-        this.focusIndex = undefined;
-        const labelList = data.labelList;
-
-        const container = document.createElement("div");
-        const indexMap = {};
-        container.id = "wimpulation-hint-container";
-        this.hints.forEach(([highlight, elem], index) => {
-            highlight.firstElementChild.textContent = labelList[index];
-            container.insertBefore(highlight, container.firstElementChild);
-            indexMap[labelList[index]] = index;
-        });
-        HintMode._setContainerPosition(container);
-        const target = document.documentElement;
-        target.appendChild(container);
-        this.indexMap = indexMap;
-        if (data.setZIndex) {
-            this._setZIndex();
-        }
-        if (Number.isInteger(data.initIndex)) {
-            this._setActive(data.initIndex);
-        }
+class HintModeBase {
+    constructor() {
+        this._hintList = [];
+        this._targetIndex = null;
+        this._indexMap = {}; // global index => local index
+        this._oldTarget = null;
     }
     static getModeName() {
         return "HINT";
     }
     getTarget() {
-        const [highlight, elem] = this.hints[this.focusIndex];
+        const [highlight, elem] = this._hintList[this._targetIndex];
         return elem;
     }
     consume(key, frameInfo) {
-        frameInfo.postMessage({ command: "forwardHintKeyEvent", key });
-        return [true, undefined, undefined, undefined];
+        return [true, undefined, key, undefined];
     }
     onReset(frameInfo, allFrame) {
         if (!allFrame) {
             frameInfo.postMessage({ command: "resetHintMode" });
         }
-        if (this.focusIndex !== undefined) {
-            const [highlight, elem] = this.hints[this.focusIndex];
-        }
-        const container = document.querySelector("#wimpulation-hint-container");
+        const container = document.getElementById("wimpulation-hint-container");
         if (container) {
-            container.parentNode.removeChild(container);
+            container.remove();
         }
-    }
-    onInvoking(cmd, frameInfo) {
     }
     onDropKeys(dropKeys) {
     }
     onNonConsumed(key, frameInfo) {
     }
-    onMessageEvent(msg, frameInfo) {
-        switch (msg.command) {
-            case 'focusHintLink':
-                return this.focusHintLink(msg, frameInfo);
-            case 'blurHintLink':
-                return this.blurHintLink(msg);
-            case 'startFilter':
-                return this._startFilter(msg, frameInfo);
-            case 'applyFilter':
-                return this._applyFilter(msg);
-            case 'hideConsole':
-                return this._stopFilter(msg, frameInfo);
-            case 'getFilterResult':
-                return this._getFilterResult(msg, frameInfo);
-            case "setHintLabel":
-                return this._setHintLabel(msg, frameInfo);
-            case "setZIndex":
-                return this._setZIndex(msg, frameInfo);
-            case "clearZIndex":
-                return this._clearZIndex(msg, frameInfo);
-            case "setOpacity":
-                return this._setOpacity(msg, frameInfo);
-            case "clearOpacity":
-                return this._clearOpacity(msg, frameInfo);
-            case "getTargetIndex":
-                return this._getTargetIndex(msg, frameInfo);
-            case "invoke":
-                return invokeCommand(msg.commandName, msg.count, frameInfo);
-            default:
-                console.warn("Unknown command:", msg.command);
-                break;
+
+    makeHints(pattern, type, area, frameInfo) {
+        const container = document.getElementById("wimpulation-hint-container");
+        if (container) {
+            container.remove();
+        }
+        this._oldTarget =
+            (this._targetIndex !== null ? this.getTarget() : null);
+        this._hintList = [];
+        this._targetIndex = null;
+        this._indexMap = {};
+        return makeHints(this._hintList, pattern, type, area, frameInfo);
+    }
+    showHintLabel(data) {
+        const labelList = data.labelList;
+        const indexMap = {};
+        const container = document.createElement("div");
+        container.id = "wimpulation-hint-container";
+        this._hintList.forEach(([highlight, elem], index) => {
+            highlight.firstElementChild.textContent = labelList[index];
+            container.insertBefore(highlight, container.firstElementChild);
+            indexMap[labelList[index]] = index;
+        });
+        HintModeBase._setContainerPosition(container);
+        document.documentElement.appendChild(container);
+        this._indexMap = indexMap;
+        if (data.setZIndex) {
+            this.setZIndex();
+        }
+        if (Number.isInteger(data.initIndex)) {
+            this._setActive(data.initIndex);
         }
     }
 
-    focusHintLink(msg, frameInfo) {
+    invoke(data, frameInfo) {
+        return invokeCommand(data.commandName, data.count, frameInfo);
+    }
+    focusHintLink(data, frameInfo) {
+        const globalIndex = data.index;
         this._blurImpl();
-        const localIndex = this.indexMap[msg.index];
+        const localIndex = this._indexMap[globalIndex];
         if (localIndex === undefined) {
-            console.error("Unknown index", msg.index);
+            console.error("Unknown index", globalIndex);
             return;
         }
         this._setActive(localIndex);
-        if (msg.autoFocus) {
+        if (data.autoFocus) {
             invokeCommand("fixedFocusin", 0, frameInfo);
         }
     }
-    blurHintLink(msg) {
+    blurHintLink() {
         this._blurImpl();
-        this.focusIndex = undefined;
+        this._targetIndex = null;
     }
-    _blurImpl() {
-        if (this.focusIndex === undefined) {
-            return;
-        }
-        const [highlight, elem] = this.hints[this.focusIndex];
-        highlight.id = "";
-        if (highlight.style.zIndex) {
-            highlight.style.setProperty(
-                "z-index", highlight.style.zIndex, "important");
-        }
-    }
-    _startFilter(msg, frameInfo) {
-        frameInfo.showConsole(this, "hintFilter", msg.filter, 0);
-    }
-    _stopFilter(msg, frameInfo) {
-        frameInfo.sendMessage({ command: "stopFilter", filter: msg.value });
-        frameInfo.hideConsole();
-    }
-    _applyFilter(msg) {
+    applyFilter(filter) {
         const FILTER_CLASS_NAME = "wimpulation-filtered-hint";
-        const filter = Utils.makeFilter(msg.filter);
+        filter = Utils.makeFilter(filter);
         const getText = (elem) => {
             const innerText = elem.innerText;
             if (innerText === undefined) { // SVGElement does not have innerText
@@ -143,7 +102,7 @@ class HintMode {
             }
             return "";
         };
-        this.hints.forEach(([highlight, elem]) => {
+        this._hintList.forEach(([highlight, elem]) => {
             if (filter.match(getText(elem))) {
                 highlight.classList.remove(FILTER_CLASS_NAME);
             }
@@ -152,25 +111,24 @@ class HintMode {
             }
         });
     }
-    _getFilterResult(msg, frameInfo) {
+    getFilterResult() {
         const FILTER_CLASS_NAME = "wimpulation-filtered-hint";
-        const result = Object.keys(this.indexMap).map((index) => {
+        const result = Object.keys(this._indexMap).map((index) => {
             // Object.keys returns an array of string
             index = parseInt(index, 10);
-            const [highlight, elem] = this.hints[this.indexMap[index]];
+            const [highlight, elem] = this._hintList[this._indexMap[index]];
             return [index, !highlight.classList.contains(FILTER_CLASS_NAME)];
         });
         return result;
     }
-    _setHintLabel(msg, frameInfo) {
-        const labelList = msg.labelList;
-        this.hints.forEach(([highlight, elem], index) => {
+    setHintLabel(labelList) {
+        this._hintList.forEach(([highlight, elem], index) => {
             highlight.firstElementChild.textContent = labelList[index];
         });
         this._blurImpl();
-        this.focusIndex = undefined;
+        this._targetIndex = null;
     }
-    _setZIndex() {
+    setZIndex() {
         const getZIndex = (elem, zIndex, childZIndex) => {
             if (!elem) {
                 return zIndex;
@@ -193,47 +151,61 @@ class HintMode {
             }
             return getZIndex(elem.parentElement, zIndex, style.zIndex);
         };
-        this.hints.forEach(([highlight, elem], index) => {
+        this._hintList.forEach(([highlight, elem], index) => {
             highlight.style.setProperty(
                 "z-index", getZIndex(elem, "auto", "auto"), "important");
         });
     }
-    _clearZIndex() {
-        this.hints.forEach(([highlight, elem], index) => {
+    clearZIndex() {
+        this._hintList.forEach(([highlight, elem], index) => {
             highlight.style.removeProperty("z-index");
         });
     }
-    _setOpacity() {
+    setOpacity() {
         const container = document.getElementById("wimpulation-hint-container");
         if (container) {
             container.classList.add("wimpulation-hint-is-transparent");
         }
     }
-    _clearOpacity() {
+    clearOpacity() {
         const container = document.getElementById("wimpulation-hint-container");
         if (container) {
             container.classList.remove("wimpulation-hint-is-transparent");
         }
     }
-    _getTargetIndex(msg) {
-        if (this.focusIndex === undefined) {
+    getTargetIndex() {
+        if (!this._oldTarget) {
             return null;
         }
-        const [highlight, elem] = this.hints[this.focusIndex];
-        const hintList = gHintElementListMap[msg.id] || [];
-        const index = hintList.findIndex((e) => e[1] === elem);
+        const index = this._hintList.findIndex((e) => e[1] === this._oldTarget);
         if (index === -1) {
             return null;
         }
         return index;
     }
+    static forward(frameInfo, frameId, data) {
+        return frameInfo.forwardMessage(
+            frameId, { command: "forwardModeCommand", mode: "HINT", data });
+    }
+
     _setActive(index) {
-        const [highlight, elem] = this.hints[index];
+        const [highlight, elem] = this._hintList[index];
         highlight.id = "wimpulation-hint-active";
         if (highlight.style.zIndex) {
             highlight.style.setProperty("z-index", highlight.style.zIndex);
         }
-        this.focusIndex = index;
+        this._targetIndex = index;
+    }
+    _blurImpl() {
+        if (this._targetIndex === null) {
+            return;
+        }
+        const [highlight, elem] = this._hintList[this._targetIndex];
+        highlight.id = "";
+        if (highlight.style.zIndex) {
+            highlight.style.setProperty(
+                "z-index", highlight.style.zIndex, "important");
+        }
     }
     static _setContainerPosition(container) {
         const style = window.getComputedStyle(document.documentElement, null);
@@ -247,6 +219,340 @@ class HintMode {
         container.style.setProperty("position", "absolute", "important");
         container.style.setProperty("left", offsetX + "px", "important");
         container.style.setProperty("top", offsetY + "px", "important");
+    }
+}
+
+class HintMode extends HintModeBase {
+    constructor(frameInfo, data) {
+        super();
+        this.typeInfo = { type: data.type, pattern: data.pattern };
+        this.filter = "";
+        this.filterIndexMap = []; // displayed index => global index
+        this.frameIdList = []; // global index => frame id
+        this.visibleFrameIdList = [];
+        this.currentIndex = 0; // current displayed index
+        this.autoFocus = data.autoFocus;
+        this.overlap = data.overlap;
+        this.opacity = false;
+        this.mapper = Utils.makeCommandMapper(data.keyMapping);
+        super.makeHints(data.pattern, data.type, {
+            left: 0, right: window.innerWidth, width: window.innerWidth,
+            top: 0, bottom: window.innerHeight, height: window.innerHeight,
+        }, frameInfo).then((frameIdList) => {
+            if (frameIdList.length === 0) {
+                frameInfo.postMessage({ command: "toNormalMode" });
+                return;
+            }
+            this._showHintLabel(frameInfo, frameIdList);
+        }).catch((error) => {
+            HintMode._handleError(frameInfo, "toHintMode", error);
+        });
+    }
+    onInvoking(key, frameInfo) {
+        this._handleKey(key, 0, frameInfo);
+    }
+    onMessageEvent(msg, frameInfo) {
+        switch (msg.command) {
+            case "handleKey":
+                return this._handleKey(msg.key, msg.frameId, frameInfo);
+            case "applyFilter":
+                return this._applyFilter(msg.filter, frameInfo);
+            case "hideConsole":
+                return this._stopFilter(msg, frameInfo);
+            default:
+                console.warn("Unknown command:", msg.command);
+                break;
+        }
+    }
+
+    nextHint(frameInfo) {
+        const nextIndex = (this.currentIndex + 1) % this.filterIndexMap.length;
+        this._changeHintNum(nextIndex, frameInfo);
+    }
+    previousHint(frameInfo) {
+        const length = this.filterIndexMap.length;
+        const prevIndex = (this.currentIndex - 1 + length) % length;
+        this._changeHintNum(prevIndex, frameInfo);
+    }
+    reconstruct(frameInfo) {
+        const { type, pattern } = this.typeInfo;
+        const targetFrameId =
+            this.frameIdList[this.filterIndexMap[this.currentIndex]];
+        this.filterIndexMap = [];
+        this.frameIdList = [];
+        super.makeHints(pattern, type, {
+            left: 0, right: window.innerWidth, width: window.innerWidth,
+            top: 0, bottom: window.innerHeight, height: window.innerHeight,
+        }, frameInfo).then((frameIdList) => {
+            return Promise.resolve(this._forward(frameInfo, targetFrameId, {
+                command: "getTargetIndex"
+            })).then((targetIndex) => [frameIdList, targetIndex]);
+        }).then(([frameIdList, targetIndex]) => {
+            if (frameIdList.length === 0) {
+                frameInfo.postMessage({ command: "toNormalMode" });
+                return;
+            }
+            this._showHintLabel(
+                frameInfo, frameIdList, targetFrameId, targetIndex);
+        }).catch((error) => {
+            HintMode._handleError(frameInfo, "reconstruct", error);
+        });
+    }
+    startFilter(frameInfo) {
+        frameInfo.showConsole(this, "hintFilter", this.filter, 0);
+    }
+    toggleAutoFocus(frameInfo) {
+        this.autoFocus = !this.autoFocus;
+        const message = "Auto focus " + (this.autoFocus ? "ON" : "OFF");
+        frameInfo.showMessage(message, 3000, false);
+    }
+    toggleOverlap(frameInfo) {
+        this.overlap = !this.overlap;
+        this._forwardToAllFrame(frameInfo, {
+            command: (this.overlap ? "setZIndex" : "clearZIndex")
+        });
+        const message = "Overlapping " + (this.overlap ? "ON" : "OFF");
+        frameInfo.showMessage(message, 3000, false);
+    }
+    toggleTransparency(frameInfo) {
+        this.opacity = !this.opacity;
+        this._forwardToAllFrame(frameInfo, {
+            command: (this.opacity ? "setOpacity" : "clearOpacity")
+        });
+    }
+    invokeCommand(frameInfo, args) {
+        const match = /^(\d+)\|(.*$)/.exec(args);
+        const [count, commandName] =
+            (match ? [parseInt(match[1], 10), match[2]] : [0, args]);
+        const targetFrameId =
+            this.frameIdList[this.filterIndexMap[this.currentIndex]];
+        return this._forward(frameInfo, targetFrameId, {
+            command: "invoke", data: { commandName, count }
+        });
+    }
+
+    _handleKey(key, frameId, frameInfo) {
+        if (this.filterIndexMap.length === 0) { // In making hints
+            return;
+        }
+        if (key.length === 1 && "0" <= key && key <= "9") {
+            this._handleDigit(key, frameInfo);
+            return;
+        }
+        const [consumed, optCmd, cmd, dropKeyList] = this.mapper.get(key);
+        if (optCmd) {
+            this._invoke(optCmd, frameInfo);
+        }
+        else if (dropKeyList && !cmd) {
+            dropKeyList.push(key);
+            frameInfo.postMessage(
+                { command: "toNormalMode", frameId, data: dropKeyList });
+            return;
+        }
+        if (cmd) {
+            this._invoke(cmd, frameInfo);
+        }
+        else if (!consumed) {
+            frameInfo.postMessage(
+                { command: "toNormalMode", frameId, data: [key] });
+        }
+    }
+    _handleDigit(num, frameInfo) {
+        const length = this.filterIndexMap.length;
+        let index = this.currentIndex.toString() + num;
+        while (index && parseInt(index, 10) >= length) {
+            index = index.substring(1);
+        }
+        const nextIndex = (index ? parseInt(index, 10) : length - 1);
+
+        this._changeHintNum(nextIndex, frameInfo);
+    }
+    _changeHintNum(nextDisplayedIndex, frameInfo) {
+        const prevId = this.frameIdList[this.filterIndexMap[this.currentIndex]];
+        const nextIndex = this.filterIndexMap[nextDisplayedIndex];
+        const nextId = this.frameIdList[nextIndex];
+        if (prevId !== nextId) {
+            this._forward(frameInfo, prevId, { command: "blurHintLink", });
+        }
+        const data = { index: nextIndex, autoFocus: this.autoFocus };
+        this._forward(frameInfo, nextId, { command: "focusHintLink", data });
+        this.currentIndex = nextDisplayedIndex;
+    }
+    _invoke(cmd, frameInfo) {
+        const index = cmd.indexOf("|");
+        const command = (index === -1 ? cmd : cmd.substr(0, index));
+        const args = cmd.substr(command.length + 1);
+        this[command](frameInfo, args);
+    }
+    _applyFilter(filter, frameInfo) {
+        this._forwardToAllFrame(
+            frameInfo, { command: "applyFilter", data: filter });
+    }
+    _stopFilter(msg, frameInfo) {
+        frameInfo.hideConsole();
+        const filter = msg.value;
+        if (filter === null) {
+            this._applyFilter(this.filter, frameInfo);
+            return;
+        }
+        if (filter === this.filter) {
+            return;
+        }
+        this._fixFilter(frameInfo).then((hasMatchingElements) => {
+            if (hasMatchingElements) {
+                this.filter = filter;
+            }
+            else {
+                const message = "No elements matched by " + filter;
+                frameInfo.showMessage(message, 3000, false);
+                this._applyFilter(this.filter, frameInfo);
+            }
+        });
+    }
+    _fixFilter(frameInfo) {
+        return Promise.all(this._forwardToAllFrame(frameInfo, {
+            command: "getFilterResult"
+        })).then((resultList) => {
+            const filterResult = resultList.reduce((filterResult, result) => {
+                Array.prototype.push.apply(filterResult, result);
+                return filterResult;
+            }).sort((lhs, rhs) => lhs[0] - rhs[0]);
+            const [indexMap, labelMap] =
+                HintMode._createFilterMaps(filterResult, this.frameIdList);
+            if (indexMap.length === 0) {
+                return false;
+            }
+            this.filterIndexMap = indexMap;
+            this.currentIndex = 0;
+            this.visibleFrameIdList.forEach((frameId) => {
+                this._forward(frameInfo, frameId, {
+                    command: "setHintLabel", data: labelMap[frameId]
+                });
+            });
+            this._changeHintNum(this.currentIndex, frameInfo);
+            return true;
+        });
+    }
+    _forward(frameInfo, frameId, message) {
+        if (frameId === 0) {
+            return super[message.command](message.data, frameInfo);
+        }
+        else {
+            return HintModeBase.forward(frameInfo, frameId, message);
+        }
+    }
+    _forwardToAllFrame(frameInfo, message) {
+        return this.visibleFrameIdList.map((frameId) => {
+            return this._forward(frameInfo, frameId, message);
+        });
+    }
+    _showHintLabel(frameInfo, frameIdList, targetId, targetIndex=null) {
+        if (targetIndex === null) {
+            targetId = frameIdList[0];
+            targetIndex = 0;
+        }
+        const labelMap = {};
+        const visibleFrameIdList = [];
+        let globalTargetIndex = 0;
+        let counter = 0;
+        frameIdList.forEach((frameId, index) => {
+            if (!labelMap[frameId]) {
+                labelMap[frameId] = [];
+                visibleFrameIdList.push(frameId);
+            }
+            labelMap[frameId].push(index);
+            if (frameId === targetId && counter++ === targetIndex) {
+                globalTargetIndex = index;
+            }
+        });
+        this._setIdList(frameIdList, visibleFrameIdList, globalTargetIndex);
+        const setZIndex = this.overlap;
+        visibleFrameIdList.forEach((frameId) => {
+            const data = {
+                labelList: labelMap[frameId],
+                setZIndex,
+                initIndex: (frameId === targetId ? targetIndex : null),
+            };
+            this._forward(
+                frameInfo, frameId, { command: "showHintLabel", data });
+        });
+    }
+    _setIdList(frameIdList, visibleFrameIdList, index) {
+        this.frameIdList = frameIdList;
+        this.visibleFrameIdList = visibleFrameIdList;
+        this.filterIndexMap = this.frameIdList.map((id, index) => index);
+        this.filter = "";
+        this.currentIndex = index;
+        this.opacity = false;
+        this.mapper.reset();
+    }
+    static _createFilterMaps(filterResult, frameIdList) {
+        const filterIndexMap = [];
+        const labelMap = {};
+        filterResult.forEach(([index, filter]) => {
+            const frameId = frameIdList[index];
+            if (!labelMap[frameId]) {
+                labelMap[frameId] = [];
+            }
+            if (filter) {
+                labelMap[frameId].push(filterIndexMap.length);
+                filterIndexMap.push(index);
+            }
+            else {
+                labelMap[frameId].push("-");
+            }
+        });
+        return [filterIndexMap, labelMap];
+    }
+    static _handleError(frameInfo, name, error) {
+        console.error(`${name}: ${Utils.errorString(e)}`);
+        frameInfo.showMessage(
+            `${name} error (${(e || "some error occured").toString()})`);
+    }
+}
+
+class ChildFrameHintMode extends HintModeBase {
+    constructor() {
+        super()
+    }
+    onInvoking(key, frameInfo) {
+        const frameId = frameInfo.getSelfFrameId();
+        HintModeBase.forward(
+            frameInfo, 0, { command: "handleKey", key, frameId });
+    }
+    onMessageEvent(msg, frameInfo) {
+        switch (msg.command) {
+            case "makeHints":
+                return super.makeHints(
+                    msg.pattern, msg.type, msg.area, frameInfo);
+            case "showHintLabel":
+                return super.showHintLabel(msg.data);
+            case "focusHintLink":
+                return super.focusHintLink(msg.data, frameInfo);
+            case "blurHintLink":
+                return super.blurHintLink();
+            case "applyFilter":
+                return super.applyFilter(msg.data);
+            case "getFilterResult":
+                return super.getFilterResult();
+            case "setHintLabel":
+                return super.setHintLabel(msg.data);
+            case "setZIndex":
+                return super.setZIndex();
+            case "clearZIndex":
+                return super.clearZIndex();
+            case "setOpacity":
+                return super.setOpacity();
+            case "clearOpacity":
+                return super.clearOpacity();
+            case "getTargetIndex":
+                return super.getTargetIndex();
+            case "invoke":
+                return super.invoke(msg.data, frameInfo);
+            default:
+                console.warn("Unknown command:", msg.command);
+                break;
+        }
     }
 }
 
@@ -414,12 +720,11 @@ function makePattern(globalPattern, localPattern) {
     }
 }
 
-function makeHints(id, pattern, type, winArea, frameInfo) {
+function makeHints(hintList, pattern, type, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
 
     const idOrPromiseList = [];
-    const hints = [];
 
     const selfFrameId = frameInfo.getSelfFrameId();
 
@@ -508,7 +813,7 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
             }
             highlight.appendChild(label);
 
-            hints.push([highlight, elem]);
+            hintList.push([highlight, elem]);
             idOrPromiseList.push(selfFrameId);
         }
         if (isFrame) {
@@ -517,14 +822,10 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
                 continue;
             }
             const frameArea = calcFrameArea(rect, style, winArea);
-            idOrPromiseList.push(frameInfo.forwardMessage(frameId, {
-                command: "collectHint", id, type, pattern, area: frameArea
+            idOrPromiseList.push(HintModeBase.forward(frameInfo, frameId, {
+                command: "makeHints", type, pattern, area: frameArea,
             }));
         }
-    }
-
-    if (hints.length > 0) { // Avoid memory leak due to no mode change.
-        gHintElementListMap[id] = hints;
     }
 
     return Promise.all(idOrPromiseList).then((list) => {

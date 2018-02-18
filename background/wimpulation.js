@@ -12,7 +12,6 @@ class TabInfo {
         this.mode = "NORMAL";
         this.frameInfoMap = new Map();
         this.consolePort = undefined;
-        this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         // [keyword, caseSensitive, backward]
         this._lastSearchInfo = ["", false, false];
@@ -25,7 +24,6 @@ class TabInfo {
             this.consolePort.disconnect();
             this.consolePort = undefined;
         }
-        this.modeInfo = undefined;
         this._frameIdListCache = [undefined];
         this._searchHighlighting = searchHighlighting;
     }
@@ -53,9 +51,8 @@ class TabInfo {
     getMode() {
         return this.mode;
     }
-    setMode(mode, modeInfo) {
+    setMode(mode) {
         this.mode = mode;
-        this.modeInfo = modeInfo;
     }
     frameIdList(continuation) {
         if (this._frameIdListCache) {
@@ -692,26 +689,25 @@ class Command {
         tabInfo.forEachPort((port, frameId) => port.postMessage(changeModeMsg));
     }
     static toNormalMode(msg, sender, tabInfo) {
-        changeNormalMode(tabInfo);
+        changeNormalMode(tabInfo, msg.frameId, msg.data);
     }
     static toHintMode(msg, sender, tabInfo) {
-        const type = msg.type;
-        const pattern = gOptions.hintPattern["global"][type];
-        const id = HintMode.getUniqueId();
-        tabInfo.sendMessage(0, {
-            command: "collectHint", id, type, pattern
-        }).then((hintsInfoList) => {
-            if (hintsInfoList.length === 0) {
-                changeNormalMode(tabInfo);
-                return;
+        tabInfo.forEachPort((port, frameId) => {
+            if (frameId === 0) {
+                const data = {
+                    type: msg.type,
+                    pattern: gOptions.hintPattern["global"][msg.type],
+                    autoFocus: gOptions.autoFocus,
+                    overlap: gOptions.overlapHintLabels,
+                    keyMapping: gOptions.hintKeyMapping,
+                };
+                port.postMessage({ command: "changeMode", mode: "HINT", data });
             }
-            tabInfo.setMode("HINT", new HintMode(
-                tabInfo, id, hintsInfoList, { type, pattern },
-                gOptions.autoFocus,
-                gOptions.overlapHintLabels, gOptions.hintKeyMapping));
-        }).catch((e) => {
-            handleError(tabInfo, "toHintMode", e);
+            else {
+                port.postMessage({ command: "changeMode", mode: "HINT" });
+            }
         });
+        tabInfo.setMode("HINT");
     }
 
     /**
@@ -749,23 +745,17 @@ class Command {
     /**
      * Commands for hint mode
      */
-    static forwardHintKeyEvent(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        return tabInfo.modeInfo.handle(msg.key, sender, tabInfo);
-    }
     static resetHintMode(msg, sender, tabInfo) {
         if (tabInfo.getMode() !== "HINT") {
             return;
         }
-        return tabInfo.modeInfo.reset(sender, tabInfo);
-    }
-    static stopFilter(msg, sender, tabInfo) {
-        if (tabInfo.getMode() !== "HINT") {
-            return;
-        }
-        tabInfo.modeInfo.stopFilter(msg.filter, sender, tabInfo);
+        const changeModeMsg = { command: "changeMode", mode: "NORMAL" };
+        tabInfo.forEachPort((port, frameId) => {
+            if (frameId !== sender.frameId) {
+                port.postMessage(changeModeMsg);
+            }
+        });
+        tabInfo.setMode("NORMAL");
     }
 
     /**
@@ -813,7 +803,8 @@ class ConsoleCommand {
         if (tabInfo.getMode() !== "HINT") {
             return;
         }
-        tabInfo.modeInfo.applyFilter(msg.filter, sender, tabInfo);
+        tabInfo.sendMessage(
+            0, { command: "forwardModeCommand", mode: "HINT", data: msg });
     }
 }
 

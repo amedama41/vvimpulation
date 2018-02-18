@@ -154,14 +154,6 @@ class MessageCommand {
         }
         return gFrameInfo.handleMessage(msg.data);
     }
-    static collectHint(msg) {
-        const winArea = msg.area || {
-            top: 0, left: 0,
-            bottom: window.innerHeight, right: window.innerWidth,
-            width: window.innerWidth, height: window.innerHeight,
-        };
-        return makeHints(msg.id, msg.pattern, msg.type, winArea, gFrameInfo);
-    }
     static changeToConsoleMode(msg) {
         return gFrameInfo.changeToConsoleMode(
             msg.frameId, msg.mode, msg.defaultInput, msg.passURL);
