@@ -639,13 +639,15 @@ class FrontendCommand {
     }
     static mousedown(count, frameInfo) {
         const elem = frameInfo.getTarget();
+        const coord = getCoord(elem);
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
-        emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "mousedown", coord, ctrl, alt, shift, meta);
     }
     static mouseup(count, frameInfo) {
         const elem = frameInfo.getTarget();
+        const coord = getCoord(elem);
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
-        emulateMouseEvent(elem, "mouseup", 0, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "mouseup", coord, ctrl, alt, shift, meta);
     }
     static mouseinTo(count, frameInfo) {
         const elem = frameInfo.getTarget();
@@ -1352,9 +1354,10 @@ function nonPrivilegedURL(url) {
 function smartOpenImpl(count, frameInfo, command) {
     const click = (count, elem) => {
         const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
-        emulateMouseEvent(elem, "mousedown", 0, ctrl, alt, shift, meta);
-        emulateMouseEvent(elem, "mouseup", 0, ctrl, alt, shift, meta);
-        emulateMouseEvent(elem, "click", 0, ctrl, alt, shift, meta);
+        const coord = getCoord(elem);
+        emulateMouseEvent(elem, "mousedown", coord, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "mouseup", coord, ctrl, alt, shift, meta);
+        emulateMouseEvent(elem, "click", coord, ctrl, alt, shift, meta);
     };
     const elem = frameInfo.getTarget();
     const link = getLink(elem);
@@ -1403,7 +1406,8 @@ function emulateClick(target, ctrl, alt, shift, meta) {
     if (!ctrl && target.target === "_blank") {
         target.target = "_top";
     }
-    emulateMouseEvent(target, "click", 0, ctrl, alt, shift, meta);
+    const coord = getCoord(target);
+    emulateMouseEvent(target, "click", coord, ctrl, alt, shift, meta);
 }
 
 function emulateMouseEvent(
@@ -1437,6 +1441,10 @@ function emulateMouseEvent(
     target.dispatchEvent(mouseEvent);
 }
 
+function getCoord(elem) {
+    const rect = elem.getBoundingClientRect();
+    return [rect.left + rect.width / 2, rect.top + rect.height / 2];
+}
 function getRandomCoord(elem) {
     const rect = elem.getBoundingClientRect();
     const x = Math.random() * (rect.right - rect.left + 1) + rect.left;
