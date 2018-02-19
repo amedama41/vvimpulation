@@ -52,8 +52,7 @@ class VisualModeBase {
         }, true);
     }
     getTarget() {
-        const node = this.selection.focusNode;
-        return node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        return DomUtils.getElementFromNode(this.selection.focusNode);
     }
     consume(key, frameInfo) {
         if (key === "0" && this.count !== "0" && // Is continuation of count?
@@ -116,10 +115,7 @@ class VisualModeBase {
 
         const style = this.caret.style;
         const range = this.selection.getRangeAt(0);
-        const elem = (() => {
-            const node = range.commonAncestorContainer;
-            return (node.nodeType === Node.TEXT_NODE ? node.parentNode : node);
-        })();
+        const elem = DomUtils.getElementFromNode(range.commonAncestorContainer);
         const win = window;
 
         const rect = (() => {

@@ -918,9 +918,8 @@ class FrontendCommand {
             return;
         }
         const range = selection.getRangeAt(0);
-        const node = range.commonAncestorContainer;
         const target =
-            (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement);
+            DomUtils.getElementFromNode(range.commonAncestorContainer);
         const url = browser.runtime.getURL("pages/source_view.html")
         return frameInfo.sendMessage({
             command: "openLinkInTab",
@@ -1273,13 +1272,7 @@ function getScrollBaseElement(target) {
     if (!selection || selection.rangeCount === 0) {
         return target;
     }
-    const selectionNode = selection.focusNode;
-    if (selectionNode.nodeType === Node.ELEMENT_NODE) {
-        return selectionNode;
-    }
-    else {
-        return selectionNode.parentElement;
-    }
+    return DomUtils.getElementFromNode(selection.focusNode);
 }
 
 function _getVideoElement() {

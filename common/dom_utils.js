@@ -304,6 +304,17 @@ return (class Edit {
         }
         return lastNode;
     }
+
+    static getElementFromNode(node) {
+        switch (node.nodeType) {
+            case Node.ELEMENT_NODE:
+                return node;
+            case Node.DOCUMENT_NODE:
+                return node.documentElement;
+            default:
+                return node.parentElement;
+        }
+    }
 });
 
 function indexOfAfterPreviousNewline(value, from) {
