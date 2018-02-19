@@ -53,6 +53,7 @@
                 "content_scripts/hover_killer.js",
                 "content_scripts/command.js",
                 "content_scripts/frontend_command.js",
+                "content_scripts/hint_command.js",
                 "content_scripts/frame_info.js",
                 "content_scripts/insert_mode.js",
                 "content_scripts/hint_mode.js",
