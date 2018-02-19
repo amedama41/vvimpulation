@@ -381,6 +381,10 @@ class HintMode extends HintModeBase {
     _invoke(cmd, frameInfo) {
         const index = cmd.indexOf("|");
         const command = (index === -1 ? cmd : cmd.substr(0, index));
+        if (!HINT_COMMAND_DESCRIPTIONS[command]) {
+            console.error("Unknown hint command:", cmd);
+            return;
+        }
         const args = cmd.substr(command.length + 1);
         this[command](frameInfo, args);
     }
