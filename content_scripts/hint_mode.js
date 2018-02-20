@@ -293,11 +293,14 @@ function updatePosInfoBasedOnAncestorCovering(elem, posInfo, style) {
         const rect = ancestor.getBoundingClientRect();
         posInfo.rectList = getRectsInArea(posInfo.rectList, rect);
         if (posInfo.rectList.length === 0) {
-            return [];
+            return;
         }
-        posInfo.minX = Math.max(posInfo.minX, rect.left - 8);
-        posInfo.minY = Math.max(posInfo.minY, rect.top - 8);
+        posInfo.minX = Math.max(posInfo.minX, rect.left);
+        posInfo.maxX = Math.min(posInfo.maxX, rect.right);
+        posInfo.minY = Math.max(posInfo.minY, rect.top);
+        posInfo.maxY = Math.min(posInfo.maxY, rect.bottom);
     }
+    posInfo.isFixed = (style.position === "fixed");
 }
 function getRects(elem, rect) {
     // Some anchor elements can be zero size even though they includes children.
@@ -450,7 +453,11 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
-        const posInfo = { rectList, minX: winArea.left, minY: winArea.top };
+        const posInfo = {
+            rectList, isFixed: false,
+            minX: bRect.left, maxX: bRect.right,
+            minY: bRect.top, maxY: bRect.bottom,
+        };
         // If some of ancestors are scrollable, the elem may not be displayed.
         if (isAreaElem) {
             const name = elem.parentNode.name;
@@ -469,18 +476,29 @@ function makeHints(id, pattern, type, winArea, frameInfo) {
 
         const rect = getIdealRect(posInfo.rectList);
         if (!isFrame || isFocusType) {
-            const highlight = doc.createElement("div");
+            const minX = posInfo.minX;
+            const minY = posInfo.minY;
+            const highlight = document.createElement("div");
             const hStyle = highlight.style;
-            hStyle.setProperty("left", (bRect.left + scrX) + "px", "important");
-            hStyle.setProperty("top", (bRect.top + scrY) + "px", "important");
-            hStyle.setProperty("width", bRect.width + "px", "important");
-            hStyle.setProperty("height", bRect.height + "px", "important");
+            if (posInfo.isFixed) {
+                hStyle.setProperty("position", "fixed", "important");
+                hStyle.setProperty("left", minX + "px", "important");
+                hStyle.setProperty("top", minY + "px", "important");
+            }
+            else {
+                hStyle.setProperty("left", (minX + scrX) + "px", "important");
+                hStyle.setProperty("top", (minY + scrY) + "px", "important");
+            }
+            hStyle.setProperty(
+                "width", (posInfo.maxX - minX) + "px", "important");
+            hStyle.setProperty(
+                "height", (posInfo.maxY - minY) + "px", "important");
 
-            const label = doc.createElement("span");
-            const labelLeft = (Math.max(rect.left, posInfo.minX) - bRect.left);
-            const labelTop = (Math.max(rect.top, posInfo.minY) - bRect.top);
-            label.style.setProperty("left", labelLeft + "px", "important");
-            label.style.setProperty("top", labelTop + "px", "important");
+            const label = document.createElement("span");
+            const left = Math.max(rect.left, minX - 8, winArea.left) - minX;
+            const top = Math.max(rect.top, minY - 8, winArea.top) - minY;
+            label.style.setProperty("left", left + "px", "important");
+            label.style.setProperty("top", top + "px", "important");
             label.className = tagName;
             if (isFrame) {
                 label.classList.add("wimpulation-is-frame");
