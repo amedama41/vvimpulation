@@ -23,7 +23,7 @@ class SuspendMode {
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmdName, frameInfo) {
-        return invokeCommand(cmdName, 0, frameInfo);
+        frameInfo.postMessage({ command: "toNormalMode" });
     }
     onDropKeys(dropKeys) {
     }

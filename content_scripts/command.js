@@ -202,7 +202,7 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for mode changing **/
     toSuspendMode: { background: true, description: "Change suspend mode" },
-    toNormalMode: { background: true, description: "Change normal mode" },
+    toNormalMode: { description: "Change normal mode" },
     toInsertMode: { description: "Change insert mode with the current target or a first input element" },
     toInsertModeOnFirstElement: { description: "Change insert mode with a first input element"},
     toInsertModeOnLastElement: { description: "Change insert mode with a last input element" },
