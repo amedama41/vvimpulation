@@ -485,9 +485,9 @@ class FrameInfo {
             container.id = "wimpulation-console-container";
             const consoleFrame = document.createElement("iframe");
             consoleFrame.src = browser.runtime.getURL("console/console.html");
-            consoleFrame.onload = () => {
+            consoleFrame.addEventListener("load", () => {
                 this._consoleFrame = consoleFrame;
-            };
+            }, { capture: true, once: true });
             container.appendChild(consoleFrame);
             const root = document.documentElement;
             if (root) {
