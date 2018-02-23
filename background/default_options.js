@@ -15,6 +15,7 @@ const DEFAULT_OPTIONS = {
             "I": "toInsertModeOnFirstElement",
             "A": "toInsertModeOnLastElement",
             "v": "toVisualMode",
+            "V": "compose|selectElement|toVisualMode",
             "<C-V>": "toCaretMode",
             ":": "toConsoleMode",
             "s": "toConsoleMode|open",
