@@ -281,8 +281,8 @@ class HintMode extends HintModeBase {
         this.filterIndexMap = [];
         this.frameIdList = [];
         super.makeHints(pattern, type, {
-            left: 0, right: window.innerWidth, width: window.innerWidth,
-            top: 0, bottom: window.innerHeight, height: window.innerHeight,
+            left: 0, right: window.innerWidth,
+            top: 0, bottom: window.innerHeight,
         }, frameInfo).then((frameIdList) => {
             return Promise.resolve(this._forward(frameInfo, targetFrameId, {
                 command: "getTargetIndex"
@@ -577,6 +577,17 @@ function isOutOfArea(rect, winArea) {
         || rect.left > winArea.right
         || rect.right < winArea.left);
 }
+function getClientRect(elem) {
+    const rect = elem.getBoundingClientRect();
+    const left = rect.left + elem.clientLeft;
+    const top = rect.top + elem.clientTop;
+    const width = elem.clientWidth;
+    const height = elem.clientHeight;
+    return {
+        left, right: left + width, width, top,
+        bottom: top + height, height,
+    };
+}
 function updatePosInfoBasedOnAncestorCovering(elem, posInfo, style) {
     const root = document.documentElement;
     const body = document.body;
@@ -600,7 +611,7 @@ function updatePosInfoBasedOnAncestorCovering(elem, posInfo, style) {
             continue;
         }
         isAbsolute = false;
-        const rect = ancestor.getBoundingClientRect();
+        const rect = getClientRect(ancestor);
         posInfo.rectList = getRectsInArea(posInfo.rectList, rect);
         if (posInfo.rectList.length === 0) {
             return;
@@ -696,22 +707,11 @@ function calcFrameArea(frameRect, style, winArea) {
         parseInt(style.paddingTop, 10) + parseInt(style.borderTopWidth, 10);
     const paddingLeft =
         parseInt(style.paddingLeft, 10) + parseInt(style.borderLeftWidth, 10);
-    const paddingBottom =
-        parseInt(style.paddingBottom, 10) +
-        parseInt(style.borderBottomWidth, 10);
-    const paddingRight =
-        parseInt(style.paddingRight, 10) + parseInt(style.borderRightWidth, 10);
     const frameTop = frameRect.top + paddingTop;
     const frameLeft = frameRect.left + paddingLeft;
-    const frameHeight = frameRect.height - (paddingTop + paddingBottom);
-    const frameWidth = frameRect.width - (paddingLeft + paddingRight);
     return {
-        top: Math.max(winArea.top - frameTop, 0),
-        left: Math.max(winArea.left - frameLeft, 0),
-        bottom: Math.min(winArea.bottom - frameTop, frameHeight),
-        right: Math.min(winArea.right - frameLeft, frameWidth),
-        width: frameWidth,
-        height: frameHeight,
+        left: winArea.left - frameLeft, right: winArea.right - frameLeft,
+        top: winArea.top - frameTop, bottom: winArea.bottom - frameTop,
     };
 }
 function makePattern(globalPattern, localPattern) {
@@ -727,6 +727,19 @@ function makePattern(globalPattern, localPattern) {
 function makeHints(hintList, pattern, type, winArea, frameInfo) {
     const win = window;
     const doc = win.document;
+    const scrollingElement = doc.scrollingElement;
+    if (scrollingElement) {
+        winArea.width = scrollingElement.clientWidth;
+        winArea.height = scrollingElement.clientHeight;
+    }
+    else {
+        winArea.width = win.innerWidth;
+        winArea.height = win.innerHeight;
+    }
+    winArea.left = Math.max(winArea.left, 0);
+    winArea.right = Math.min(winArea.right, winArea.width);
+    winArea.top = Math.max(winArea.top, 0);
+    winArea.bottom = Math.min(winArea.bottom, winArea.height);
 
     const idOrPromiseList = [];
 
