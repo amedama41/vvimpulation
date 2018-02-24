@@ -245,6 +245,7 @@ class HintMode extends HintModeBase {
             }
             this._showHintLabel(frameInfo, frameIdList);
         }).catch((error) => {
+            frameInfo.postMessage({ command: "toNormalMode" });
             HintMode._handleError(frameInfo, "toHintMode", error);
         });
     }
@@ -295,6 +296,7 @@ class HintMode extends HintModeBase {
             this._showHintLabel(
                 frameInfo, frameIdList, targetFrameId, targetIndex);
         }).catch((error) => {
+            frameInfo.postMessage({ command: "toNormalMode" });
             HintMode._handleError(frameInfo, "reconstruct", error);
         });
     }
