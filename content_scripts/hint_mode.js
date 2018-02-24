@@ -511,9 +511,9 @@ class HintMode extends HintModeBase {
         return [filterIndexMap, labelMap];
     }
     static _handleError(frameInfo, name, error) {
-        console.error(`${name}: ${Utils.errorString(e)}`);
+        console.error(`${name}: ${Utils.errorString(error)}`);
         frameInfo.showMessage(
-            `${name} error (${(e || "some error occured").toString()})`);
+            `${name} error (${(error || "some error occured").toString()})`);
     }
 }
 
