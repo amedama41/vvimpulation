@@ -504,7 +504,21 @@ class FrameInfo {
                 }
             }, timeout);
         };
-        create(2000);
+        if (document.readyState === "loading") {
+            let start = false;
+            const createOnce = () => {
+                if (!start) {
+                    create(2000);
+                    start = true;
+                }
+            };
+            window.addEventListener(
+                "DOMContentLoaded", createOnce, { capture: true, once: true });
+            setTimeout(createOnce, 1000);
+        }
+        else {
+            create(2000);
+        }
     }
     _sendConsoleMessage(msg) {
         return this._port.sendMessage(
