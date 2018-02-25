@@ -240,8 +240,7 @@ class HintMode extends HintModeBase {
             top: 0, bottom: window.innerHeight, height: window.innerHeight,
         }, frameInfo).then((frameIdList) => {
             if (frameIdList.length === 0) {
-                frameInfo.postMessage({ command: "toNormalMode" });
-                return;
+                return Promise.reject(HintMode._NO_HINTS_MESSAGE);
             }
             this._showHintLabel(frameInfo, frameIdList);
         }).catch((error) => {
@@ -285,14 +284,13 @@ class HintMode extends HintModeBase {
             left: 0, right: window.innerWidth,
             top: 0, bottom: window.innerHeight,
         }, frameInfo).then((frameIdList) => {
+            if (frameIdList.length === 0) {
+                return Promise.reject(HintMode._NO_HINTS_MESSAGE);
+            }
             return Promise.resolve(this._forward(frameInfo, targetFrameId, {
                 command: "getTargetIndex"
             })).then((targetIndex) => [frameIdList, targetIndex]);
         }).then(([frameIdList, targetIndex]) => {
-            if (frameIdList.length === 0) {
-                frameInfo.postMessage({ command: "toNormalMode" });
-                return;
-            }
             this._showHintLabel(
                 frameInfo, frameIdList, targetFrameId, targetIndex);
         }).catch((error) => {
@@ -511,11 +509,16 @@ class HintMode extends HintModeBase {
         return [filterIndexMap, labelMap];
     }
     static _handleError(frameInfo, name, error) {
+        if (error === HintMode._NO_HINTS_MESSAGE) {
+            frameInfo.showMessage(error, 3000, false);
+            return;
+        }
         console.error(`${name}: ${Utils.errorString(error)}`);
         frameInfo.showMessage(
             `${name} error (${(error || "some error occured").toString()})`);
     }
 }
+HintMode._NO_HINTS_MESSAGE = "No hints are found";
 
 class ChildFrameHintMode extends HintModeBase {
     constructor() {
