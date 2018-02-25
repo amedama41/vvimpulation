@@ -17,6 +17,7 @@
     border: none !important;
     box-shadow: crimson 0 0 2px 2px !important;
     transition: none !important;
+    pointer-events: none !important;
     visibility: hidden !important;
 }
 #wimpulation-hint-container > div > span {
