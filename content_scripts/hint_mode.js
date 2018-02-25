@@ -748,7 +748,7 @@ function makeHints(hintList, pattern, type, winArea, frameInfo) {
     const selfFrameId = frameInfo.getSelfFrameId();
 
     const scrX = win.scrollX, scrY = win.scrollY;
-    const elems = win.document.querySelectorAll(
+    const elems = doc.querySelectorAll(
         makePattern(pattern, frameInfo.getLocalHintPattern(type)));
     const isFocusType = (type === 'focus');
     for (let i = 0, length = elems.length; i < length; i++) {
@@ -802,7 +802,7 @@ function makeHints(hintList, pattern, type, winArea, frameInfo) {
         if (!isFrame || isFocusType) {
             const minX = posInfo.minX;
             const minY = posInfo.minY;
-            const highlight = document.createElement("div");
+            const highlight = doc.createElement("div");
             const hStyle = highlight.style;
             if (posInfo.isFixed) {
                 hStyle.setProperty("position", "fixed", "important");
@@ -818,7 +818,7 @@ function makeHints(hintList, pattern, type, winArea, frameInfo) {
             hStyle.setProperty(
                 "height", (posInfo.maxY - minY) + "px", "important");
 
-            const label = document.createElement("span");
+            const label = doc.createElement("span");
             const left = Math.max(rect.left, minX - 8, winArea.left) - minX;
             const top = Math.max(rect.top, minY - 8, winArea.top) - minY;
             label.style.setProperty("left", left + "px", "important");
