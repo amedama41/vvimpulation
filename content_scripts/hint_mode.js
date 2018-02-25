@@ -586,8 +586,9 @@ function getClientRect(elem) {
     const rect = elem.getBoundingClientRect();
     const left = rect.left + elem.clientLeft;
     const top = rect.top + elem.clientTop;
-    const width = elem.clientWidth;
-    const height = elem.clientHeight;
+    // For SVGElement, clientWidth and clientHeight are both zero.
+    const width = elem.clientWidth || rect.width;
+    const height = elem.clientHeight || rect.height;
     return {
         left, right: left + width, width, top,
         bottom: top + height, height,
