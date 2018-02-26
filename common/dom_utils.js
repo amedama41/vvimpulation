@@ -16,8 +16,10 @@ return (class Edit {
         if (inputs.length == 0) {
             return [];
         }
-        return Array.prototype.filter.call(
-            inputs, (input) => input.getClientRects().length !== 0);
+        return Array.prototype.filter.call(inputs, (input) => {
+            return (input.getClientRects().length !== 0 &&
+                window.getComputedStyle(input).visibility !== "hidden");
+        });
     }
     static isEditableInputType(type) {
         switch (type) {
