@@ -998,86 +998,12 @@ class FrontendCommand {
     static showElementInfo(count, frameInfo) {
         const elem = frameInfo.getTarget();
         const infoList = [["tagName:", elem.tagName.toLowerCase()]];
-        const COMMON_ATTR_LIST = ["id", "className", "title", "accessKey"];
-        const attrList = COMMON_ATTR_LIST.concat((() => {
-            switch (elem.tagName) {
-                case "A":
-                    return ["href", "target", "rel", "ping", "download"];
-                case "AREA":
-                    return ["href", "target", "rel", "download", "alt"];
-                case "AUDIO":
-                    return ["src", "crossOrigin"];
-                case "BASE":
-                    return ["href", "target"];
-                case "BUTTON":
-                    return ["name", "type", "value"];
-                case "DATA":
-                    return ["value"];
-                case "DEL":
-                    return ["cite", "dateTime"];
-                case "EMBED":
-                    return ["src", "type"];
-                case "FIELDSET":
-                    return ["name"];
-                case "FORM":
-                    return ["name", "action", "method", "target"];
-                case "FRAME":
-                    return ["name", "src"];
-                case "IFRAME":
-                    return ["name", "src", "srcdoc"];
-                case "IMG":
-                    return ["src", "srcset", "alt", "usemap", "crossOrigin"];
-                case "INPUT":
-                    return ["name", "type", "value", "src", "alt"];
-                case "INS":
-                    return ["cite", "dateTime"];
-                case "LINK":
-                    return ["type", "href", "rel", "media", "crossOrigin"];
-                case "MAP":
-                    return ["name"];
-                case "META":
-                    return ["name", "httpEquiv", "content"];
-                case "METER":
-                    return ["value", "min", "max", "low", "high"];
-                case "OBJECT":
-                    return ["name", "data", "type", "usemap"];
-                case "OPTGROUP":
-                    return ["label"];
-                case "OPTION":
-                    return ["label", "value"];
-                case "OUTPUT":
-                    return ["name"];
-                case "PARAM":
-                    return ["name", "value"];
-                case "PROGRESS":
-                    return ["value", "max"];
-                case "Q":
-                    return ["cite"];
-                case "SCRIPT":
-                    return ["src", "type", "crossOrigin"];
-                case "SELECT":
-                    return ["name"];
-                case "SOURCE":
-                    return ["src", "type", "srcset", "media"];
-                case "STYLE":
-                    return ["media"];
-                case "TRACK":
-                    return ["src", "srclang", "kind", "label"];
-                case "TEXTAREA":
-                    return ["name"];
-                case "TIME":
-                    return ["dateTime"];
-                case "VIDEO":
-                    return ["src", "crossOrigin"];
-                default:
-                    return [];
+        const attrs = elem.attributes;
+        Array.from(attrs).forEach((attr) => {
+            if (attr.name === "style") {
+                return;
             }
-        })());
-        attrList.forEach((attr) => {
-            const value = elem[attr];
-            if (value !== undefined && value !== null && value !== "") {
-                infoList.push([attr + ":", value]);
-            }
+            infoList.push([attr.name, attr.value]);
         });
         if (elem.tagName === "SELECT") {
             Array.from(elem.options).forEach((option, i) => {
