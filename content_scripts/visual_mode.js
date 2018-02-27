@@ -46,7 +46,7 @@ class VisualModeBase {
             }).then((hasTopFrameFocus) => {
                 if (hasTopFrameFocus || document.activeElement.contentWindow) {
                     // This means other frame has focus.
-                    frameInfo.changeModeNow("NORMAL");
+                    frameInfo.changeModeFrom(this, "NORMAL");
                 }
             });
         }, true);

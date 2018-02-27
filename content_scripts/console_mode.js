@@ -13,7 +13,7 @@ class ConsoleMode {
         this._frameId = frameId;
         frameInfo.showConsole(this, mode, defaultInput).catch((e) => {
             console.error("ShowConsole error:", Utils.errorString(e));
-            frameInfo.changeMode("NORMAL");
+            frameInfo.changeModeFrom(this, "NORMAL");
         });
         if (document.readyState === "loading") {
             this._observeActiveElement("DOMContentLoaded", frameInfo);
@@ -65,7 +65,7 @@ class ConsoleMode {
                 this._execute(msg.value, frameInfo).catch((error) => {
                     frameInfo.showMessage(error);
                 }).then((message) => {
-                    frameInfo.changeModeNow("NORMAL");
+                    frameInfo.changeModeFrom(this, "NORMAL");
                 });
                 break;
             default:

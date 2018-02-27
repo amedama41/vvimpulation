@@ -320,6 +320,12 @@ class FrameInfo {
     }
 
     // Method for mode classes.
+    changeModeFrom(fromMode, toMode, data=undefined) {
+        if (fromMode !== this._mode) {
+            return;
+        }
+        this.changeModeNow(toMode, data);
+    }
     setEventListener(target, eventType, handler, options) {
         const adapterHandler = (e) => handler(e, this);
         target.addEventListener(eventType, adapterHandler, options);
