@@ -152,6 +152,24 @@ class TabInfo {
             return result;
         });
     }
+    toHintMode(type, pattern, options) {
+        this.forEachPort((port, frameId) => {
+            if (frameId === 0) {
+                const data = {
+                    type,
+                    pattern,
+                    autoFocus: options.autoFocus,
+                    overlap: options.overlapHintLabels,
+                    keyMapping: options.hintKeyMapping,
+                };
+                port.postMessage({ command: "changeMode", mode: "HINT", data });
+            }
+            else {
+                port.postMessage({ command: "changeMode", mode: "HINT" });
+            }
+        });
+        this.setMode("HINT");
+    }
     setConsolePort(port) {
         if (this.consolePort) {
             this.consolePort.disconnect();
@@ -692,22 +710,8 @@ class Command {
         changeNormalMode(tabInfo, msg.frameId, msg.data);
     }
     static toHintMode(msg, sender, tabInfo) {
-        tabInfo.forEachPort((port, frameId) => {
-            if (frameId === 0) {
-                const data = {
-                    type: msg.type,
-                    pattern: gOptions.hintPattern["global"][msg.type],
-                    autoFocus: gOptions.autoFocus,
-                    overlap: gOptions.overlapHintLabels,
-                    keyMapping: gOptions.hintKeyMapping,
-                };
-                port.postMessage({ command: "changeMode", mode: "HINT", data });
-            }
-            else {
-                port.postMessage({ command: "changeMode", mode: "HINT" });
-            }
-        });
-        tabInfo.setMode("HINT");
+        tabInfo.toHintMode(
+            msg.type, gOptions.hintPattern["global"][msg.type], gOptions);
     }
 
     /**

@@ -683,6 +683,25 @@ gExCommandMap.makeCommand(
             ];
         });
     });
+gExCommandMap.addCommand(new (class {
+    constructor() {
+        this.name = "hint";
+        this.description = "Start hint mode with input selector";
+        this.previousSelector = "*";
+    }
+    invoke(args, tabInfo, options) {
+        let selector = args.join(" ").trim();
+        if (selector === "") {
+            selector = this.previousSelector;
+        }
+        tabInfo.toHintMode("console", selector, options);
+        this.previousSelector = selector;
+        return null;
+    }
+    complete(value, tabInfo) {
+        return undefined;
+    }
+})());
 gExCommandMap.makeCommand(
     "registers", "Show the contents of all registers", (args, tabInfo) => {
         return gMacro.getRegisters().map(
