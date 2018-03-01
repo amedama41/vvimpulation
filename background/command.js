@@ -141,6 +141,24 @@ function setEngine(engineMap, searchEngine) {
 function discardResult(promise) {
     return promise.then(() => null);
 }
+function getElementByIndexOrText(elemList, args, getText) {
+    if (args.length === 1 && /\d+/.test(args[0])) {
+        const index = parseInt(args[0], 10);
+        if (index >= elemList.length) {
+            throw new Error("too larget index");
+        }
+        return elemList[index];
+    }
+    const filter = Utils.makeFilter(args.join(" "));
+    const filteredList = elemList.filter((elem) => filter.match(getText(elem)));
+    if (filteredList.length === 0) {
+        throw new Error("no matching");
+    }
+    if (filteredList.length !== 1) {
+        throw new Error("multiple matching");
+    }
+    return filteredList[0];
+}
 
 class OpenCommand {
     constructor(name, description, kind, engineMap) {
@@ -324,13 +342,10 @@ gExCommandMap.makeCommand(
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
-        const index = parseInt(args[0], 10);
-        if (Number.isNaN(index)) {
-            return Promise.reject("argument must be number");
-        }
         const windowId = tabInfo.windowId;
         return discardResult(browser.tabs.query({ windowId }).then((tabs) => {
-            return browser.tabs.update(tabs[index].id, { active: true });
+            const tab = getElementByIndexOrText(tabs, args, (tab) => tab.title);
+            return browser.tabs.update(tab.id, { active: true });
         }));
     },
     (value, tabInfo) => {
@@ -347,12 +362,10 @@ gExCommandMap.makeCommand(
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
-        const index = parseInt(args[0], 10);
-        if (Number.isNaN(index)) {
-            return Promise.reject("argument must be number");
-        }
         return discardResult(browser.windows.getAll().then((windows) => {
-            return browser.windows.update(windows[index].id, { focused: true });
+            const win =
+                getElementByIndexOrText(windows, args, (win) => win.title);
+            return browser.windows.update(win.id, { focused: true });
         }));
     },
     (value, tabInfo) => {
