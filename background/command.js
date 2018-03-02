@@ -24,7 +24,8 @@ class CommandMap {
             return [cmdList[0], ""];
         }
         if (cmdList.length > 1) {
-            return [null, `${name} is ambiguous (${cmdList.join(",")})`];
+            const nameList = cmdList.map((cmd) => cmd.name);
+            return [null, `${name} is ambiguous (${nameList.join(",")})`];
         }
         if (this.defaultCommand) {
             return [this.map.get(this.defaultCommand), "use default command"];
