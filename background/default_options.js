@@ -295,6 +295,7 @@ const DEFAULT_OPTIONS = {
             "<C-E>": "endLine",
             "<C-F>": "charNext",
             "<C-B>": "charPrevious",
+            "<C-X><C-L>": "showHistoryList",
             "<C-I>": "getCandidate",
             "<Tab>": "selectNextHistoryOrCandidate",
             "<S-Tab>": "selectPreviousHistoryOrCandidate",

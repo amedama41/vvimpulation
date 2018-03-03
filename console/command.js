@@ -9,6 +9,7 @@ const CONSOLE_COMMAND_DESCRIPTIONS = {
     removeFromHistory: { description: "Remove the current input value from history" },
     removeAllHistory: { description: "Remove all history" },
 
+    showHistoryList: { description: "Show history list as the candidate list" },
     getCandidate: { description: "Get candidates and open the candidate list" },
     selectNextHistoryOrCandidate: { description: "Select the next candidate if the candidate list is opened. Otherwise select the next history" },
     selectPreviousHistoryOrCandidate: { description: "Select the previous candidate if the candidate list is opened. Otherwise select the previous history" },

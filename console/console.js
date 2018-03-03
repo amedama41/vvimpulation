@@ -54,8 +54,7 @@ class Completer {
             const matchCandidates = (needFilter
                 ? Completer._filter(candidates, value.substr(candidateStart))
                 : candidates);
-            this.container.appendChild(
-                createCandidateList(matchCandidates));
+            this.container.appendChild(createCandidateList(matchCandidates));
             const prefix = orgValue.substr(0, candidateStart);
             this.candidates =
                 [ value ].concat(matchCandidates.map((c) => prefix + c[index]));
@@ -169,6 +168,17 @@ class History {
     setPrevious(input) {
         this.select(input, 1);
     }
+    getCandidates(value) {
+        const candidates = [];
+        const checkMap = {};
+        this.history.forEach((item) => {
+            if (item.startsWith(value) && !checkMap[item]) {
+                candidates.push([null, null, item, ""]);
+                checkMap[item] = true;
+            }
+        });
+        return [value, 0, 2, candidates];
+    }
     static load(key) {
         const param = { [key]: [] };
         return browser.storage.local.get(param);
@@ -222,6 +232,14 @@ class ConsoleCommand {
                 completer.setCandidates(result);
                 completer.selectNext(target);
             });
+        }
+    }
+    static showHistoryList(mode) {
+        const history = mode.history;
+        const completer = mode.completer;
+        if (history && completer) {
+            const target = mode.getTarget();
+            completer.setCandidates(history.getCandidates(target.value));
         }
     }
     static selectNextHistoryOrCandidate(mode) {
