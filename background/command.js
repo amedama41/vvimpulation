@@ -118,7 +118,7 @@ class ExCommandMap {
             const cmd = cmdList;
             const result = cmd.complete(value.substr(fixedLen), tabInfo);
             if (!result) {
-                return;
+                return Promise.resolve();
             }
             return Promise.resolve(result).then(([start, index, candidates]) => {
                 return [value, fixedLen + start, index, candidates];

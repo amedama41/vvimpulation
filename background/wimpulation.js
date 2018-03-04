@@ -16,6 +16,7 @@ class TabInfo {
         // [keyword, caseSensitive, backward]
         this._lastSearchInfo = ["", false, false];
         this._searchHighlighting = searchHighlighting;
+        this._consoleCandidateInfo = {};
     }
     reset(searchHighlighting) {
         this.mode = "NORMAL";
@@ -26,6 +27,7 @@ class TabInfo {
         }
         this._frameIdListCache = [undefined];
         this._searchHighlighting = searchHighlighting;
+        this._consoleCandidateInfo = {};
     }
     get id() {
         return this.tab.id;
@@ -90,6 +92,9 @@ class TabInfo {
     }
     set searchHighlighting(enabled) {
         this._searchHighlighting = enabled;
+    }
+    get consoleCandidateInfo() {
+        return this._consoleCandidateInfo;
     }
     setPort(frameId, port) {
         this._frameIdListCache = undefined;
@@ -798,7 +803,31 @@ class Command {
 
 class ConsoleCommand {
     static getCandidate(msg, sender, tabInfo) {
-        return gExCommandMap.getCandidate(msg.value, tabInfo);
+        const candidateInfo = tabInfo.consoleCandidateInfo;
+        if (candidateInfo.active) {
+            if (candidateInfo.pending) {
+                const [value, resolve, reject] = candidateInfo.pending;
+                resolve(undefined);
+            }
+            return new Promise((resolve, reject) => {
+                candidateInfo.pending = [msg.value, resolve, reject];
+            });
+        }
+        const onFinally = () => {
+            if (candidateInfo.pending) {
+                const [value, resolve, reject] = candidateInfo.pending;
+                const promise = gExCommandMap.getCandidate(value, tabInfo);
+                candidateInfo.active =
+                    promise.then(resolve, reject).finally(onFinally);
+                candidateInfo.pending = null;
+            }
+            else {
+                candidateInfo.active = null;
+            }
+        };
+        const promise = gExCommandMap.getCandidate(msg.value, tabInfo);
+        candidateInfo.active = promise.finally(onFinally);
+        return promise;
     }
     static hideConsole(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);

@@ -19,6 +19,7 @@ class Completer {
         this.candidates = [];
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
+        this.type = null;
     }
     setMaxHeight(maxHeight) {
         this.container.style.maxHeight = maxHeight + "px";
@@ -29,20 +30,27 @@ class Completer {
         this.candidateInfo = undefined;
         this.container.innerHTML = "";
     }
-    setCandidates(candidateInfo) {
+    setCandidates(candidateInfo, type) {
+        this.type = type;
         this.candidates = [];
         let [orgValue, candidateStart, index, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
         this.update(orgValue, false);
     }
-    update(value, needFilter) {
+    isSelected(value) {
         if (!this.candidateInfo) {
-            return;
+            return false;
         }
         if (this.candidates.length !== 0 && this.candidates[0] === value) {
-            return;
+            return true;
         }
         if (this.candidates[this.selectIndex] === value) {
+            return true;
+        }
+        return false;
+    }
+    update(value, needFilter) {
+        if (!this.candidateInfo || this.isSelected(value)) {
             return;
         }
         let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
@@ -224,7 +232,8 @@ class ConsoleCommand {
         if (history) {
             const target = mode.getTarget();
             const completer = mode.completer;
-            completer.setCandidates(history.getCandidates(target.value));
+            completer.setCandidates(
+                history.getCandidates(target.value), "history");
         }
     }
     static selectNextHistoryOrCandidate(mode) {
@@ -303,8 +312,9 @@ class ConsoleMode {
         return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     handleKeyup() {
-        this._completer.update(this._input.value, true);
-        return this.onKeyup(this._input);
+        if (!this.onKeyup(this._input)) {
+            this._completer.update(this._input.value, true);
+        }
     }
     getTarget() {
         return this._input;
@@ -312,7 +322,7 @@ class ConsoleMode {
     getCandidate() {
         this.onComplete(this._input).then((result) => {
             if (result) {
-                this._completer.setCandidates(result);
+                this._completer.setCandidates(result, "complete");
                 this._completer.selectNext(this._input);
             }
         });
@@ -330,9 +340,26 @@ class ConsoleMode {
 class ExMode extends ConsoleMode {
     onInit(options) {
         this._history = new History("command_history");
+        this._autoComplete = true;
+        this._prevValue = null;
     }
     onKeyup(input) {
-        this._history.reset(input.value);
+        const value = input.value;
+        const prevValue = this._prevValue;
+        this._prevValue = value;
+
+        this._history.reset(value);
+        const completer = super.completer;
+        if (this._autoComplete &&
+            completer.type !== "history" && !completer.isSelected(value) &&
+            value !== prevValue) {
+            this.onComplete(input).then((result) => {
+                if (result) {
+                    completer.setCandidates(result, "complete");
+                }
+            });
+            return true;
+        }
     }
     onComplete(input) {
         return super.sendMessage({
