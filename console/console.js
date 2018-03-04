@@ -29,9 +29,6 @@ class Completer {
         this.candidateInfo = undefined;
         this.container.innerHTML = "";
     }
-    hasCandidates() {
-        return this.candidates.length !== 0;
-    }
     setCandidates(candidateInfo) {
         this.candidates = [];
         let [orgValue, candidateStart, index, candidates] = candidateInfo;
@@ -67,14 +64,14 @@ class Completer {
         }
     }
     selectNext(input) {
-        this._selectCandidate(input, 1);
+        return this._selectCandidate(input, 1);
     }
     selectPrevious(input) {
-        this._selectCandidate(input, -1);
+        return this._selectCandidate(input, -1);
     }
     _selectCandidate(input, diff) {
         if (!this.candidateInfo) {
-            return;
+            return false;
         }
         let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
 
@@ -97,6 +94,7 @@ class Completer {
             li.classList.add(SELECT_CLASS);
             Completer._scrollIntoView(li, this.container, diff);
         }
+        return true;
     }
     static _scrollIntoView(item, container, diff) {
         const itemRect = item.getBoundingClientRect();
@@ -219,44 +217,23 @@ class ConsoleCommand {
     }
 
     static getCandidate(mode) {
-        const completer = mode.completer;
-        if (completer) {
-            const target = mode.getTarget();
-            mode.sendMessage({
-                command: "getCandidate",
-                value: target.value.substring(0, target.selectionStart)
-            }).then((result) => {
-                if (!result) {
-                    return;
-                }
-                completer.setCandidates(result);
-                completer.selectNext(target);
-            });
-        }
+        mode.getCandidate();
     }
     static showHistoryList(mode) {
         const history = mode.history;
-        const completer = mode.completer;
-        if (history && completer) {
+        if (history) {
             const target = mode.getTarget();
+            const completer = mode.completer;
             completer.setCandidates(history.getCandidates(target.value));
         }
     }
     static selectNextHistoryOrCandidate(mode) {
-        const completer = mode.completer;
-        if (completer && completer.hasCandidates()) {
-            completer.selectNext(mode.getTarget());
-        }
-        else {
+        if (!mode.selectNextCandidate()) {
             ConsoleCommand.selectNextHistory(mode);
         }
     }
     static selectPreviousHistoryOrCandidate(mode) {
-        const completer = mode.completer;
-        if (completer && completer.hasCandidates()) {
-            completer.selectPrevious(mode.getTarget());
-        }
-        else {
+        if (!mode.selectPreviousCandidate()) {
             ConsoleCommand.selectPreviousHistory(mode);
         }
     }
@@ -296,18 +273,19 @@ class ConsoleMode {
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultInput;
+        this._completer = new Completer(container);
         this._mapper = keyMapping;
 
-        this.onInit(container, options);
+        this.onInit(options);
     }
     startConsole(options) {
         this._isOpened = true;
-        this.onStart();
+        this._completer.setMaxHeight(window.innerHeight - 100);
         this._input.focus();
     }
     stopConsole(value=null) {
         this._isOpened = false;
-        this.onStop();
+        this._completer.reset();
         this._input.value = "";
         this.sendMessage({ command: "hideConsole", value });
     }
@@ -325,57 +303,64 @@ class ConsoleMode {
         return (cmd ? !ConsoleCommand[cmd](this) : consumed);
     }
     handleKeyup() {
+        this._completer.update(this._input.value, true);
         return this.onKeyup(this._input);
     }
     getTarget() {
         return this._input;
     }
-}
-class ExMode extends ConsoleMode {
-    onInit(container, options) {
-        this._completer = new Completer(container);
-        this._history = new History("command_history");
+    getCandidate() {
+        this.onComplete(this._input).then((result) => {
+            if (result) {
+                this._completer.setCandidates(result);
+                this._completer.selectNext(this._input);
+            }
+        });
     }
-    onStart() {
-        this._completer.setMaxHeight(window.innerHeight - 100);
+    selectNextCandidate() {
+        return this._completer.selectNext(this._input);
     }
-    onStop() {
-        this._completer.reset();
-    }
-    onKeyup(input) {
-        this._history.reset(input.value);
-        this._completer.update(input.value, true);
-    }
-
-    get history() {
-        return this._history;
+    selectPreviousCandidate() {
+        return this._completer.selectPrevious(this._input);
     }
     get completer() {
         return this._completer;
     }
 }
-class SearchMode extends ConsoleMode {
-    onInit(container, options) {
-        this._history = new History("search_history");
-    }
-    onStart() {
-    }
-    onStop() {
+class ExMode extends ConsoleMode {
+    onInit(options) {
+        this._history = new History("command_history");
     }
     onKeyup(input) {
         this._history.reset(input.value);
+    }
+    onComplete(input) {
+        return super.sendMessage({
+            command: "getCandidate",
+            value: input.value.substring(0, input.selectionStart)
+        });
+    }
+    get history() {
+        return this._history;
+    }
+}
+class SearchMode extends ConsoleMode {
+    onInit(options) {
+        this._history = new History("search_history");
+    }
+    onKeyup(input) {
+        this._history.reset(input.value);
+    }
+    onComplete(input) {
+        return Promise.resolve();
     }
     get history() {
         return this._history;
     }
 }
 class HintFilterMode extends ConsoleMode {
-    onInit(container, options) {
+    onInit(options) {
         this._prevFilter = options.defaultInput;
-    }
-    onStart() {
-    }
-    onStop() {
     }
     onKeyup(input) {
         const filter = input.value;
@@ -383,6 +368,9 @@ class HintFilterMode extends ConsoleMode {
             super.sendMessage({ command: 'applyFilter', filter });
             this._prevFilter = filter;
         }
+    }
+    onComplete(input) {
+        return Promise.resolve();
     }
 }
 
