@@ -376,6 +376,7 @@ const DEFAULT_OPTIONS = {
         "highlightSearch": true,
         "overwriteErrorPage": true,
         "activateNewTab": false,
+        "consoleAutocomplete": true,
     }
 };
 

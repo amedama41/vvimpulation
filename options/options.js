@@ -32,7 +32,9 @@ class Options {
         this.searchEngine.setOptions(options["searchEngine"] || {});
         this.consoleDesign.setOptions(getOption("consoleDesign"));
         this.pagePattern.setOptions(getOption("pagePattern"));
-        this.miscellaneous.setOptions(options["miscellaneous"] || {});
+        this.miscellaneous.setOptions(
+            Object.assign(
+                DEFAULT_OPTIONS["miscellaneous"], options["miscellaneous"]));
         this.options = options;
     }
     saveOptions() {
@@ -810,6 +812,7 @@ const MISCELLANEOUS_ID_MAP = {
     "miscellaneous-highlight-search": "highlightSearch",
     "miscellaneous-overwrite-error-page": "overwriteErrorPage",
     "miscellaneous-activate-new-tab": "activateNewTab",
+    "miscellaneous-console-autocomplete": "consoleAutocomplete",
 };
 class Miscellaneous {
     constructor() {

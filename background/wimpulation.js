@@ -932,19 +932,22 @@ function setOptions(options) {
     setEngine(gEngineMap, options["searchEngine"]);
     gOptions.pagePattern = getOption("pagePattern");
     gOptions.consoleDesign = makeConsoleCSS(getOption("consoleDesign"));
-    if (options["miscellaneous"].overwriteErrorPage) {
+    const miscellaneous = Object.assign(
+        DEFAULT_OPTIONS["miscellaneous"], options["miscellaneous"]);
+    if (miscellaneous.overwriteErrorPage) {
         setOverwriteErrorPageListener();
     }
     else {
         removeOverwriteErrorPageListener();
     }
-    gOptions.autoFocus = options["miscellaneous"].autoFocus;
-    gOptions.overlapHintLabels = options["miscellaneous"].overlapHintLabels;
-    gOptions.autoKillHover = options["miscellaneous"].autoKillHover;
-    gOptions.onlyVisibility = options["miscellaneous"].onlyVisibility;
-    gOptions.highlightSearch = options["miscellaneous"].highlightSearch;
-    gOptions.activateNewTab = options["miscellaneous"].activateNewTab;
-    gOptions.debug = options["debug"];
+    gOptions.autoFocus = miscellaneous.autoFocus;
+    gOptions.overlapHintLabels = miscellaneous.overlapHintLabels;
+    gOptions.autoKillHover = miscellaneous.autoKillHover;
+    gOptions.onlyVisibility = miscellaneous.onlyVisibility;
+    gOptions.highlightSearch = miscellaneous.highlightSearch;
+    gOptions.activateNewTab = miscellaneous.activateNewTab;
+    gOptions.consoleAutocomplete = miscellaneous.consoleAutocomplete;
+    gOptions.debug = miscellaneous.debug;
 }
 
 browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
@@ -957,8 +960,11 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         const oldConsoleDesign = gOptions.consoleDesign;
         setOptions(changes["options"].newValue);
         const newConsoleDesign = gOptions.consoleDesign;
-        const setKeyMappingMsg = {
-            command: "setKeyMapping", keyMapping: gOptions.consoleKeyMapping
+        const setConsoleOptionsMsg = {
+            command: "setConsoleOptions", options: {
+                keyMapping: gOptions.consoleKeyMapping,
+                autocomplete: gOptions.consoleAutocomplete,
+            },
         };
         gTabInfoMap.forEach((tabInfo, tabId) => {
             tabInfo.forEachPort((port, frameId) => port.postMessage({
@@ -978,7 +984,7 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
             }
             browser.tabs.removeCSS(tabId, { frameId, code: oldConsoleDesign });
             browser.tabs.insertCSS(tabId, { frameId, code: newConsoleDesign });
-            tabInfo.sendConsoleMessage(setKeyMappingMsg);
+            tabInfo.sendConsoleMessage(setConsoleOptionsMsg);
         });
     });
 
@@ -1000,9 +1006,10 @@ browser.storage.local.get({ options: DEFAULT_OPTIONS }).then(({ options }) => {
         debugLog(() => ["Connected", tabId, frameId, sender.url]);
 
         if (port.name === "console") {
-            setConsolePort(
-                port, tabId, frameId,
-                gOptions.consoleDesign, gOptions.consoleKeyMapping);
+            setConsolePort(port, tabId, frameId, gOptions.consoleDesign, {
+                keyMapping: gOptions.consoleKeyMapping,
+                autocomplete: gOptions.consoleAutocomplete,
+            });
             return;
         }
 
@@ -1060,7 +1067,7 @@ function cleanupFrameInfo(port, error) {
         tabInfo.reset(gOptions.highlightSearch);
     }
 }
-function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
+function setConsolePort(port, tabId, frameId, consoleDesign, options) {
     const tabInfo = gTabInfoMap.get(tabId);
     if (!tabInfo) {
         console.warn(`TabInfo for ${tabId} is not found`);
@@ -1070,7 +1077,7 @@ function setConsolePort(port, tabId, frameId, consoleDesign, keyMapping) {
     port.onRequest.addListener(invokeConsoleCommand);
     port.onDisconnect.addListener(cleanupConsolePort);
     tabInfo.setConsolePort(port);
-    tabInfo.sendConsoleMessage({ command: "setKeyMapping", keyMapping });
+    tabInfo.sendConsoleMessage({ command: "setConsoleOptions", options });
 }
 function invokeConsoleCommand(msg, sender) {
     const tabInfo = gTabInfoMap.get(sender.tab.id);

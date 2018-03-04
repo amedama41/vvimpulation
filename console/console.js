@@ -340,7 +340,7 @@ class ConsoleMode {
 class ExMode extends ConsoleMode {
     onInit(options) {
         this._history = new History("command_history");
-        this._autoComplete = true;
+        this._autoComplete = options.autocomplete;
         this._prevValue = null;
     }
     onKeyup(input) {
@@ -443,14 +443,17 @@ window.addEventListener("DOMContentLoaded", (e) => {
     const container = document.getElementById("ex_candidates");
     let mode = undefined;
     let keyMapping = undefined;
+    let autocomplete = false;
 
     port.onRequest.addListener((msg) => {
         switch (msg.command) {
-            case "setKeyMapping":
+            case "setConsoleOptions":
                 keyMapping = Utils.makeCommandMapper(
-                    Utils.toPreparedCmdMap(msg.keyMapping));
+                    Utils.toPreparedCmdMap(msg.options.keyMapping));
+                autocomplete = msg.options.autocomplete;
                 return true;
             case "setConsoleMode":
+                msg.options.autocomplete = autocomplete;
                 mode = createConsoleMode(
                     msg.options, port, input, container, keyMapping);
                 return true;
