@@ -19,7 +19,7 @@ class Completer {
         this.candidates = [];
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
-        this.type = null;
+        this.isFixed = false;
     }
     setMaxHeight(maxHeight) {
         this.container.style.maxHeight = maxHeight + "px";
@@ -29,12 +29,13 @@ class Completer {
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
         this.container.innerHTML = "";
+        this.isFixed = true;
     }
-    setCandidates(candidateInfo, type) {
-        this.type = type;
+    setCandidates(candidateInfo, isFixed=false) {
         this.candidates = [];
         let [orgValue, candidateStart, index, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
+        this.isFixed = isFixed;
         this.update(orgValue, false);
     }
     isSelected(value) {
@@ -232,8 +233,7 @@ class ConsoleCommand {
         if (history) {
             const target = mode.getTarget();
             const completer = mode.completer;
-            completer.setCandidates(
-                history.getCandidates(target.value), "history");
+            completer.setCandidates(history.getCandidates(target.value), true);
         }
     }
     static selectNextHistoryOrCandidate(mode) {
@@ -322,7 +322,7 @@ class ConsoleMode {
     getCandidate() {
         this.onComplete(this._input).then((result) => {
             if (result) {
-                this._completer.setCandidates(result, "complete");
+                this._completer.setCandidates(result);
                 this._completer.selectNext(this._input);
             }
         });
@@ -351,11 +351,11 @@ class ExMode extends ConsoleMode {
         this._history.reset(value);
         const completer = super.completer;
         if (this._autoComplete &&
-            completer.type !== "history" && !completer.isSelected(value) &&
+            !completer.isFixed && !completer.isSelected(value) &&
             value !== prevValue) {
             this.onComplete(input).then((result) => {
                 if (result) {
-                    completer.setCandidates(result, "complete");
+                    completer.setCandidates(result);
                 }
             });
             return true;
