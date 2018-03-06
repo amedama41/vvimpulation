@@ -750,6 +750,7 @@ function makeHints(hintList, pattern, type, winArea, frameInfo) {
     const idOrPromiseList = [];
 
     const selfFrameId = frameInfo.getSelfFrameId();
+    const consoleFrame = frameInfo.consoleFrame;
 
     const scrX = win.scrollX, scrY = win.scrollY;
     const elems = doc.querySelectorAll(
@@ -778,6 +779,9 @@ function makeHints(hintList, pattern, type, winArea, frameInfo) {
         }
         const tagName = elem.tagName.toUpperCase();
         const isFrame = !!elem.contentWindow;
+        if (isFrame && elem === consoleFrame) {
+            continue;
+        }
         if (isFocusType && !isFrame && !Scroll.isScrollable(elem, style)) {
             continue;
         }
