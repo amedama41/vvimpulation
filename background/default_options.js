@@ -374,7 +374,7 @@ const DEFAULT_OPTIONS = {
         "autoKillHover": true,
         "onlyVisibility": false,
         "highlightSearch": true,
-        "overwriteErrorPage": true,
+        "overwriteErrorPage": false,
         "activateNewTab": false,
         "consoleAutocomplete": true,
     }
