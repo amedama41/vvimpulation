@@ -891,7 +891,10 @@ function overwriteErrorPage(details) {
             return;
         }
         if (details.error.endsWith("2152398850") || // Cancel loading
-            details.error.endsWith("2153578529")) { // Show image
+            details.error.endsWith("2153578529") || // Show image
+            // Ignore SSL unknown issuer to enable to register the
+            // certificate to the browser's exception list.
+            details.error.endsWith("2153390067")) {
             return;
         }
         const url = browser.runtime.getURL("pages/error.html");
