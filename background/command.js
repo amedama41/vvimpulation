@@ -355,7 +355,9 @@ gExCommandMap.makeCommand(
         return browser.tabs.query({ windowId }).then((tabs) => [
             0, 1, tabs.map((tab, index) => [
                 tab.favIconUrl, index, tab.title, tab.url
-            ]).filter(([icon, index, title, url]) => filter.match(title))
+            ]).filter(([icon, index, title, url]) => {
+                return filter.match(title) || filter.match(url);
+            })
         ]);
     });
 gExCommandMap.makeCommand(
