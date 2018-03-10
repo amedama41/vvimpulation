@@ -890,11 +890,13 @@ function overwriteErrorPage(details) {
         if (tab.status !== "complete" || tab.url !== details.url) {
             return;
         }
-        if (details.error.endsWith("2152398850") || // Cancel loading
-            details.error.endsWith("2153578529") || // Show image
-            // Ignore SSL unknown issuer to enable to register the
-            // certificate to the browser's exception list.
-            details.error.endsWith("2153390067")) {
+        const IGNORED_ERROR_LIST = [
+            "2152398850", // Cancel loading
+            "2153578529", // Show image
+            "2153390067", // Ignore SSL unknown issuer to enable to register the
+                          // certificate to the browser's exception list.
+        ];
+        if (IGNORED_ERROR_LIST.some((error) => details.error.endsWith(error))) {
             return;
         }
         const url = browser.runtime.getURL("pages/error.html");
