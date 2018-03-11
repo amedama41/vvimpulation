@@ -187,7 +187,7 @@ class History {
                 checkMap[item] = true;
             }
         });
-        return [value, 0, 2, candidates];
+        return [value, 0, [2], candidates];
     }
     static load(key) {
         const param = { [key]: [] };
