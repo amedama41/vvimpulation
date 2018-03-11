@@ -389,12 +389,8 @@ class DownloadManager {
         const State = browser.downloads.State;
         const cmdList = [
             new ExCommand(
-                "show", "Show all download item",
-                (args, tabInfo) => {
-                    return DownloadManager._getItemList(null, args, tabInfo)
-                        .then((items) => items.map(
-                            ([icon, id, name, info]) => [id, name, info]));
-                },
+                "show", "Show download items",
+                DownloadManager._invokeShowItemList,
                 DownloadManager._getItemList.bind(null, null)),
             new ExCommand(
                 "pause", "Pause download",
@@ -459,10 +455,22 @@ class DownloadManager {
             return (errors.length ? Promise.reject(errors.join("\n")) : null);
         });
     }
-    static _getItemList(state, query, tabInfo) {
+    static _invokeShowItemList(args, tabInfo, options) {
+        return DownloadManager._getItemList(null, args, tabInfo, true).then(
+            (items) => items.map(([icon, id, name, info]) => [id, name, info]));
+    }
+    static _getItemList(state, valueList, tabInfo, doesFilterById=false) {
+        const [idList, query] = valueList.reduce((listTuple, value) => {
+            listTuple[(/^\d+$/.test(value) ? 0 : 1)].push(value);
+            return listTuple;
+        }, [[], []]);
         return browser.downloads.search({ query, state }).then((dlItems) => {
             if (!tabInfo.incognito) {
                 dlItems = dlItems.filter((item) => !item.incognito);
+            }
+            if (doesFilterById && idList.length > 0) {
+                dlItems = dlItems.filter(
+                    (item) => idList.some((id) => id.includes(item.id)));
             }
             return Promise.all(dlItems.map((item) => {
                 const infoList = [];
