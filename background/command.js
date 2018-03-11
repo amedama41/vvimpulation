@@ -160,6 +160,11 @@ function getElementByIndexOrText(elemList, args, getText) {
     }
     return filteredList[0];
 }
+function filterCandidates(candidates, indexList, filterValue) {
+    const filter = Utils.makeFilter(filterValue);
+    return candidates.filter(
+        (items) => indexList.some((index) => filter.match(items[index])));
+}
 
 class OpenCommand {
     constructor(name, description, kind, engineMap) {
@@ -350,14 +355,12 @@ gExCommandMap.makeCommand(
         }));
     },
     (value, tabInfo) => {
-        const filter = Utils.makeFilter(value);
+        const INDEX_LIST = [1, 2, 3];
         const windowId = tabInfo.windowId;
         return browser.tabs.query({ windowId }).then((tabs) => [
-            0, [1, 2, 3], tabs.map((tab, index) => [
+            0, INDEX_LIST, filterCandidates(tabs.map((tab, index) => [
                 tab.favIconUrl, index, tab.title, tab.url
-            ]).filter(([icon, index, title, url]) => {
-                return filter.match(title) || filter.match(url);
-            })
+            ]), INDEX_LIST, value)
         ]);
     });
 gExCommandMap.makeCommand(
@@ -372,13 +375,13 @@ gExCommandMap.makeCommand(
         }));
     },
     (value, tabInfo) => {
-        const filter = Utils.makeFilter(value);
+        const INDEX_LIST = [1, 2];
         return browser.windows.getAll().then((windows) => [
-            0, [1, 2], windows.map((win, index) => [
+            0, INDEX_LIST, filterCandidates(windows.map((win, index) => [
                 (win.incognito ?
                     "chrome://browser/skin/privatebrowsing/favicon.svg" : null),
                 index, win.title, win.type
-            ]).filter(([icons, index, title, type]) => filter.match(title))
+            ]), INDEX_LIST, value)
         ]);
     });
 class DownloadManager {
@@ -662,14 +665,15 @@ gExCommandMap.makeCommand(
         });
     },
     (value, tabInfo) => {
+        const INDEX_LIST = [1, 2];
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter(
                 (s) => s.tab && s.tab.windowId === tabInfo.windowId);
             return [
-                0, [1, 2], tabSessions.map((s, index) => [
+                0, INDEX_LIST, filterCandidates(tabSessions.map((s, index) => [
                     s.tab.favIconUrl, index, s.tab.title,
                     closeTime(s.lastModified)
-                ])
+                ]), INDEX_LIST, value)
             ];
         });
     });
@@ -692,10 +696,11 @@ gExCommandMap.makeCommand(
         });
     },
     (value, tabInfo) => {
+        const INDEX_LIST = [1, 2];
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             return [
-                0, [1, 2], winSessions.map((s, index) => {
+                0, INDEX_LIST, filterCandidates(winSessions.map((s, index) => {
                     const tab = s.window.tabs.reduce((lhs, rhs) => {
                         return lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs;
                     });
@@ -703,7 +708,7 @@ gExCommandMap.makeCommand(
                         tab.favIconUrl, index, s.window.title || tab.title,
                         closeTime(s.lastModified)
                     ];
-                })
+                }), INDEX_LIST, value)
             ];
         });
     });
