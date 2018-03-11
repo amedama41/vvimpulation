@@ -97,6 +97,9 @@ class StringFilter {
         }
     }
     match(value) {
+        if (!value.includes) {
+            value = value.toString();
+        }
         if (!this.caseSensitive) {
             value = value.toLowerCase();
         }

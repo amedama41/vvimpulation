@@ -33,7 +33,7 @@ class Completer {
     }
     setCandidates(candidateInfo, isFixed=false) {
         this.candidates = [];
-        let [orgValue, candidateStart, index, candidates] = candidateInfo;
+        let [orgValue, candidateStart, indexList, candidates] = candidateInfo;
         this.candidateInfo = candidateInfo;
         this.isFixed = isFixed;
         this.update(orgValue, false);
@@ -54,14 +54,17 @@ class Completer {
         if (!this.candidateInfo || this.isSelected(value)) {
             return;
         }
-        let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
+        const [orgValue, candidateStart, filterIndexList, candidates] =
+            this.candidateInfo;
         this.container.innerHTML = "";
         if (value.startsWith(orgValue)) {
             const matchCandidates = (needFilter
-                ? Completer._filter(candidates, value.substr(candidateStart))
+                ? Completer._filter(
+                    candidates, value.substr(candidateStart), filterIndexList)
                 : candidates);
             this.container.appendChild(createCandidateList(matchCandidates));
             const prefix = orgValue.substr(0, candidateStart);
+            const index = filterIndexList[0];
             this.candidates =
                 [ value ].concat(matchCandidates.map((c) => prefix + c[index]));
             this.selectIndex = 0;
@@ -115,10 +118,10 @@ class Completer {
             container.scrollBy(0, itemRect.bottom - containerRect.bottom);
         }
     }
-    static _filter(candidates, value) {
+    static _filter(candidates, value, indexList) {
         const filter = Utils.makeFilter(value);
         return candidates.filter(
-            (item) => filter.match(item[2]) || filter.match(item[3]));
+            (item) => indexList.some((index) => filter.match(item[index])));
     }
 }
 

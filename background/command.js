@@ -110,7 +110,7 @@ class ExCommandMap {
         const [cmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(cmdList)) {
             return Promise.resolve([
-                value, fixedLen, 2,
+                value, fixedLen, [2],
                 cmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ]);
         }
@@ -199,19 +199,19 @@ class OpenCommand {
                         "chrome://browser/skin/search-glass.svg",
                         null, engine.name, engine.searchUrl
                     ]);
-                return [0, 2, engines.concat(result)];
+                return [0, [2, 3], engines.concat(result)];
             });
         }
         if (fixedLen === 0) { // Select the default engine
             return OpenCommand._getHistoryAndBookmark(value).then((result) => {
-                return [0, 2, result];
+                return [0, [2, 3], result];
             });
         }
 
         // Suggest only if the user specify a engine name.
         const suggest = engineList.suggest;
         if (!suggest) {
-            return [0, 2, []];
+            return [0, [2, 3], []];
         }
 
         const url = suggest.url.replace(
@@ -244,7 +244,7 @@ class OpenCommand {
                 }
             })
             .then((result) => [
-                fixedLen, 2, result.map((e) => [null, null, e, ""])
+                fixedLen, [2], result.map((e) => [null, null, e, ""])
             ]);
     }
     static _getJSONSuggests(json, path, decode) {
@@ -353,7 +353,7 @@ gExCommandMap.makeCommand(
         const filter = Utils.makeFilter(value);
         const windowId = tabInfo.windowId;
         return browser.tabs.query({ windowId }).then((tabs) => [
-            0, 1, tabs.map((tab, index) => [
+            0, [1, 2, 3], tabs.map((tab, index) => [
                 tab.favIconUrl, index, tab.title, tab.url
             ]).filter(([icon, index, title, url]) => {
                 return filter.match(title) || filter.match(url);
@@ -374,7 +374,7 @@ gExCommandMap.makeCommand(
     (value, tabInfo) => {
         const filter = Utils.makeFilter(value);
         return browser.windows.getAll().then((windows) => [
-            0, 1, windows.map((win, index) => [
+            0, [1, 2], windows.map((win, index) => [
                 (win.incognito ?
                     "chrome://browser/skin/privatebrowsing/favicon.svg" : null),
                 index, win.title, win.type
@@ -437,13 +437,13 @@ class DownloadManager {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
-                0, 2,
+                0, [2],
                 subcmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ];
         }
         const query = value.substr(fixedLen).trim().split(/\s+/);
         return subcmdList.complete(query, tabInfo)
-            .then((result) => [fixedLen, 1, result]);
+            .then((result) => [fixedLen, [1, 2], result]);
     }
     static _invokeCommand(func, args, tabInfo) {
         const ids = args
@@ -615,12 +615,12 @@ class HistoryManager {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
         if (Array.isArray(subcmdList)) {
             return [
-                0, 2,
+                0, [2],
                 subcmdList.map((cmd) => [null, null, cmd.name, cmd.description])
             ];
         }
         return subcmdList.complete(value.substr(fixedLen), tabInfo)
-            .then((result) => [fixedLen, 2, result]);
+            .then((result) => [fixedLen, [2, 3], result]);
     }
     static _getItemList(text) {
         return browser.history.search({
@@ -658,7 +658,7 @@ gExCommandMap.makeCommand(
             const tabSessions = sessions.filter(
                 (s) => s.tab && s.tab.windowId === tabInfo.windowId);
             return [
-                0, 1, tabSessions.map((s, index) => [
+                0, [1, 2], tabSessions.map((s, index) => [
                     s.tab.favIconUrl, index, s.tab.title,
                     closeTime(s.lastModified)
                 ])
@@ -687,7 +687,7 @@ gExCommandMap.makeCommand(
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             return [
-                0, 1, winSessions.map((s, index) => {
+                0, [1, 2], winSessions.map((s, index) => {
                     const tab = s.window.tabs.reduce((lhs, rhs) => {
                         return lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs;
                     });
