@@ -647,9 +647,8 @@ function closeTime(time) {
 }
 gExCommandMap.makeCommand(
     "undoTab", "Reopen closed tab", (args, tabInfo) => {
-        const index = parseInt(args[0], 10);
-        if (Number.isNaN(index)) {
-            return Promise.reject("argument must be number");
+        if (args.length === 0) {
+            return Promise.reject("no argument");
         }
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const tabSessions = sessions.filter(
@@ -657,10 +656,9 @@ gExCommandMap.makeCommand(
             if (tabSessions.length === 0) {
                 return Promise.reject("no closed tab");
             }
-            if (!(index < tabSessions.length)) {
-                return Promise.reject("invalid index");
-            }
-            const sessionId = tabSessions[index].tab.sessionId;
+            const session = getElementByIndexOrText(
+                tabSessions, args, (session) => session.tab.title)
+            const sessionId = session.tab.sessionId;
             return discardResult(browser.sessions.restore(sessionId));
         });
     },
@@ -677,21 +675,25 @@ gExCommandMap.makeCommand(
             ];
         });
     });
+function getLastAccessedTab(tabs) {
+    return tabs.reduce((lhs, rhs) => {
+        return lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs;
+    });
+}
 gExCommandMap.makeCommand(
     "undoWindow", "Reopen closed window", (args, tabInfo) => {
-        const index = parseInt(args[0], 10);
-        if (Number.isNaN(index)) {
-            return Promise.reject("argument must be number");
+        if (args.length === 0) {
+            return Promise.reject("no argument");
         }
         return browser.sessions.getRecentlyClosed().then((sessions) => {
             const winSessions = sessions.filter((s) => s.window);
             if (winSessions.length === 0) {
                 return Promise.reject("no closed window");
             }
-            if (!(index < winSessions.length)) {
-                return Promise.reject("invalid index");
-            }
-            const sessionId = winSessions[index].window.sessionId;
+            const session = getElementByIndexOrText(
+                winSessions, args,
+                (session) => getLastAccessedTab(session.window.tabs).title);
+            const sessionId = session.window.sessionId;
             return discardResult(browser.sessions.restore(sessionId));
         });
     },
@@ -701,9 +703,7 @@ gExCommandMap.makeCommand(
             const winSessions = sessions.filter((s) => s.window);
             return [
                 0, INDEX_LIST, filterCandidates(winSessions.map((s, index) => {
-                    const tab = s.window.tabs.reduce((lhs, rhs) => {
-                        return lhs.lastAccessed > rhs.lastAccessed ? lhs : rhs;
-                    });
+                    const tab = getLastAccessedTab(s.window.tabs);
                     return [
                         tab.favIconUrl, index, s.window.title || tab.title,
                         closeTime(s.lastModified)
