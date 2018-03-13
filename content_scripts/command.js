@@ -217,6 +217,7 @@ const COMMAND_DESCRIPTIONS = {
     toCaretMode: { description: "Change caret mode" },
     toConsoleMode: { description: "Change console mode" },
     toConsoleModeWithURL: { description: "Change console mode with URL as default input" },
+    toConsoleModeWithSelection: { description: "Change console mode with selection text as default input" },
     toSearchMode: { description: "Change search forward mode" },
     toBackwardSearchMode: { description: "Change search backward mode" },
 };

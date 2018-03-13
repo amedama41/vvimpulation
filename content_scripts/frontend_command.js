@@ -1180,6 +1180,12 @@ class FrontendCommand {
         return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "exec", args.join(" "), true);
     }
+    static toConsoleModeWithSelection(count, frameInfo, args) {
+        const selection = window.getSelection();
+        args.push(selection ? selection.toString() : "");
+        return frameInfo.changeToConsoleMode(
+            frameInfo.getSelfFrameId(), "exec", args.join(" "), false);
+    }
     static toSearchMode(count, frameInfo, isBackward=false) {
         return frameInfo.changeToConsoleMode(
             frameInfo.getSelfFrameId(), "forwardSearch", '');
