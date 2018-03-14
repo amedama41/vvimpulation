@@ -510,6 +510,13 @@ class FrameInfo {
             consoleFrame.src = browser.runtime.getURL("console/console.html");
             consoleFrame.addEventListener("load", () => {
                 this._consoleFrame = consoleFrame;
+                if (document.readyState === "loading") {
+                    FrameInfo._observeActiveElement(
+                        "DOMContentLoaded", this._consoleFrame);
+                }
+                if (document.readyState !== "complete") {
+                    FrameInfo._observeActiveElement("load", this._consoleFrame);
+                }
             }, { capture: true, once: true });
             container.appendChild(consoleFrame);
             const root = document.documentElement;
@@ -541,6 +548,20 @@ class FrameInfo {
     _sendConsoleMessage(msg) {
         return this._port.sendMessage(
             { command: "sendConsoleMessage", data: msg });
+    }
+    static _observeActiveElement(type, consoleFrame) {
+        window.addEventListener(type, (e) => {
+            if (!consoleFrame.classList.contains("wimpulation-console-mode")) {
+                return;
+            }
+            setTimeout(() => {
+                // Check whether focus is stolen by page's auto focus.
+                if (document.activeElement !== consoleFrame) {
+                    document.activeElement.blur();
+                    consoleFrame.focus();
+                }
+            }, 0);
+        }, { capture: true, once: true });
     }
     static _exactlyFocus(elem) {
         const activeElement = document.activeElement;

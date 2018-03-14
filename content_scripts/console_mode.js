@@ -14,22 +14,6 @@ class ConsoleMode {
             console.error("ShowConsole error:", Utils.errorString(e));
             frameInfo.changeModeFrom(this, "NORMAL");
         });
-        if (document.readyState === "loading") {
-            this._observeActiveElement("DOMContentLoaded", frameInfo);
-        }
-        if (document.readyState !== "complete") {
-            this._observeActiveElement("load", frameInfo);
-        }
-    }
-    _observeActiveElement(type, frameInfo) {
-        frameInfo.setEventListener(window, type, (e) => {
-            setTimeout(() => {
-                if (document.activeElement !== this.consoleFrame) {
-                    document.activeElement.blur();
-                    this.consoleFrame.focus();
-                }
-            }, 0);
-        }, { capture: true, once: true });
     }
     static getModeName() {
         return "CONSOLE";
