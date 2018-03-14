@@ -100,6 +100,7 @@ class FrameInfo {
         this._consoleTimerId = 0;
         this._lastMessage = "";
         this._fixedMessage = undefined;
+        this._lastActiveElement = null;
         this._markPositionMap = {};
         if (this.isTopFrame()) {
             this._createConsoleFrame();
@@ -340,35 +341,36 @@ class FrameInfo {
             return Promise.reject("console frame is not loaded yet");
         }
         const options = { mode, defaultInput };
-        return this._sendConsoleMessage({ command: "setConsoleMode", options })
-            .then((result) => {
-                if (this._mode !== requestMode) { // Maybe mode is changed.
-                    return false;
-                }
-                if (this._consoleTimerId !== 0) {
-                    clearTimeout(this._consoleTimerId);
-                    this._consoleTimerId = 0;
-                }
-                if (this._fixedMessage) {
-                    this._fixedMessage = undefined;
-                }
-                this._consoleFrame.classList.add("wimpulation-console-mode");
-                this._consoleFrame.classList.add("wimpulation-show-console");
-                const activeElement = document.activeElement;
-                if (activeElement) {
-                    // Can not focus a frame if an element in another frame is
-                    // already focused.
-                    activeElement.blur();
-                }
-                this._consoleFrame.focus();
-                return true;
-            })
-            .catch((error) => {
-                if (this._mode !== requestMode) { // Maybe mode is changed.
-                    return false;
-                }
-                return Promise.reject(error);
-            });
+        return this._sendConsoleMessage({
+            command: "setConsoleMode", options
+        }).then((result) => {
+            if (this._mode !== requestMode) { // Maybe mode is changed.
+                return false;
+            }
+            if (this._consoleTimerId !== 0) {
+                clearTimeout(this._consoleTimerId);
+                this._consoleTimerId = 0;
+            }
+            if (this._fixedMessage) {
+                this._fixedMessage = undefined;
+            }
+            this._consoleFrame.classList.add("wimpulation-console-mode");
+            this._consoleFrame.classList.add("wimpulation-show-console");
+            const activeElement = document.activeElement;
+            if (activeElement) {
+                // Can not focus a frame if an element in another frame is
+                // already focused.
+                activeElement.blur();
+            }
+            this._lastActiveElement = activeElement;
+            this._consoleFrame.focus();
+            return true;
+        }).catch((error) => {
+            if (this._mode !== requestMode) { // Maybe mode is changed.
+                return false;
+            }
+            return Promise.reject(error);
+        });
     }
     showMessage(message, duration=3000, saveMessage=true) {
         if (!this.isTopFrame()) {
@@ -420,8 +422,18 @@ class FrameInfo {
         }
     }
     hideConsole() {
+        const isConsoleFocued = (document.activeElement === this._consoleFrame);
         this._consoleFrame.blur();
         this._consoleFrame.classList.remove("wimpulation-console-mode");
+        // Reset focus only when console frame is focused.
+        // If search command succeeds or user click elements outside of console,
+        // frame is not focused.
+        if (isConsoleFocued) {
+            if (this._lastActiveElement) {
+                DomUtils.fixedFocus(this._lastActiveElement);
+            }
+        }
+        this._lastActiveElement = null;
         // If showing message, showMessage has a responsibility to close.
         if (this._consoleTimerId !== 0) {
             return;

@@ -6,7 +6,6 @@ class ConsoleMode {
         if (!this.consoleFrame) {
             throw new Error("Console frame is not loaded yet");
         }
-        this.lastFocusedElem = document.activeElement;
 
         const { mode, defaultInput, frameId } = options;
         this._mode = mode;
@@ -42,16 +41,7 @@ class ConsoleMode {
         return [false, undefined, undefined, undefined];
     }
     onReset(frameInfo) {
-        const isConsoleFocued = (document.activeElement === this.consoleFrame);
         frameInfo.hideConsole();
-        // Reset focus only when console frame is focused.
-        // If search succeeds or user click elements outside of console,
-        // frame is not focused.
-        if (isConsoleFocued) {
-            if (this.lastFocusedElem) {
-                DomUtils.fixedFocus(this.lastFocusedElem);
-            }
-        }
     }
     onInvoking(cmd, frameInfo) {
     }
