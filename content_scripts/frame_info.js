@@ -262,7 +262,7 @@ class FrameInfo {
             });
         }
         if (passURL) {
-            defaultInput += location.href;
+            defaultInput += decodeURI(location.href);
         }
         this.changeMode("CONSOLE", { mode, frameId, defaultInput });
     }
