@@ -773,12 +773,6 @@ class Command {
     static forwardFrameMessage(msg, sender, tabInfo) {
         return tabInfo.sendMessage(msg.frameId, msg.data);
     }
-    static showMessage(msg, sender, tabInfo) {
-        tabInfo.sendMessage(0, msg);
-    }
-    static hideFixedMessage(msg, sender, tabInfo) {
-        tabInfo.sendMessage(0, msg);
-    }
     static sendConsoleMessage(msg, sender, tabInfo) {
         return tabInfo.sendConsoleMessage(msg.data);
     }

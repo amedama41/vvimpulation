@@ -374,8 +374,8 @@ class FrameInfo {
     }
     showMessage(message, duration=3000, saveMessage=true) {
         if (!this.isTopFrame()) {
-            this._port.postMessage(
-                { command: "showMessage", message, duration, saveMessage });
+            this.forwardMessage(
+                0, { command: "showMessage", message, duration, saveMessage });
             return;
         }
         if (!this._consoleFrame) {
@@ -442,7 +442,7 @@ class FrameInfo {
     }
     hideFixedMessage() {
         if (!this.isTopFrame()) {
-            this._port.postMessage({ command: "hideFixedMessage" });
+            this.forwardMessage(0, { command: "hideFixedMessage" });
             return;
         }
         this._fixedMessage = undefined;
