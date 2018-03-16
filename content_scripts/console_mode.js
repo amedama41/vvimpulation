@@ -35,7 +35,7 @@ class ConsoleMode {
     }
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
-            case "hideConsole":
+            case "finishConsole":
                 this._execute(msg.value, frameInfo).catch((error) => {
                     frameInfo.showMessage(error);
                 }).then((message) => {

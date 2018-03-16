@@ -257,7 +257,7 @@ class HintMode extends HintModeBase {
                 return this._handleKey(msg.key, msg.frameId, frameInfo);
             case "applyFilter":
                 return this._applyFilter(msg.filter, frameInfo);
-            case "hideConsole":
+            case "finishConsole":
                 return this._stopFilter(msg, frameInfo);
             default:
                 console.warn("Unknown command:", msg.command);

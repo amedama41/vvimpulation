@@ -823,7 +823,7 @@ class ConsoleCommand {
         candidateInfo.active = promise.finally(onFinally);
         return promise;
     }
-    static hideConsole(msg, sender, tabInfo) {
+    static finishConsole(msg, sender, tabInfo) {
         return tabInfo.sendMessage(0, msg);
     }
     static applyFilter(msg, sender, tabInfo) {

@@ -158,7 +158,7 @@ class MessageCommand {
         return gFrameInfo.changeToConsoleMode(
             msg.frameId, msg.mode, msg.defaultInput, msg.passURL);
     }
-    static hideConsole(msg) {
+    static finishConsole(msg) {
         return gFrameInfo.handleMessage(msg);
     }
     static forwardCommand(msg, sneder) {

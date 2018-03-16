@@ -299,7 +299,7 @@ class ConsoleMode {
         this._isOpened = false;
         this._completer.reset();
         this._input.value = "";
-        this.sendMessage({ command: "hideConsole", value });
+        this.sendMessage({ command: "finishConsole", value });
     }
     execute() {
         this.stopConsole(this._input.value);
