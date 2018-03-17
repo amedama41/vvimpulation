@@ -154,10 +154,6 @@ class MessageCommand {
         }
         return gFrameInfo.handleMessage(msg.data);
     }
-    static changeToConsoleMode(msg) {
-        return gFrameInfo.changeToConsoleMode(
-            msg.frameId, msg.mode, msg.defaultInput, msg.passURL);
-    }
     static finishConsole(msg) {
         return gFrameInfo.handleMessage(msg);
     }
@@ -251,7 +247,7 @@ class MessageCommand {
         return document.hasFocus();
     }
     static setConsoleMode(msg) {
-        return gFrameInfo.setConsoleMode(msg.options);
+        return gFrameInfo.setConsoleMode(msg.options, msg.passURL);
     }
     static showMessage(msg) {
         gFrameInfo.showMessage(msg.message, msg.duration, msg.saveMessage);

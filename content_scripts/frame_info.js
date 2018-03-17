@@ -254,18 +254,6 @@ class FrameInfo {
         this._resetMode(allFrame);
         this._mode = this._createMode(mode, data);
     }
-    changeToConsoleMode(frameId, mode, defaultInput, passURL=false) {
-        if (!this.isTopFrame()) {
-            return this.forwardMessage(this._frameIdInfo.getParentFrameId(), {
-                command: "changeToConsoleMode",
-                frameId, mode, defaultInput, passURL
-            });
-        }
-        if (passURL) {
-            defaultInput += decodeURI(location.href);
-        }
-        this.changeMode("CONSOLE", { mode, frameId, defaultInput });
-    }
     getTarget() {
         return this._mode.getTarget();
     }
@@ -336,16 +324,16 @@ class FrameInfo {
     get consoleFrame() {
         return this._consoleFrame;
     }
-    showConsole(requestMode, mode, defaultInput) {
+    showConsole(requestMode, mode, defaultInput, passURL=false) {
         // Ignore collisions of multiple frame requests only because it rarely
         // occurs.
         const promise = ((options) => {
             if (!this.isTopFrame()) {
                 return this.forwardMessage(
-                    0, { command: "setConsoleMode", options });
+                    0, { command: "setConsoleMode", options, passURL });
             }
             else {
-                return this.setConsoleMode(options);
+                return this.setConsoleMode(options, passURL);
             }
         })({ mode, defaultInput, frameId: this.getSelfFrameId() });
         return promise.then(() => {
@@ -360,9 +348,12 @@ class FrameInfo {
             return Promise.reject(error);
         });
     }
-    setConsoleMode(options) {
+    setConsoleMode(options, passURL) {
         if (!this._consoleFrame) {
             return Promise.reject("console frame is not loaded yet");
+        }
+        if (passURL) {
+            options.defaultInput += decodeURI(location.href);
         }
         return this._sendConsoleMessage({
             command: "setConsoleMode", options

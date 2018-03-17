@@ -1172,27 +1172,32 @@ class FrontendCommand {
     }
     static toConsoleMode(count, frameInfo, args) {
         args.push("");
-        return frameInfo.changeToConsoleMode(
-            frameInfo.getSelfFrameId(), "exec", args.join(" "), false);
+        frameInfo.changeMode("CONSOLE", {
+            mode: "exec", defaultInput: args.join(" "), passURL: false
+        });
     }
     static toConsoleModeWithURL(count, frameInfo, args) {
         args.push("");
-        return frameInfo.changeToConsoleMode(
-            frameInfo.getSelfFrameId(), "exec", args.join(" "), true);
+        frameInfo.changeMode("CONSOLE", {
+            mode: "exec", defaultInput: args.join(" "), passURL: true
+        });
     }
     static toConsoleModeWithSelection(count, frameInfo, args) {
         const selection = window.getSelection();
         args.push(selection ? selection.toString() : "");
-        return frameInfo.changeToConsoleMode(
-            frameInfo.getSelfFrameId(), "exec", args.join(" "), false);
+        frameInfo.changeMode("CONSOLE", {
+            mode: "exec", defaultInput: args.join(" "), passURL: false
+        });
     }
     static toSearchMode(count, frameInfo, isBackward=false) {
-        return frameInfo.changeToConsoleMode(
-            frameInfo.getSelfFrameId(), "forwardSearch", '');
+        frameInfo.changeMode("CONSOLE", {
+            mode: "forwardSearch", defaultInput: '', passURL: false
+        });
     }
     static toBackwardSearchMode(count, frameInfo) {
-        return frameInfo.changeToConsoleMode(
-            frameInfo.getSelfFrameId(), "backwardSearch", '');
+        frameInfo.changeMode("CONSOLE", {
+            mode: "backwardSearch", defaultInput: '', passURL: false
+        });
     }
 }
 

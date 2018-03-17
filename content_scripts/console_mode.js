@@ -2,15 +2,9 @@
 
 class ConsoleMode {
     constructor(frameInfo, options) {
-        this.consoleFrame = frameInfo.consoleFrame;
-        if (!this.consoleFrame) {
-            throw new Error("Console frame is not loaded yet");
-        }
-
-        const { mode, defaultInput, frameId } = options;
+        const { mode, defaultInput, passURL } = options;
         this._mode = mode;
-        this._frameId = frameId;
-        frameInfo.showConsole(this, mode, defaultInput).catch((e) => {
+        frameInfo.showConsole(this, mode, defaultInput, passURL).catch((e) => {
             console.error("ShowConsole error:", Utils.errorString(e));
             frameInfo.changeModeFrom(this, "NORMAL");
         });
@@ -19,7 +13,7 @@ class ConsoleMode {
         return "CONSOLE";
     }
     getTarget() {
-        return this.consoleFrame;
+        return null;
     }
     consume(key, frameInfo) {
         return [false, undefined, undefined, undefined];
@@ -70,9 +64,9 @@ class ConsoleMode {
         return frameInfo.sendMessage({ command: "execCommand", cmd });
     }
     _search(keyword, backward, frameInfo) {
-        return frameInfo.sendMessage({
-            command: "search", keyword, backward, frameId: this._frameId
-        });
+        const frameId = frameInfo.getSelfFrameId();
+        return frameInfo.sendMessage(
+            { command: "search", keyword, backward, frameId });
     }
 }
 
