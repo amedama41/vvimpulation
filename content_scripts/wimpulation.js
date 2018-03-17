@@ -250,8 +250,14 @@ class MessageCommand {
     static hasFocus() {
         return document.hasFocus();
     }
+    static setConsoleMode(msg) {
+        return gFrameInfo.setConsoleMode(msg.options);
+    }
     static showMessage(msg) {
         gFrameInfo.showMessage(msg.message, msg.duration, msg.saveMessage);
+    }
+    static hideConsole(msg) {
+        return gFrameInfo.hideConsole();
     }
     static hideFixedMessage(msg) {
         gFrameInfo.hideFixedMessage();

@@ -285,6 +285,7 @@ class ConsoleMode {
         this._input = input;
         this._input.parentNode.setAttribute("mode", options.mode);
         this._input.value = options.defaultInput;
+        this._ownerFrameId = options.frameId;
         this._completer = new Completer(container);
         this._mapper = keyMapping;
 
@@ -299,7 +300,8 @@ class ConsoleMode {
         this._isOpened = false;
         this._completer.reset();
         this._input.value = "";
-        this.sendMessage({ command: "finishConsole", value });
+        this.sendMessage(
+            { command: "finishConsole", value, frameId: this._ownerFrameId });
     }
     execute() {
         this.stopConsole(this._input.value);

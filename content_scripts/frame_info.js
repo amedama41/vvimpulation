@@ -337,16 +337,36 @@ class FrameInfo {
         return this._consoleFrame;
     }
     showConsole(requestMode, mode, defaultInput) {
-        if (!this._consoleFrame) {
-            return Promise.reject("console frame is not loaded yet");
-        }
-        const options = { mode, defaultInput };
-        return this._sendConsoleMessage({
-            command: "setConsoleMode", options
-        }).then((result) => {
+        // Ignore collisions of multiple frame requests only because it rarely
+        // occurs.
+        const promise = ((options) => {
+            if (!this.isTopFrame()) {
+                return this.forwardMessage(
+                    0, { command: "setConsoleMode", options });
+            }
+            else {
+                return this.setConsoleMode(options);
+            }
+        })({ mode, defaultInput, frameId: this.getSelfFrameId() });
+        return promise.then(() => {
             if (this._mode !== requestMode) { // Maybe mode is changed.
                 return false;
             }
+            return true;
+        }).catch((error) => {
+            if (this._mode !== requestMode) { // Maybe mode is changed.
+                return false;
+            }
+            return Promise.reject(error);
+        });
+    }
+    setConsoleMode(options) {
+        if (!this._consoleFrame) {
+            return Promise.reject("console frame is not loaded yet");
+        }
+        return this._sendConsoleMessage({
+            command: "setConsoleMode", options
+        }).then(() => {
             if (this._consoleTimerId !== 0) {
                 clearTimeout(this._consoleTimerId);
                 this._consoleTimerId = 0;
@@ -364,12 +384,6 @@ class FrameInfo {
             }
             this._lastActiveElement = activeElement;
             this._consoleFrame.focus();
-            return true;
-        }).catch((error) => {
-            if (this._mode !== requestMode) { // Maybe mode is changed.
-                return false;
-            }
-            return Promise.reject(error);
         });
     }
     showMessage(message, duration=3000, saveMessage=true) {
@@ -422,6 +436,10 @@ class FrameInfo {
         }
     }
     hideConsole() {
+        if (!this.isTopFrame()) {
+            this.forwardMessage(0, { command: "hideConsole" });
+            return;
+        }
         const isConsoleFocued = (document.activeElement === this._consoleFrame);
         this._consoleFrame.blur();
         this._consoleFrame.classList.remove("wimpulation-console-mode");

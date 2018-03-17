@@ -824,7 +824,7 @@ class ConsoleCommand {
         return promise;
     }
     static finishConsole(msg, sender, tabInfo) {
-        return tabInfo.sendMessage(0, msg);
+        return tabInfo.sendMessage(msg.frameId, msg);
     }
     static applyFilter(msg, sender, tabInfo) {
         if (tabInfo.getMode() !== "HINT") {
