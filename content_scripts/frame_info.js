@@ -200,6 +200,35 @@ class FrameInfo {
             command: "moveFocus", recursive: true, count, isForward, changeMode
         });
     }
+    setConsoleMode(options, passURL) {
+        if (!this._consoleFrame) {
+            return Promise.reject("console frame is not loaded yet");
+        }
+        if (passURL) {
+            options.defaultInput += decodeURI(location.href);
+        }
+        return this._sendConsoleMessage({
+            command: "setConsoleMode", options
+        }).then(() => {
+            if (this._consoleTimerId !== 0) {
+                clearTimeout(this._consoleTimerId);
+                this._consoleTimerId = 0;
+            }
+            if (this._fixedMessage) {
+                this._fixedMessage = undefined;
+            }
+            this._consoleFrame.classList.add("wimpulation-console-mode");
+            this._consoleFrame.classList.add("wimpulation-show-console");
+            const activeElement = document.activeElement;
+            if (activeElement) {
+                // Can not focus a frame if an element in another frame is
+                // already focused.
+                activeElement.blur();
+            }
+            this._lastActiveElement = activeElement;
+            this._consoleFrame.focus();
+        });
+    }
     killHover() {
         HoverKiller.killHover(this._onlyVisibility);
     }
@@ -346,35 +375,6 @@ class FrameInfo {
                 return false;
             }
             return Promise.reject(error);
-        });
-    }
-    setConsoleMode(options, passURL) {
-        if (!this._consoleFrame) {
-            return Promise.reject("console frame is not loaded yet");
-        }
-        if (passURL) {
-            options.defaultInput += decodeURI(location.href);
-        }
-        return this._sendConsoleMessage({
-            command: "setConsoleMode", options
-        }).then(() => {
-            if (this._consoleTimerId !== 0) {
-                clearTimeout(this._consoleTimerId);
-                this._consoleTimerId = 0;
-            }
-            if (this._fixedMessage) {
-                this._fixedMessage = undefined;
-            }
-            this._consoleFrame.classList.add("wimpulation-console-mode");
-            this._consoleFrame.classList.add("wimpulation-show-console");
-            const activeElement = document.activeElement;
-            if (activeElement) {
-                // Can not focus a frame if an element in another frame is
-                // already focused.
-                activeElement.blur();
-            }
-            this._lastActiveElement = activeElement;
-            this._consoleFrame.focus();
         });
     }
     showMessage(message, duration=3000, saveMessage=true) {
