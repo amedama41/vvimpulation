@@ -304,10 +304,8 @@ class FrontendCommand {
         if (args.length === 0) {
             return;
         }
-        return frameInfo.sendMessage({
-            command: "search", keyword: args[0], backward: false,
-            frameId: frameInfo.getSelfFrameId()
-        });
+        return frameInfo.sendMessage(
+            { command: "search", keyword: args[0], backward: false });
     }
     static searchSelectionForward(count, frameInfo) {
         const selection = window.getSelection();

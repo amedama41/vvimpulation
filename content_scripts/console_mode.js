@@ -64,9 +64,7 @@ class ConsoleMode {
         return frameInfo.sendMessage({ command: "execCommand", cmd });
     }
     _search(keyword, backward, frameInfo) {
-        const frameId = frameInfo.getSelfFrameId();
-        return frameInfo.sendMessage(
-            { command: "search", keyword, backward, frameId });
+        return frameInfo.sendMessage({ command: "search", keyword, backward });
     }
 }
 

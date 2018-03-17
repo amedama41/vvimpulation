@@ -422,12 +422,12 @@ class Command {
      * Commands for search
      */
     static search(msg, sender, tabInfo) {
-        const { keyword, backward, frameId } = msg;
+        const { keyword, backward } = msg;
         const caseSensitive = /[A-Z]/.test(keyword);
         return tabInfo.frameIdList((frameIdList) => {
             tabInfo.searchHighlighting = gOptions.highlightSearch;
             return findAllFrame(
-                tabInfo, frameId, frameIdList,
+                tabInfo, sender.frameId, frameIdList,
                 keyword, caseSensitive, backward);
         }).then((result) => {
             tabInfo.lastSearchInfo = [keyword, caseSensitive, backward];
