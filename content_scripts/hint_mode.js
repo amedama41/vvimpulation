@@ -25,6 +25,9 @@ class HintModeBase {
         if (container) {
             container.remove();
         }
+        if (frameInfo.isTopFrame()) {
+            frameInfo.hideConsole();
+        }
     }
     onDropKeys(dropKeys) {
     }
