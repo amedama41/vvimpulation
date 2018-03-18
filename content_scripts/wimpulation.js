@@ -243,6 +243,9 @@ class MessageCommand {
     static killHover(msg) {
         gFrameInfo.killHover();
     }
+    static getMarks() {
+        return gFrameInfo.getMarks();
+    }
     static hasFocus() {
         return document.hasFocus();
     }

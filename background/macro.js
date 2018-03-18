@@ -75,7 +75,8 @@ class MacroManager {
 
         if (register === ":") {
             if (this.recordConsoleCommand) {
-                tabInfo.executeCommand(this.recordConsoleCommand, options);
+                tabInfo.executeCommand(
+                    this.recordConsoleCommand, frameId, options);
             }
             return;
         }

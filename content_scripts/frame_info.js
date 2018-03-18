@@ -232,6 +232,10 @@ class FrameInfo {
     killHover() {
         HoverKiller.killHover(this._onlyVisibility);
     }
+    getMarks() {
+        const posMap = this._markPositionMap;
+        return Object.keys(posMap).map((key) => [key, posMap[key]]);
+    }
 
     // Method related to frame id.
     getSelfFrameId() {

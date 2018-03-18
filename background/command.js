@@ -69,8 +69,8 @@ class ExCommand {
         this.proc = proc;
         this.completion = completion;
     }
-    invoke(args, tabInfo, options) {
-        return this.proc(args, tabInfo, options);
+    invoke(args, tabInfo, frameId, options) {
+        return this.proc(args, tabInfo, frameId, options);
     }
     complete(value, tabInfo) {
         if (!this.completion) {
@@ -90,7 +90,7 @@ class ExCommandMap {
     makeCommand(name, description, proc, completion) {
         this.addCommand(new ExCommand(name, description, proc, completion));
     }
-    execCommand(inputCmd, tabInfo, options) {
+    execCommand(inputCmd, tabInfo, frameId, options) {
         const args = inputCmd.trim().split(/\s+/);
         const cmdName = args.shift();
         const [cmd, reason] = this.cmdMap.getCommand(cmdName);
@@ -98,7 +98,7 @@ class ExCommandMap {
             return Promise.resolve([false, reason]);
         }
         try {
-            return Promise.resolve(cmd.invoke(args, tabInfo, options))
+            return Promise.resolve(cmd.invoke(args, tabInfo, frameId, options))
                 .then((result) => [true, result])
                 .catch((error) => [false, (error && error.toString())]);
         }
@@ -173,7 +173,7 @@ class OpenCommand {
         this.kind = kind;
         this.engineMap = engineMap;
     }
-    invoke(args, tabInfo, options) {
+    invoke(args, tabInfo, frameId, options) {
         if (args.length === 0) {
             return OpenCommand._open(
                 "about:blank", this.kind, tabInfo, options);
@@ -344,7 +344,7 @@ gExCommandMap.addCommand(
     new OpenCommand(
         "private", "Open or search in private window", "private", gEngineMap));
 gExCommandMap.makeCommand(
-    "buffer", "Switch tab", (args, tabInfo) => {
+    "buffer", "Switch tab", (args, tabInfo, frameId, options) => {
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
@@ -364,7 +364,7 @@ gExCommandMap.makeCommand(
         ]);
     });
 gExCommandMap.makeCommand(
-    "winbuffer", "Switch window", (args, tabInfo) => {
+    "winbuffer", "Switch window", (args, tabInfo, frameId, options) => {
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
@@ -419,7 +419,7 @@ class DownloadManager {
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
         this.cmdMap.setDefault("show");
     }
-    invoke(args, tabInfo, options) {
+    invoke(args, tabInfo, frameId, options) {
         if (args.length === 0) {
             args.push("show");
         }
@@ -430,7 +430,7 @@ class DownloadManager {
         if (!reason) { // if reason is null, head of args is command
             args.shift();
         }
-        return subcmd.invoke(args, tabInfo, options);
+        return subcmd.invoke(args, tabInfo, frameId, options);
     }
     complete(value, tabInfo) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -444,7 +444,7 @@ class DownloadManager {
         return subcmdList.complete(query, tabInfo)
             .then((result) => [fixedLen, [1, 2], result]);
     }
-    static _invokeCommand(func, args, tabInfo) {
+    static _invokeCommand(func, args, tabInfo, frameId, options) {
         const ids = args
             .map((arg) => parseInt(arg, 10))
             .filter((id) => !Number.isNaN(id));
@@ -458,7 +458,7 @@ class DownloadManager {
             return (errors.length ? Promise.reject(errors.join("\n")) : null);
         });
     }
-    static _invokeShowItemList(args, tabInfo, options) {
+    static _invokeShowItemList(args, tabInfo, frameId, options) {
         return DownloadManager._getItemList(null, args, tabInfo, true).then(
             (items) => items.map(([icon, id, name, info]) => [id, name, info]));
     }
@@ -606,7 +606,7 @@ class HistoryManager {
         ];
         cmdList.forEach((cmd) => this.cmdMap.set(cmd.name, cmd));
     }
-    invoke(args, tabInfo, options) {
+    invoke(args, tabInfo, frameId, options) {
         if (args.length === 0) {
             return Promise.reject("No subcommand");
         }
@@ -620,7 +620,7 @@ class HistoryManager {
         if (args.length === 0) {
             return Promise.reject("No arguments");
         }
-        return discardResult(subcmd.invoke(args, tabInfo, options));
+        return discardResult(subcmd.invoke(args, tabInfo, frameId, options));
     }
     complete(value, tabInfo) {
         const [subcmdList, fixedLen] = this.cmdMap.getCandidate(value);
@@ -646,7 +646,7 @@ function closeTime(time) {
     return `Closed at ${d.toLocaleTimeString()} on ${d.toLocaleDateString()}`;
 }
 gExCommandMap.makeCommand(
-    "undoTab", "Reopen closed tab", (args, tabInfo) => {
+    "undoTab", "Reopen closed tab", (args, tabInfo, frameId, options) => {
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
@@ -681,7 +681,7 @@ function getLastAccessedTab(tabs) {
     });
 }
 gExCommandMap.makeCommand(
-    "undoWindow", "Reopen closed window", (args, tabInfo) => {
+    "undoWindow", "Reopen closed window", (args, tabInfo, frameId, options) => {
         if (args.length === 0) {
             return Promise.reject("no argument");
         }
@@ -718,7 +718,7 @@ gExCommandMap.addCommand(new (class {
         this.description = "Start hint mode with input selector";
         this.previousSelector = "*";
     }
-    invoke(args, tabInfo, options) {
+    invoke(args, tabInfo, frameId, options) {
         let selector = args.join(" ").trim();
         if (selector === "") {
             selector = this.previousSelector;
@@ -732,18 +732,24 @@ gExCommandMap.addCommand(new (class {
     }
 })());
 gExCommandMap.makeCommand(
-    "registers", "Show the contents of all registers", (args, tabInfo) => {
+    "registers", "Show the contents of all registers",
+    (args, tabInfo, frameId, options) => {
         return gMacro.getRegisters().map(
             ([register, keyList]) => [register, keyList.join("")]);
     });
 gExCommandMap.makeCommand(
-    "nohlsearch", "Remove search highlighting", (args, tabInfo, options) => {
+    "marks", "Show marks of a frame", (args, tabInfo, frameId, options) => {
+        return tabInfo.sendMessage(frameId, { command: "getMarks" });
+    });
+gExCommandMap.makeCommand(
+    "nohlsearch", "Remove search highlighting",
+    (args, tabInfo, frameId, options) => {
         browser.find.removeHighlighting();
         tabInfo.searchHighlighting = options.highlightSearch;
         return null;
     });
 gExCommandMap.makeCommand(
-    "options", "Open option page", (args, tabInfo) => {
+    "options", "Open option page", (args, tabInfo, frameId, options) => {
         return browser.runtime.openOptionsPage();
     });
 

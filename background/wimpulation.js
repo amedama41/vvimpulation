@@ -148,8 +148,9 @@ class TabInfo {
         this.sendMessage(
             0, { command: "showMessage", message, duration, saveMessage });
     }
-    executeCommand(command, options) {
-        const promise = gExCommandMap.execCommand(command, this, options);
+    executeCommand(command, frameId, options) {
+        const promise =
+            gExCommandMap.execCommand(command, this, frameId, options);
         return promise.then(([result, message]) => {
             if (message) {
                 this.showMessage(message, 3000, false);
@@ -408,7 +409,9 @@ class Command {
      * Commands for console command execution
      */
     static execCommand(msg, sender, tabInfo) {
-        return tabInfo.executeCommand(msg.cmd, gOptions).then((result) => {
+        const promise =
+            tabInfo.executeCommand(msg.cmd, sender.frameId, gOptions);
+        return promise.then((result) => {
             gMacro.lastConsoleCommand = msg.cmd;
             if (result && !tabInfo.incognito) { // TODO
                 saveHistory("command_history", msg.cmd);
