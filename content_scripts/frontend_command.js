@@ -1452,7 +1452,8 @@ function invokeCommand(cmdName, count, frameInfo, doesRecord=true) {
     const cmdDesc = COMMAND_DESCRIPTIONS[cmdAndArgs[0]];
     let result;
     if (cmdDesc.background) {
-        result = frameInfo.sendMessage({ command: cmdName, count: count });
+        const command = cmdAndArgs.shift();
+        result = frameInfo.sendMessage({ command, count, args: cmdAndArgs });
     }
     else if (cmdDesc.topFrame && !frameInfo.isTopFrame()) {
         result = frameInfo.forwardToFrame(0, { command: cmdName, count: count });
