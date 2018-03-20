@@ -24,12 +24,12 @@ class Completer {
     setMaxHeight(maxHeight) {
         this.container.style.maxHeight = maxHeight + "px";
     }
-    reset() {
+    reset(isFixed) {
         this.candidates = [];
         this.selectIndex = undefined;
         this.candidateInfo = undefined;
         this.container.innerHTML = "";
-        this.isFixed = true;
+        this.isFixed = isFixed;
     }
     setCandidates(candidateInfo, isFixed=false) {
         this.candidates = [];
@@ -82,7 +82,7 @@ class Completer {
         return this._selectCandidate(input, -1);
     }
     _selectCandidate(input, diff) {
-        if (!this.candidateInfo) {
+        if (this.candidates.length <= 1) {
             return false;
         }
         let [orgValue, candidateStart, index, candidates] = this.candidateInfo;
@@ -298,7 +298,7 @@ class ConsoleMode {
     }
     stopConsole(value=null) {
         this._isOpened = false;
-        this._completer.reset();
+        this._completer.reset(true);
         this._input.value = "";
         this.sendMessage(
             { command: "finishConsole", value, frameId: this._ownerFrameId });
@@ -329,6 +329,9 @@ class ConsoleMode {
             if (result) {
                 this._completer.setCandidates(result);
                 this._completer.selectNext(this._input);
+            }
+            else {
+                this._completer.reset(false);
             }
         });
     }
@@ -361,6 +364,9 @@ class ExMode extends ConsoleMode {
             this.onComplete(input).then((result) => {
                 if (result) {
                     completer.setCandidates(result);
+                }
+                else {
+                    this._completer.reset(false);
                 }
             });
             return true;
