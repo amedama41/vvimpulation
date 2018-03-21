@@ -298,6 +298,8 @@ const DEFAULT_OPTIONS = {
             "<C-E>": "endLine",
             "<C-F>": "charNext",
             "<C-B>": "charPrevious",
+            "<C-O>p": "pasteValue",
+            "<C-O><C-P>": "pasteValue",
             "<C-X><C-L>": "showHistoryList",
             "<C-I>": "getCandidate",
             "<Tab>": "selectNextHistoryOrCandidate",

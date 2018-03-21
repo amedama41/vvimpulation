@@ -22,5 +22,6 @@ const CONSOLE_COMMAND_DESCRIPTIONS = {
     charPrevious: { description: "Move a cursor to the previous character of the target" },
     beginLine: { description: "Move a cursor to the beginning of a line of the target" },
     endLine: { description: "Move a cursor to the end of a line of the target" },
+    pasteValue: { description: "Paste a value from clipboard to the value of the target" },
 };
 

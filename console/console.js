@@ -276,6 +276,16 @@ class ConsoleCommand {
     static endLine(mode) {
         DomUtils.endLine(mode.getTarget());
     }
+    static pasteValue(mode) {
+        const target = mode.getTarget();
+        // Reserve selection range because getFromClipboard can modify that.
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        const value = DomUtils.getFromClipboard();
+        if (value) {
+            target.setRangeText(value, start, end, "end");
+        }
+    }
 }
 
 class ConsoleMode {
@@ -288,6 +298,7 @@ class ConsoleMode {
         this._ownerFrameId = options.frameId;
         this._completer = new Completer(container);
         this._mapper = keyMapping;
+        this._inInvoking = false;
 
         this.onInit(options);
     }
@@ -312,9 +323,21 @@ class ConsoleMode {
     get isOpened() {
         return this._isOpened;
     }
+    get inInvoking() {
+        return this._inInvoking;
+    }
     handleKeydown(key) {
         const [consumed, optCmd, cmd, dropKeyList] = this._mapper.get(key);
-        return (cmd ? !ConsoleCommand[cmd](this) : consumed);
+        if (!cmd) {
+            return consumed;
+        }
+        this._inInvoking = true;
+        try {
+            return !ConsoleCommand[cmd](this);
+        }
+        finally {
+            this._inInvoking = false;
+        }
     }
     handleKeyup() {
         if (!this.onKeyup(this._input)) {
@@ -499,7 +522,8 @@ window.addEventListener("DOMContentLoaded", (e) => {
         mode.startConsole();
     });
     input.addEventListener("blur", (e) => {
-        if (document.activeElement === input) { // If other window is focused
+        if (document.activeElement === input || // If other window is focused
+            mode.inInvoking) {
             return;
         }
         if (mode.isOpened) {
