@@ -435,6 +435,9 @@ class FrameInfo {
             this.forwardMessage(0, { command: "hideConsole" });
             return;
         }
+        if (!this._consoleFrame) {
+            return;
+        }
         const isConsoleFocued = (document.activeElement === this._consoleFrame);
         this._consoleFrame.blur();
         this._consoleFrame.classList.remove("wimpulation-console-mode");
