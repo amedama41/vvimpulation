@@ -49,9 +49,9 @@ class ConsoleMode {
             case "exec":
                 return this._executeConsoleCommand(value, frameInfo);
             case "forwardSearch":
-                return this._search(value, false, frameInfo);
+                return this._search(value, "forward", frameInfo);
             case "backwardSearch":
-                return this._search(value, true, frameInfo);
+                return this._search(value, "backward", frameInfo);
             default:
                 return Promise.resolve("Invalid mode");
         }
@@ -59,12 +59,15 @@ class ConsoleMode {
     _executeConsoleCommand(cmd, frameInfo) {
         const prefix = cmd.charAt(0);
         if (prefix === "/" || prefix === "?") {
-            return this._search(cmd.substr(1), prefix === '?', frameInfo);
+            return this._search(
+                cmd.substr(1),
+                (prefix === '/' ? "forward" : "backward"), frameInfo);
         }
         return frameInfo.sendMessage({ command: "execCommand", cmd });
     }
-    _search(keyword, backward, frameInfo) {
-        return frameInfo.sendMessage({ command: "search", keyword, backward });
+    _search(keyword, direction, frameInfo) {
+        return frameInfo.sendMessage(
+            { command: "search", keyword, args: [direction] });
     }
 }
 

@@ -315,12 +315,14 @@ function findAllFrame(
     return findFrame(0);
 }
 
-function continueSearch(tabInfo, frameId, isNext) {
+function continueSearch(tabInfo, frameId, isNext, isLocal) {
     const [keyword, caseSensitive, backward] = tabInfo.lastSearchInfo;
     if (keyword === "") {
         return Promise.resolve();
     }
-    return tabInfo.frameIdList((frameIdList) => {
+    const getFrameIdList = (continuation) =>
+        (isLocal ? continuation([frameId]) : tabInfo.frameIdList(continuation));
+    return getFrameIdList((frameIdList) => {
         return findAllFrame(
             tabInfo, frameId, frameIdList,
             keyword, caseSensitive, (isNext ? backward : !backward));
@@ -425,9 +427,13 @@ class Command {
      * Commands for search
      */
     static search(msg, sender, tabInfo) {
-        const { keyword, backward } = msg;
+        const { keyword, args } = msg;
+        const backward = (args.length > 0 && args[0] === "backward");
+        const isLocal = (args.length > 1 && args[1] === "local");
         const caseSensitive = /[A-Z]/.test(keyword);
-        return tabInfo.frameIdList((frameIdList) => {
+        const getFrameIdList = (continuation) => (isLocal ?
+            continuation([sender.frameId]) : tabInfo.frameIdList(continuation));
+        return getFrameIdList((frameIdList) => {
             tabInfo.searchHighlighting = gOptions.highlightSearch;
             return findAllFrame(
                 tabInfo, sender.frameId, frameIdList,
@@ -437,17 +443,22 @@ class Command {
             if (!tabInfo.incognito) {
                 saveHistory("search_history", keyword);
             }
+            return result;
         }).catch((e) => {
             handleError(tabInfo, "search", e);
         });
     }
     static searchNext(msg, sender, tabInfo) {
-        return continueSearch(tabInfo, sender.frameId, true).catch((e) => {
+        const frameId = sender.frameId;
+        const isLocal = (msg.args.length > 0 && msg.args[0] === "local");
+        return continueSearch(tabInfo, frameId, true, isLocal).catch((e) => {
             handleError(tabInfo, "searchNext", e);
         });
     }
     static searchPrevious(msg, sender, tabInfo) {
-        return continueSearch(tabInfo, sender.frameId, false).catch((e) => {
+        const frameId = sender.frameId;
+        const isLocal = (msg.args.length > 0 && msg.args[0] === "local");
+        return continueSearch(tabInfo, frameId, false, isLocal).catch((e) => {
             handleError(tabInfo, "searchPrevious", e);
         });
     }
