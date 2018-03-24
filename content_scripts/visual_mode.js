@@ -32,14 +32,14 @@ class VisualModeBase {
             this.caret.style.setProperty(
                 "visibility",  (isHidden ? "visible" : "hidden"), "important");
         }, 500);
-        this._searchInfo = null;
+        this._isForwardSearch = null;
 
         this._updateCaret();
         document.documentElement.appendChild(this.caret);
         this._showMessage(frameInfo);
         frameInfo.focusThisFrame();
         frameInfo.setEventListener(document, "blur", (e, frameInfo) => {
-            if (e.target !== document || this._searchInfo) {
+            if (e.target !== document || this._isForwardSearch !== null) {
                 return;
             }
             frameInfo.forwardMessage(0, {
@@ -68,6 +68,9 @@ class VisualModeBase {
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
+        if (this._isForwardSearch !== null) { // In searching.
+            return;
+        }
         let count = parseInt(this.count, 10);
         this.count = "0";
         let result = undefined;
@@ -80,17 +83,20 @@ class VisualModeBase {
             else if (granularity === "search") {
                 const isForward = (direction === "forward");
                 const mode = (isForward ? "forwardSearch" : "backwardSearch");
-                this._searchInfo = direction;
+                this._isForwardSearch = isForward;
                 frameInfo.showConsole(this, mode, "").catch((error) => {
-                    this._searchInfo = null;
+                    this._isForwardSearch = null;
                 });
             }
             else if (granularity === "continueSearch") {
                 const isForward = (direction === "forward");
                 const command = (isForward ? "searchNext" : "searchPrevious");
-                this._search(
-                    () => frameInfo.sendMessage({ command, args: ["local"] }),
-                    isForward);
+                this._isForwardSearch = isForward;
+                this._searchAndSelect(() => frameInfo.sendMessage({
+                    command, args: ["local"]
+                })).finally(() => {
+                    this._isForwardSearch = null;
+                });
             }
             else {
                 const alter = this.constructor.getAlter();
@@ -113,20 +119,7 @@ class VisualModeBase {
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
             case "finishConsole":
-                const cleanup = () => {
-                    this._searchInfo = null;
-                    frameInfo.hideConsole();
-                    this._showMessage(frameInfo);
-                };
-                if (!msg.value) {
-                    cleanup();
-                    return;
-                }
-                this._search(() => frameInfo.sendMessage({
-                    command: "search",
-                    keyword: msg.value,
-                    args: [this._searchInfo, "local"]
-                }), (this._searchInfo === "forward")).finally(cleanup);
+                this._search(msg.value, frameInfo);
                 break;
             default:
                 console.warn("Unknown command:", msg.command);
@@ -324,30 +317,43 @@ class VisualModeBase {
             }
         };
     }
-    _search(searchFunc, isForward) {
+    _search(keyword, frameInfo) {
+        const resetConsole = () => {
+            this._isForwardSearch = null;
+            frameInfo.hideConsole();
+            this._showMessage(frameInfo);
+        };
+        if (!keyword) {
+            resetConsole();
+            return;
+        }
+        this._searchAndSelect(() => frameInfo.sendMessage({
+            command: "search",
+            keyword,
+            args: [(this._isForwardSearch ? "forward" : "backward"), "local"]
+        })).finally(resetConsole);
+    }
+    _searchAndSelect(searchFunc) {
         const selection = this.selection;
         const anchorNode = selection.anchorNode;
         const anchorOffset = selection.anchorOffset;
-        const focusNode = selection.focusNode;
-        const focusOffset = selection.focusOffset;
-        selection.collapse(focusNode, focusOffset);
+        let newFocusNode = selection.focusNode;
+        let newFocusOffset = selection.focusOffset;
+        selection.collapse(selection.focusNode, selection.focusOffset);
         return searchFunc().then((result) => {
             if (result) {
-                if (isForward) {
-                    selection.setBaseAndExtent(
-                        anchorNode, anchorOffset,
-                        selection.focusNode, selection.focusOffset);
+                if (this._isForwardSearch) {
+                    newFocusNode = selection.focusNode;
+                    newFocusOffset = selection.focusOffset;
                 }
                 else {
-                    selection.setBaseAndExtent(
-                        anchorNode, anchorOffset,
-                        selection.anchorNode, selection.anchorOffset);
+                    newFocusNode = selection.anchorNode;
+                    newFocusOffset = selection.anchorOffset;
                 }
             }
-            else {
-                selection.setBaseAndExtent(
-                    anchorNode, anchorOffset, focusNode, focusOffset);
-            }
+        }).finally(() => {
+            selection.setBaseAndExtent(
+                anchorNode, anchorOffset, newFocusNode, newFocusOffset);
             this._updateCaret();
         });
     }
