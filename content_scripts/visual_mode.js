@@ -32,13 +32,14 @@ class VisualModeBase {
             this.caret.style.setProperty(
                 "visibility",  (isHidden ? "visible" : "hidden"), "important");
         }, 500);
+        this._searchInfo = null;
 
         this._updateCaret();
         document.documentElement.appendChild(this.caret);
-        frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
+        this._showMessage(frameInfo);
         frameInfo.focusThisFrame();
         frameInfo.setEventListener(document, "blur", (e, frameInfo) => {
-            if (e.target !== document) {
+            if (e.target !== document || this._searchInfo) {
                 return;
             }
             frameInfo.forwardMessage(0, {
@@ -76,6 +77,21 @@ class VisualModeBase {
             if (granularity === "block") {
                 VisualModeBase._extendToBlock(this.selection, count, direction);
             }
+            else if (granularity === "search") {
+                const isForward = (direction === "forward");
+                const mode = (isForward ? "forwardSearch" : "backwardSearch");
+                this._searchInfo = direction;
+                frameInfo.showConsole(this, mode, "").catch((error) => {
+                    this._searchInfo = null;
+                });
+            }
+            else if (granularity === "continueSearch") {
+                const isForward = (direction === "forward");
+                const command = (isForward ? "searchNext" : "searchPrevious");
+                this._search(
+                    () => frameInfo.sendMessage({ command, args: ["local"] }),
+                    isForward);
+            }
             else {
                 const alter = this.constructor.getAlter();
                 try {
@@ -94,6 +110,29 @@ class VisualModeBase {
         this._updateCaret();
         return result;
     }
+    onMessageEvent(msg, frameInfo) {
+        switch (msg.command) {
+            case "finishConsole":
+                const cleanup = () => {
+                    this._searchInfo = null;
+                    frameInfo.hideConsole();
+                    this._showMessage(frameInfo);
+                };
+                if (!msg.value) {
+                    cleanup();
+                    return;
+                }
+                this._search(() => frameInfo.sendMessage({
+                    command: "search",
+                    keyword: msg.value,
+                    args: [this._searchInfo, "local"]
+                }), (this._searchInfo === "forward")).finally(cleanup);
+                break;
+            default:
+                console.warn("Unknown command:", msg.command);
+                break;
+        }
+    }
     onDropKeys(dropKeys) {
         this.count = "0";
     }
@@ -104,6 +143,9 @@ class VisualModeBase {
         else {
             this.count = "0";
         }
+    }
+    _showMessage(frameInfo) {
+        frameInfo.showMessage(`-- ${this.constructor.getModeName()} --`, 0);
     }
     _updateCaret() {
         this.constructor.reset(this.selection);
@@ -281,6 +323,33 @@ class VisualModeBase {
                 return n;
             }
         };
+    }
+    _search(searchFunc, isForward) {
+        const selection = this.selection;
+        const anchorNode = selection.anchorNode;
+        const anchorOffset = selection.anchorOffset;
+        const focusNode = selection.focusNode;
+        const focusOffset = selection.focusOffset;
+        selection.collapse(focusNode, focusOffset);
+        return searchFunc().then((result) => {
+            if (result) {
+                if (isForward) {
+                    selection.setBaseAndExtent(
+                        anchorNode, anchorOffset,
+                        selection.focusNode, selection.focusOffset);
+                }
+                else {
+                    selection.setBaseAndExtent(
+                        anchorNode, anchorOffset,
+                        selection.anchorNode, selection.anchorOffset);
+                }
+            }
+            else {
+                selection.setBaseAndExtent(
+                    anchorNode, anchorOffset, focusNode, focusOffset);
+            }
+            this._updateCaret();
+        });
     }
 }
 
