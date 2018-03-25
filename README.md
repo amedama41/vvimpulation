@@ -20,6 +20,46 @@ VVimpulation also use all host permissions in order to get search suggestions in
 
 ## Release Notes
 
+### 1.3
+
+Command
+- Add extendSelection search and continueSearch for visual mode.
+- Add toConsoleModeWithSelection command.
+- Add pasteValue command for console mode.
+- Add showHistoryList command for console mode.
+- Add marks console command.
+- Add hint console command.
+
+Enhancement
+- Enable to search text on only the current frame by search commands.
+- Apply decodeURI to the URL of toConsoleModeWithURL.
+- Restore focus when hint filter finish.
+- Enhance console candidate filtering.
+- Exclude SSL unknown issuer error from the overwriteErrorPage target.
+- Change default value of overwriteErrorPage, which has some issues.
+- Implement console autocomplete.
+- Enable to select/undo tab or window by text on buffer/undo commands.
+- Check current mode to avoid invalid mode changing.
+- Display all attributes except style by showElementInfo.
+- Ignore hidden input elements for toInsertMode commands.
+- Show message when no hints are found.
+- Now hint highlighting does not interfere mouse operation.
+- Defer console creation to avoid broken loading for some pages.
+- Exclude elements under scrollbar from hint target.
+- Handle key events in top frame when the mode is hint. This enhance the response performance.
+- Prevent animations for hint highlighting.
+- Reduce communication with the background script when changing to normal mode.
+- Prevent scrollbar occurrence by hint highlighting.
+- Invoke compose command synchronously if all subcommands are synchronous.
+- Enable to activate label elements by click commands
+
+Bugfix
+- Enable background commands to use arguments.
+- Close the filter console even when mode changing due to tab select.
+- Exclude console frame from hint target.
+- Fix command ambiguous error message.
+- Fix errors when selecting document node.
+
 ### 1.2
 
 Command
@@ -61,7 +101,7 @@ Command
 - Add execCommand command.
 - Add search command.
 
-Enhancemanet
+Enhancement
 - Add p tag to the default code hint pattern.
 - Add the word "target" to the description of commands using a target.
 - Keep insert mode even when other window is focused.

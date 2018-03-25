@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "VVimpulation",
-    "version": "1.2",
+    "version": "1.3",
 
     "description": "Provides keyboard navigation like Vim.",
 
