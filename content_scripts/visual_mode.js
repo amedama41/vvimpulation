@@ -77,38 +77,7 @@ class VisualModeBase {
         if (cmd.startsWith("extendSelection|")) {
             count = Math.max(count, 1);
             const [prefix, direction, granularity] = cmd.split("|");
-            if (granularity === "block") {
-                VisualModeBase._extendToBlock(this.selection, count, direction);
-            }
-            else if (granularity === "search") {
-                const isForward = (direction === "forward");
-                const mode = (isForward ? "forwardSearch" : "backwardSearch");
-                this._isForwardSearch = isForward;
-                frameInfo.showConsole(this, mode, "").catch((error) => {
-                    this._isForwardSearch = null;
-                });
-            }
-            else if (granularity === "continueSearch") {
-                const isForward = (direction === "forward");
-                const command = (isForward ? "searchNext" : "searchPrevious");
-                this._isForwardSearch = isForward;
-                this._searchAndSelect(() => frameInfo.sendMessage({
-                    command, args: ["local"]
-                })).finally(() => {
-                    this._isForwardSearch = null;
-                });
-            }
-            else {
-                const alter = this.constructor.getAlter();
-                try {
-                    for (let i = 0; i < count; ++i) {
-                        this.selection.modify(alter, direction, granularity);
-                    }
-                }
-                catch (e) {
-                    console.warn(Utils.errorString(e));
-                }
-            }
+            this._extendSelection(count, direction, granularity, frameInfo);
         }
         else {
             result = invokeCommand(cmd, count, frameInfo);
@@ -176,6 +145,45 @@ class VisualModeBase {
         z-index: 2147483646 !important;
         `;
         return caret;
+    }
+    _extendSelection(count, direction, granularity, frameInfo) {
+        switch (granularity) {
+            case "block":
+                VisualModeBase._extendToBlock(this.selection, count, direction);
+                break;
+            case "search": {
+                const isForward = (direction === "forward");
+                const mode = (isForward ? "forwardSearch" : "backwardSearch");
+                this._isForwardSearch = isForward;
+                frameInfo.showConsole(this, mode, "").catch((error) => {
+                    this._isForwardSearch = null;
+                });
+                break;
+            }
+            case "continueSearch": {
+                const isForward = (direction === "forward");
+                const command = (isForward ? "searchNext" : "searchPrevious");
+                this._isForwardSearch = isForward;
+                this._searchAndSelect(() => frameInfo.sendMessage({
+                    command, args: ["local"]
+                })).finally(() => {
+                    this._isForwardSearch = null;
+                });
+                break;
+            }
+            default: {
+                const alter = this.constructor.getAlter();
+                try {
+                    for (let i = 0; i < count; ++i) {
+                        this.selection.modify(alter, direction, granularity);
+                    }
+                }
+                catch (e) {
+                    console.warn(Utils.errorString(e));
+                }
+                break;
+            }
+        }
     }
     static _extendToBlock(selection, count, direction) {
         const positionBit = Node.DOCUMENT_POSITION_CONTAINED_BY;
