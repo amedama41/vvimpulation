@@ -223,6 +223,7 @@ class KeyMapping {
         error.innerText = KeyMapping._getErrorList(this.options).join("\n");
     }
     static _getErrorList(options) {
+        const KEY_PATTERN = /^(?:<(?:[ACMS]-)+\S[^>]*>|<\w+>|\\\S|[^\\\s])+$/;
         return KEY_MAPPING_TYPES.reduce((errorList, mode) => {
             try {
                 const mapping = {};
@@ -235,6 +236,9 @@ class KeyMapping {
                             return
                         }
                         throw new Error(`Key is not found for ${cmd}`);
+                    }
+                    if (!KEY_PATTERN.test(key)) {
+                        throw new Error(`${key} is invalid key sequence`);
                     }
                     if (cmd === "") {
                         throw new Error(`Command is not found for ${key}`);
