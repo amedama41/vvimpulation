@@ -216,6 +216,7 @@ class KeyMapping {
         inputs[2].addEventListener("click", (e) => {
             this.options[this.currentMode].splice(index, 1);
             this._updateKeyMappingSection();
+            this._checkMapping();
         });
     }
     _checkMapping() {
