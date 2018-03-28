@@ -1101,6 +1101,8 @@ class FrontendCommand {
     static ignore(count, frameInfo) {
         return frameInfo.ignore();
     }
+    static nop(count, frameInfo) {
+    }
 
     /**
      * Commands for mode changing

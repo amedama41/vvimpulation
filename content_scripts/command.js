@@ -198,7 +198,8 @@ const COMMAND_DESCRIPTIONS = {
     compose: { description: "Do multiple commands simultaneously" },
     repeatLastCommand: { description: "Run the latest invoked command" },
     showLastMessage: { topFrame: true, description: "Show the latest message" },
-    ignore: { description: "Do nothing and through pass through the keydown event" },
+    ignore: { description: "Do nothing and pass through the keydown event" },
+    nop: { description: "Do nothing but prevent the keydown event" },
 
     /** Commands for mode changing **/
     toSuspendMode: { background: true, description: "Change suspend mode" },
