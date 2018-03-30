@@ -7,6 +7,20 @@ window.addEventListener("DOMContentLoaded", (e) => {
         code.textContent = line + "\n";
         fragment.appendChild(code);
     });
-    document.getElementById("source").appendChild(fragment);
+    const sourceElem = document.getElementById("source");
+    sourceElem.appendChild(fragment);
+
+    const switchWrap = (isWrap) => {
+        const CLASS_NAME = "wrap-lines";
+        if (isWrap.checked) {
+            sourceElem.classList.add(CLASS_NAME);
+        }
+        else {
+            sourceElem.classList.remove(CLASS_NAME);
+        }
+    };
+    const isWrap = document.getElementById("is-wrap");
+    switchWrap(isWrap);
+    isWrap.addEventListener("change", (e) => switchWrap(e.target), true);
 });
 
