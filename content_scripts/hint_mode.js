@@ -80,7 +80,7 @@ class HintModeBase {
         }
         this._setActive(localIndex);
         if (data.autoFocus) {
-            invokeCommand("fixedFocusin", 0, frameInfo);
+            invokeCommand("fixedFocusin", 0, frameInfo, false);
         }
     }
     blurHintLink() {
