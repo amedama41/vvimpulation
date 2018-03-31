@@ -16,7 +16,7 @@ class VisualModeBase {
         }
 
         this.selection = selection;
-        this.count = "0";
+        this.count = 0;
         this.mapper = Utils.makeCommandMapper(keyMap);
         this.caret = VisualModeBase._createCaret();
         this.cancelBlink = false;
@@ -56,7 +56,7 @@ class VisualModeBase {
         return DomUtils.getElementFromNode(this.selection.focusNode);
     }
     consume(key, frameInfo) {
-        if (key === "0" && this.count !== "0" && // Is continuation of count?
+        if (key === "0" && this.count !== 0 && // Is continuation of count?
             !this.mapper.hasPendingKeys()) {
             return [false, undefined, undefined, undefined];
         }
@@ -71,8 +71,8 @@ class VisualModeBase {
         if (this._isForwardSearch !== null) { // In searching.
             return;
         }
-        let count = parseInt(this.count, 10);
-        this.count = "0";
+        let count = this.count;
+        this.count = 0;
         let result = undefined;
         if (cmd.startsWith("extendSelection|")) {
             count = Math.max(count, 1);
@@ -96,14 +96,14 @@ class VisualModeBase {
         }
     }
     onDropKeys(dropKeys) {
-        this.count = "0";
+        this.count = 0;
     }
     onNonConsumed(key, frameInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
-            this.count += key;
+            this.count = this.count * 10 + key.charCodeAt(0) - 48;
         }
         else {
-            this.count = "0";
+            this.count = 0;
         }
     }
     _showMessage(frameInfo) {

@@ -27,7 +27,7 @@ const NORMAL_MODE_KYE_ARG_COMMAND_INFO = {
 
 class NormalMode {
     constructor(frameInfo, keyMap, keyList=undefined) {
-        this.count = "0";
+        this.count = 0;
         this.keyArgCmd = undefined;
         this.isRecordingMacro = false;
         this.mapper = Utils.makeCommandMapper(keyMap);
@@ -54,7 +54,7 @@ class NormalMode {
             return [true, undefined, undefined, undefined];
         }
 
-        if (key === "0" && this.count !== "0" && // Is continuation of count?
+        if (key === "0" && this.count !== 0 && // Is continuation of count?
             !this.mapper.hasPendingKeys()) {
             if (this.isRecordingMacro) {
                 frameInfo.postMessage({ command: "recordMacro", key });
@@ -88,19 +88,19 @@ class NormalMode {
         }
     }
     onInvoking(cmdName, frameInfo) {
-        const count = parseInt(this.count, 10);
-        this.count = "0";
+        const count = this.count;
+        this.count = 0;
         return invokeCommand(cmdName, count, frameInfo);
     }
     onDropKeys(dropKeys) {
-        this.count = "0";
+        this.count = 0;
     }
     onNonConsumed(key, frameInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
-            this.count += key;
+            this.count += this.count * 10 + key.charCodeAt(0) - 48;
         }
         else {
-            this.count = "0";
+            this.count = 0;
         }
     }
     onMessageEvent(msg, frameInfo) {
