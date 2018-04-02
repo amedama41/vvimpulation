@@ -1,11 +1,12 @@
 'use strict';
 
 class HintModeBase {
-    constructor() {
+    constructor(frameInfo) {
         this._hintList = [];
         this._targetIndex = null;
         this._indexMap = {}; // global index => local index
         this._oldTarget = null;
+        frameInfo.waitNextKey("nop", 0);
     }
     static getModeName() {
         return "HINT";
@@ -15,7 +16,7 @@ class HintModeBase {
         return elem;
     }
     consume(key, frameInfo) {
-        return [true, undefined, key, undefined];
+        return [true, undefined, undefined, undefined];
     }
     onReset(frameInfo, allFrame) {
         if (!allFrame) {
@@ -28,6 +29,12 @@ class HintModeBase {
         if (frameInfo.isTopFrame()) {
             frameInfo.hideConsole();
         }
+    }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+        frameInfo.waitNextKey("nop", 0);
+        this.onKeyEvent(key, frameInfo);
+    }
+    onInvoking(key, frameInfo) {
     }
     onDropKeys(dropKeys) {
     }
@@ -227,7 +234,7 @@ class HintModeBase {
 
 class HintMode extends HintModeBase {
     constructor(frameInfo, data) {
-        super();
+        super(frameInfo);
         this.typeInfo = { type: data.type, pattern: data.pattern };
         this.filter = "";
         this.filterIndexMap = []; // displayed index => global index
@@ -251,7 +258,7 @@ class HintMode extends HintModeBase {
             HintMode._handleError(frameInfo, "toHintMode", error);
         });
     }
-    onInvoking(key, frameInfo) {
+    onKeyEvent(key, frameInfo) {
         this._handleKey(key, 0, frameInfo);
     }
     onMessageEvent(msg, frameInfo) {
@@ -524,10 +531,10 @@ class HintMode extends HintModeBase {
 HintMode._NO_HINTS_MESSAGE = "No hints are found";
 
 class ChildFrameHintMode extends HintModeBase {
-    constructor() {
-        super()
+    constructor(frameInfo) {
+        super(frameInfo)
     }
-    onInvoking(key, frameInfo) {
+    onKeyEvent(key, frameInfo) {
         const frameId = frameInfo.getSelfFrameId();
         HintModeBase.forward(
             frameInfo, 0, { command: "handleKey", key, frameId });

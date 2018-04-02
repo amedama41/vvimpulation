@@ -92,6 +92,12 @@ class NormalMode {
         this.count = 0;
         return invokeCommand(cmdName, count, frameInfo);
     }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+        if (this.isRecordingMacro) {
+            frameInfo.postMessage({ command: "recordMacro", key });
+        }
+        return invokeCommand(`${cmd}|${key}`, count, frameInfo);
+    }
     onDropKeys(dropKeys) {
         this.count = 0;
     }

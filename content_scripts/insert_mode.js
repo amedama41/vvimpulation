@@ -54,13 +54,10 @@ class InsertMode {
         }
     }
     onInvoking(cmd, frameInfo) {
-        this.inInvoking = true;
-        try {
-            return invokeCommand(cmd, 0, frameInfo);
-        }
-        finally {
-            this.inInvoking = false;
-        }
+        return this._invokeCommand(cmd, 0, frameInfo);
+    }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+        return this._invokeCommand(`${cmd}|${key}`, count, frameInfo);
     }
     onDropKeys(dropKeys) {
     }
@@ -72,6 +69,15 @@ class InsertMode {
             this.target.undoStack.push(this.target.value);
         }
         return frameInfo.ignore();
+    }
+    _invokeCommand(cmd, count, frameInfo) {
+        this.inInvoking = true;
+        try {
+            return invokeCommand(cmd, 0, frameInfo);
+        }
+        finally {
+            this.inInvoking = false;
+        }
     }
 }
 

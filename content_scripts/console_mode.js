@@ -23,6 +23,8 @@ class ConsoleMode {
     }
     onInvoking(cmd, frameInfo) {
     }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+    }
     onDropKeys(dropKeys) {
     }
     onNonConsumed(key, frameInfo) {

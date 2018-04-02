@@ -95,6 +95,7 @@ class FrameInfo {
         this._hintPattern = options.hintPattern;
         this._pagePattern = options.pagePattern;
         this._onlyVisibility = options.onlyVisibility;
+        this._waitKeyInfo = null;
         this._mode = this._createMode(modeName);
         this._consoleFrame = undefined;
         this._consoleTimerId = 0;
@@ -146,9 +147,22 @@ class FrameInfo {
         this._doesIgnoreKeyupEvent = false;
     }
     handleKey(key) {
+        if (this._waitKeyInfo) {
+            const [cmd, count] = this._waitKeyInfo;
+            this._waitKeyInfo = null;
+            this._mode.onInvokingWithKey(cmd, count, key, this);
+            return;
+        }
         const [consumed, optCmd, cmd, dropKeys] = this._mode.consume(key, this);
         if (optCmd) {
-            this._mode.onInvoking(optCmd, this);
+            // Disable waitNextKey because the next key is already consumed.
+            this._waitKeyInfo = ["nop", 0];
+            try {
+                this._mode.onInvoking(optCmd, this);
+            }
+            finally {
+                this._waitKeyInfo = null;
+            }
         }
         else if (dropKeys) {
             this._mode.onDropKeys(dropKeys);
@@ -286,6 +300,11 @@ class FrameInfo {
     changeModeNow(mode, data=undefined, allFrame=false) {
         this._resetMode(allFrame);
         this._mode = this._createMode(mode, data);
+    }
+    waitNextKey(command, count) {
+        if (!this._waitKeyInfo) {
+            this._waitKeyInfo = [command, count];
+        }
     }
     getTarget() {
         return this._mode.getTarget();
@@ -509,6 +528,7 @@ class FrameInfo {
             target.removeEventListener(eventType, handler, options);
         }
         this._modeEventListenerList = [];
+        this._waitKeyInfo = null;
         this._mode.onReset(this, allFrame);
     }
     _createConsoleFrame() {

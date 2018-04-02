@@ -68,22 +68,12 @@ class VisualModeBase {
         frameInfo.hideFixedMessage();
     }
     onInvoking(cmd, frameInfo) {
-        if (this._isForwardSearch !== null) { // In searching.
-            return;
-        }
-        let count = this.count;
+        const count = this.count;
         this.count = 0;
-        let result = undefined;
-        if (cmd.startsWith("extendSelection|")) {
-            count = Math.max(count, 1);
-            const [prefix, direction, granularity] = cmd.split("|");
-            this._extendSelection(count, direction, granularity, frameInfo);
-        }
-        else {
-            result = invokeCommand(cmd, count, frameInfo);
-        }
-        this._updateCaret();
-        return result;
+        return this._invokeCommand(cmd, count, frameInfo);
+    }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+        return this._invokeCommand(`${cmd}|${key}`, count, frameInfo);
     }
     onMessageEvent(msg, frameInfo) {
         switch (msg.command) {
@@ -145,6 +135,22 @@ class VisualModeBase {
         z-index: 2147483646 !important;
         `;
         return caret;
+    }
+    _invokeCommand(cmd, count, frameInfo) {
+        if (this._isForwardSearch !== null) { // In searching.
+            return;
+        }
+        let result = undefined;
+        if (cmd.startsWith("extendSelection|")) {
+            count = Math.max(count, 1);
+            const [prefix, direction, granularity] = cmd.split("|");
+            this._extendSelection(count, direction, granularity, frameInfo);
+        }
+        else {
+            result = invokeCommand(cmd, count, frameInfo);
+        }
+        this._updateCaret();
+        return result;
     }
     _extendSelection(count, direction, granularity, frameInfo) {
         switch (granularity) {

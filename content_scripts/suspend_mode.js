@@ -25,6 +25,8 @@ class SuspendMode {
     onInvoking(cmdName, frameInfo) {
         frameInfo.postMessage({ command: "toNormalMode" });
     }
+    onInvokingWithKey(cmd, count, key, frameInfo) {
+    }
     onDropKeys(dropKeys) {
     }
     onNonConsumed(key, frameInfo) {
