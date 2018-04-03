@@ -1012,6 +1012,45 @@ class FrontendCommand {
     }
 
     /**
+     * Commands for mark
+     **/
+    static mark(count, frameInfo, args) {
+        if (args.length === 0) {
+            frameInfo.waitNextKey("mark", count);
+        }
+        else {
+            let key = args[0];
+            if (!/^[a-z'`]$/.test(key)) {
+                return;
+            }
+            if (key === "`") {
+                key = "'";
+            }
+            frameInfo.markPosition(key, [window.scrollX, window.scrollY]);
+        }
+    }
+    static jumpToMark(count, frameInfo, args) {
+        if (args.length === 0) {
+            frameInfo.waitNextKey("jumpToMark", count);
+        }
+        else {
+            let key = args[0];
+            if (!/^[a-z'`]$/.test(key)) {
+                return;
+            }
+            if (key === "`") {
+                key = "'";
+            }
+            const position = frameInfo.getPosition(key);
+            if (!position) {
+                return;
+            }
+            frameInfo.markPosition("'", [window.scrollX, window.scrollY]);
+            window.scrollTo(position[0], position[1]);
+        }
+    }
+
+    /**
      * Commands for various applications
      **/
     static showPageInfo(count, frameInfo) {

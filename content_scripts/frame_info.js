@@ -356,6 +356,12 @@ class FrameInfo {
             }
         }
     }
+    markPosition(key, position) {
+        this._markPositionMap[key] = position;
+    }
+    getPosition(key) {
+        return this._markPositionMap[key];
+    }
     ignore() {
         return IGNORE_KEY_EVENT;
     }
@@ -482,12 +488,6 @@ class FrameInfo {
         }
         this._fixedMessage = undefined;
         this.hideConsole();
-    }
-    markPosition(key, position) {
-        this._markPositionMap[key] = position;
-    }
-    getPosition(key) {
-        return this._markPositionMap[key];
     }
 
     _createMode(mode, data=undefined) {

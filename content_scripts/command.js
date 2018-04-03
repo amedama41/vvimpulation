@@ -186,6 +186,10 @@ const COMMAND_DESCRIPTIONS = {
     removeTabIndex: { description: "Remove tabindex from the target" },
     showElementInfo: { description: "Show the information of the target element" },
 
+    /** Commands for mark **/
+    mark: { description: "Mark current page position" },
+    jumpToMark: { description: "Jump to a mark" },
+
     /** Commands for various applications **/
     showPageInfo: { topFrame: true, description: "Show the current page information" },
     smartOpen: { description: "Open the target in the current page or click the target" },
