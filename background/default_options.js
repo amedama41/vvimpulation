@@ -93,6 +93,8 @@ const DEFAULT_OPTIONS = {
             "m": "mark",
             "`": "jumpToMark",
             "'": "jumpToMark",
+            "q": "recordMacro",
+            "@": "playMacro",
             "gu": "goToParent",
             "gU": "goToRoot",
             "zi": "zoomIn",

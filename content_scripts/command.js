@@ -225,4 +225,8 @@ const COMMAND_DESCRIPTIONS = {
     toConsoleModeWithSelection: { description: "Change console mode with selection text as default input" },
     toSearchMode: { description: "Change search forward mode" },
     toBackwardSearchMode: { description: "Change search backward mode" },
+
+    /** Commands specifically for each mode **/
+    recordMacro: { description: "Record a key sequence into a register, or stop recording when recording that" },
+    playMacro: { description: "Replay the key sequence of a specified register" },
 };

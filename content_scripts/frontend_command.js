@@ -1236,6 +1236,13 @@ class FrontendCommand {
             mode: "backwardSearch", defaultInput: '', passURL: false
         });
     }
+
+    static recordMacro(count, frameInfo, args) {
+        frameInfo._mode.recordMacro(count, frameInfo, args);
+    }
+    static playMacro(count, frameInfo, args) {
+        frameInfo._mode.playMacro(count, frameInfo, args);
+    }
 }
 
 function getScrollBaseElement(target) {
