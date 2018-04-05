@@ -227,6 +227,6 @@ const COMMAND_DESCRIPTIONS = {
     toBackwardSearchMode: { description: "Change search backward mode" },
 
     /** Commands specifically for each mode **/
-    recordMacro: { description: "Record a key sequence into a register, or stop recording when recording that" },
-    playMacro: { description: "Replay the key sequence of a specified register" },
+    recordMacro: { mode: "normal", description: "Record a key sequence into a register, or stop recording when recording that" },
+    playMacro: { mode: "normal", description: "Replay the key sequence of a specified register" },
 };

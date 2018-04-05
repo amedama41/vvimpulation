@@ -177,8 +177,12 @@ class KeyMapping {
         const descriptions = KeyMapping._getDescriptions(this.currentMode);
         const fragment = document.createDocumentFragment();
         Object.keys(descriptions).forEach((cmd) => {
+            const desc = descriptions[cmd];
+            if (desc.mode && desc.mode !== this.currentMode) {
+                return;
+            }
             fragment.appendChild(
-                new Option(`${cmd} -- ${descriptions[cmd].description}`, cmd));
+                new Option(`${cmd} -- ${desc.description}`, cmd));
         });
         datalist.innerHTML = "";
         datalist.appendChild(fragment);
@@ -248,8 +252,12 @@ class KeyMapping {
                         throw new Error(
                             `${key} is already mapped to ${mapping[key]}`);
                     }
-                    if (!descriptions[cmd.split("|", 1)[0]]) {
+                    const desc = descriptions[cmd.split("|", 1)[0]];
+                    if (!desc) {
                         throw new Error(`${cmd} is unknown`);
+                    }
+                    if (desc.mode && desc.mode !== mode) {
+                        throw new Error(`${cmd} is used for only ${desc.mode} mode`);
                     }
                     mapping[key] = cmd;
                 });
