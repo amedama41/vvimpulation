@@ -140,19 +140,12 @@ class VisualModeBase {
         if (this._isForwardSearch !== null) { // In searching.
             return;
         }
-        let result = undefined;
-        if (cmd.startsWith("extendSelection|")) {
-            count = Math.max(count, 1);
-            const [prefix, direction, granularity] = cmd.split("|");
-            this._extendSelection(count, direction, granularity, frameInfo);
-        }
-        else {
-            result = invokeCommand(cmd, count, frameInfo);
-        }
+        const result = invokeCommand(cmd, count, frameInfo);
         this._updateCaret();
         return result;
     }
-    _extendSelection(count, direction, granularity, frameInfo) {
+    extendSelection(count, frameInfo, [direction, granularity]) {
+        count = Math.max(count, 1);
         switch (granularity) {
             case "block":
                 VisualModeBase._extendToBlock(this.selection, count, direction);

@@ -1243,6 +1243,9 @@ class FrontendCommand {
     static playMacro(count, frameInfo, args) {
         frameInfo._mode.playMacro(count, frameInfo, args);
     }
+    static extendSelection(count, frameInfo, args) {
+        frameInfo._mode.extendSelection(count, frameInfo, args);
+    }
 }
 
 function getScrollBaseElement(target) {

@@ -270,17 +270,8 @@ class KeyMapping {
     }
     static _getDescriptions(mode) {
         switch (mode) {
-            case "normal": case "insert":
+            case "normal": case "insert": case "visual":
                 return COMMAND_DESCRIPTIONS;
-            case "visual":
-                return Object.assign({
-                    extendSelection: {
-                        description: (
-                            "Extend selection. This takes two arguments " +
-                            "such as extendSelection|<direction>|<granularity>"
-                        )
-                    },
-                }, COMMAND_DESCRIPTIONS);
             case "hint":
                 return HINT_COMMAND_DESCRIPTIONS;
             case "console":

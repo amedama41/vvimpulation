@@ -229,4 +229,6 @@ const COMMAND_DESCRIPTIONS = {
     /** Commands specifically for each mode **/
     recordMacro: { mode: "normal", description: "Record a key sequence into a register, or stop recording when recording that" },
     playMacro: { mode: "normal", description: "Replay the key sequence of a specified register" },
+    extendSelection: { mode: "visual", description: "Extend selection. This takes two arguments such as extendSelection|<direction>|<granularity>" },
 };
+
