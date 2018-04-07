@@ -75,7 +75,7 @@ class MacroManager {
 
         if (register === ":") {
             if (this.recordConsoleCommand) {
-                tabInfo.executeCommand(
+                return tabInfo.executeCommand(
                     this.recordConsoleCommand, frameId, options);
             }
             return;
@@ -90,15 +90,15 @@ class MacroManager {
                 this.playKeyList = undefined;
                 return;
             }
-            tabInfo.forwardModeCommand(frameId, "NORMAL", {
+            return tabInfo.forwardModeCommand(frameId, "NORMAL", {
                 command: "playMacro", key: this.playKeyList[index]
             }).then(() => tabInfo.focusedFrameId()).then((frameId) => {
-                sendKey(index + 1, frameId)
+                return sendKey(index + 1, frameId)
             }).catch(() => {
                 this.playKeyList = undefined;
             });
         };
-        sendKey(0, frameId);
+        return sendKey(0, frameId);
     }
     isRecord(tabId) {
         return (this.recordTabInfo && this.recordTabInfo.id === tabId);

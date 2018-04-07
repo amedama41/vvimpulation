@@ -6,6 +6,7 @@ class NormalMode {
     constructor(frameInfo, keyMap, keyList=undefined) {
         this.count = 0;
         this.isRecordingMacro = false;
+        this.doesRecordCmd = true;
         this.mapper = Utils.makeCommandMapper(keyMap);
         if (keyList) {
             setTimeout(() => {
@@ -44,13 +45,14 @@ class NormalMode {
     onInvoking(cmdName, frameInfo) {
         const count = this.count;
         this.count = 0;
-        return invokeCommand(cmdName, count, frameInfo);
+        return invokeCommand(cmdName, count, frameInfo, this.doesRecordCmd);
     }
     onInvokingWithKey(cmd, count, key, frameInfo) {
         if (this.isRecordingMacro && NormalMode._isRecordablCommand(cmd)) {
             frameInfo.postMessage({ command: "recordMacro", key });
         }
-        return invokeCommand(`${cmd}|${key}`, count, frameInfo);
+        const cmdName = `${cmd}|${key}`;
+        return invokeCommand(cmdName, count, frameInfo, this.doesRecordCmd);
     }
     onDropKeys(dropKeys) {
         this.count = 0;
@@ -112,7 +114,10 @@ class NormalMode {
             if (!/^[:0-9a-zA-Z@]$/.test(key)) {
                 return;
             }
-            frameInfo.postMessage({ command: "playMacro", key });
+            this.doesRecordCmd = false;
+            frameInfo.sendMessage({ command: "playMacro", key }).finally(() => {
+                this.doesRecordCmd = true
+            });
         }
     }
     static _isRecordablCommand(cmd) {

@@ -762,7 +762,7 @@ class Command {
         gMacro.stop(true);
     }
     static playMacro(msg, sender, tabInfo) {
-        gMacro.play(msg.key, sender.frameId, tabInfo, gOptions);
+        return gMacro.play(msg.key, sender.frameId, tabInfo, gOptions);
     }
 
     /**
