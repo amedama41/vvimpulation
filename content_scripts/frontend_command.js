@@ -1238,13 +1238,13 @@ class FrontendCommand {
     }
 
     static recordMacro(count, frameInfo, args) {
-        frameInfo._mode.recordMacro(count, frameInfo, args);
+        frameInfo.invokeModeCommand("recordMacro", count, args);
     }
     static playMacro(count, frameInfo, args) {
-        frameInfo._mode.playMacro(count, frameInfo, args);
+        frameInfo.invokeModeCommand("playMacro", count, args);
     }
     static extendSelection(count, frameInfo, args) {
-        frameInfo._mode.extendSelection(count, frameInfo, args);
+        frameInfo.invokeModeCommand("extendSelection", count, args);
     }
 }
 

@@ -309,6 +309,9 @@ class FrameInfo {
     getTarget() {
         return this._mode.getTarget();
     }
+    invokeModeCommand(command, count, args) {
+        return this._mode[command](count, this, args);
+    }
     getLocalHintPattern(type) {
         if (!this._hintPattern) {
             return null;
