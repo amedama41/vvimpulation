@@ -230,7 +230,7 @@ return (class Edit {
         try {
             elem.focus();
             // Restore position which was changed by focus
-            window.scrollTo(x, y);
+            window.scrollTo(Math.round(x), Math.round(y));
         }
         catch (e) {
             console.warn("Element is likely dead:", Utils.errorString(e));
