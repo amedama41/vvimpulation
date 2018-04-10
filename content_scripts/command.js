@@ -192,6 +192,7 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for various applications **/
     showPageInfo: { topFrame: true, description: "Show the current page information" },
+    viewSource: { description: "View the source of the current document" },
     smartOpen: { description: "Open the target in the current page or click the target" },
     smartOpenInTab: { description: "Open the target in a new page or click the target" },
     smartYank: { description: "Yank the target value or link or text" },

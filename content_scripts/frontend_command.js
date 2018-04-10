@@ -1077,6 +1077,15 @@ class FrontendCommand {
         const duration = (count === 0 ? 3000 : count * 1000);
         frameInfo.showMessage(infoList, duration);
     }
+    static viewSource(count, frameInfo) {
+        return fetch(location.href).then((res) => res.text()).then((source) => {
+            const url = browser.runtime.getURL("pages/source_view.html")
+            return frameInfo.sendMessage({
+                command: "openLinkInTab",
+                url: `${url}?source=${encodeURIComponent(source)}`
+            });
+        });
+    }
     static smartOpen(count, frameInfo) {
         smartOpenImpl(count, frameInfo, 'openLink');
     }
