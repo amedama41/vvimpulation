@@ -110,6 +110,19 @@ return (class Edit {
         elem.setRangeText("", start - 1, end, "start");
         return true;
     }
+    static deleteCharForward(elem) {
+        const start = elem.selectionStart;
+        const end = elem.selectionEnd;
+        if (start !== end) {
+            elem.setRangeText("", start, end, "start");
+            return true;
+        }
+        if (end === elem.value.length) {
+            return false;
+        }
+        elem.setRangeText("", start, end + 1, "start");
+        return true;
+    }
     static deleteWordBackward(elem) {
         const start = elem.selectionStart;
         const end = elem.selectionEnd;

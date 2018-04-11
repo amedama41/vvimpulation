@@ -152,6 +152,7 @@ const COMMAND_DESCRIPTIONS = {
 
     /** Commands for text edit **/
     deleteCharBackward: { description: "Delete a character backward of the target" },
+    deleteCharForward: { description: "Delete a character forward of the target" },
     deleteWordBackward: { description: "Delete a word backward of the target" },
     deleteToBeginningOfLine: { description: "Delete characters to the beginning of a line of the target" },
     deleteToEndOfLine: { description: "Delete characters to the end of a line of the target" },

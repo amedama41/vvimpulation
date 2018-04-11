@@ -745,6 +745,12 @@ class FrontendCommand {
             document.execCommand("delete");
         });
     }
+    static deleteCharForward(count, frameInfo) {
+        _editElement(frameInfo, DomUtils.deleteCharForward, (selection) => {
+            selection.modify("extend", "forward", "character");
+            document.execCommand("delete");
+        });
+    }
     static deleteWordBackward(count, frameInfo) {
         _editElement(frameInfo, DomUtils.deleteWordBackward, (selection) => {
             selection.modify("extend", "backward", "word");
