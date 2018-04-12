@@ -300,6 +300,12 @@ function addEventListenersJustOnce() {
         gFrameInfo.reset();
         gFrameInfo = null;
     }, true);
+    window.addEventListener("click", (e) => {
+        if (!e.isTrusted || !DomUtils.isEditable(e.target)) {
+            return;
+        }
+        gFrameInfo.changeModeNow("INSERT", { editableElement: e.target });
+    }, true);
     addEventListenersJustOnce.done = true;
 }
 
