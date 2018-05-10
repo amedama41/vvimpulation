@@ -349,7 +349,7 @@ class ConsoleMode {
     }
     getCandidate() {
         this.onComplete(this._input).then((result) => {
-            if (result) {
+            if (result && !this._completer.isFixed) {
                 this._completer.setCandidates(result);
                 this._completer.selectNext(this._input);
             }
