@@ -20,6 +20,26 @@ VVimpulation also use all host permissions in order to get search suggestions in
 
 ## Release Notes
 
+### 1.4
+
+Command
+- Add nop command, which does nothing.
+- Add mark and jumpToMark command. These are no longer implicit normal mode's commands.
+- Add recordMacro and playMacro. These are no longer implicit normal mode's commands, but which are available in only normal mode.
+- Add viewSource command.
+- Add deleteCharForward command.
+
+Enhancement
+- Enable to wrap source lines on a source page.
+- Check patterns of key sequence on the option page.
+- Ignore Document not cached error
+- Enable to change the mode to insert by user click.
+
+Bugfix
+- Update error message after removing key bindings on the option page.
+- Fix the issue that fixedFocusin causes scroll in some pages.
+- Not show candidates when console is closing.
+
 ### 1.3
 
 Command
