@@ -577,7 +577,7 @@ class ChildFrameHintMode extends HintModeBase {
 
 function getRectsInArea(rectList, area) {
     const MARGIN = 16;
-    return rectList.filter((rect) => {
+    return Array.prototype.filter.call(rectList, (rect) => {
         const xMargin = Math.min(MARGIN, rect.width / 2, area.width / 2);
         const yMargin = Math.min(MARGIN, rect.height / 2, area.height / 2);
         return !isOutOfArea(rect, {
