@@ -59,7 +59,7 @@ class NormalMode {
     }
     onNonConsumed(key, frameInfo) {
         if (key.length === 1 && "0" <= key && key <= "9") {
-            this.count += this.count * 10 + key.charCodeAt(0) - 48;
+            this.count = this.count * 10 + key.charCodeAt(0) - 48;
         }
         else {
             this.count = 0;
