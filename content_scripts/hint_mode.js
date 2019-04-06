@@ -346,6 +346,7 @@ class HintMode extends HintModeBase {
             return;
         }
         if (key.length === 1 && "0" <= key && key <= "9") {
+            this.mapper.reset();
             this._handleDigit(key, frameInfo);
             return;
         }
