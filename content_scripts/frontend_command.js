@@ -313,7 +313,7 @@ class FrontendCommand {
             return;
         }
         return frameInfo.sendMessage({
-            command: "search", keyword: selection.toString(), backward: false
+            command: "search", keyword: selection.toString(), args: ["forward"]
         });
     }
     static searchSelectionBackward(count, frameInfo) {
@@ -322,7 +322,7 @@ class FrontendCommand {
             return;
         }
         return frameInfo.sendMessage({
-            command: "search", keyword: selection.toString(), backward: true
+            command: "search", keyword: selection.toString(), args: ["backward"]
         });
     }
     static findSelectionForward(...args) {
