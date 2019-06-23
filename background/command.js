@@ -363,6 +363,53 @@ gExCommandMap.makeCommand(
             ]), INDEX_LIST, value)
         ]);
     });
+class MultiTabCommand {
+    constructor(name, description, invoke_func, filter_func) {
+        this.name = name;
+        this.description = description;
+        this.invoke_func = invoke_func;
+        this.filter_func = filter_func;
+    }
+    invoke(args, tabInfo, frameId, options) {
+        if (args.length === 0) {
+            return Promise.reject("no argument");
+        }
+        const windowId = tabInfo.windowId;
+        return discardResult(browser.tabs.query({ windowId }).then((tabs) => {
+            return this.invoke_func(MultiTabCommand._getTabIdList(tabs, args));
+        }));
+    }
+    complete(value, tabInfo) {
+        const INDEX_LIST = [1, 2, 3];
+        const windowId = tabInfo.windowId;
+        return browser.tabs.query({ windowId }).then((tabs) => {
+            const pairList = tabs
+                .map((tab, index) => [tab, index])
+                .filter(([tab, index]) => this.filter_func(tab));
+            return [
+                0, INDEX_LIST, filterCandidates(pairList.map(([tab, index]) => [
+                    tab.favIconUrl, index, tab.title, tab.url
+                ]), INDEX_LIST, value)
+            ]
+        });
+    }
+    static _getTabIdList(tabs, args) {
+        const indexList = args.map((v) => Number(v))
+        if (indexList.some(Number.isNaN)) {
+            const tab = getElementByIndexOrText(tabs, args, (tab) => tab.title);
+            return [tab.id];
+        }
+        return indexList
+            .filter((index) => index < tabs.length)
+            .map((index) => tabs[index].id);
+    }
+}
+gExCommandMap.addCommand(
+    new MultiTabCommand(
+        "bunload", "Unload tab", browser.tabs.discard, (tab) => !tab.discarded));
+gExCommandMap.addCommand(
+    new MultiTabCommand(
+        "bdelete", "Close tab", browser.tabs.remove, (tab) => true));
 gExCommandMap.makeCommand(
     "winbuffer", "Switch window", (args, tabInfo, frameId, options) => {
         if (args.length === 0) {
