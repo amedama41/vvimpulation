@@ -11,5 +11,11 @@ window.addEventListener("DOMContentLoaded", (e) => {
     button.onclick = () => gFrameInfo.sendMessage({
         command: "openLink", url: errorURL, replace: true
     });
+
+    FrameInfo.getLocation = function() {
+        const a = document.createElement('A');
+        a.href = errorURL;
+        return a;
+    };
 });
 

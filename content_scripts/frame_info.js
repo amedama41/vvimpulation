@@ -219,7 +219,7 @@ class FrameInfo {
             return Promise.reject("console frame is not loaded yet");
         }
         if (passURL) {
-            options.defaultInput += decodeURI(location.href);
+            options.defaultInput += decodeURI(FrameInfo.getLocation().href);
         }
         return this._sendConsoleMessage({
             command: "setConsoleMode", options
@@ -491,6 +491,9 @@ class FrameInfo {
         }
         this._fixedMessage = undefined;
         this.hideConsole();
+    }
+    static getLocation() {
+        return window.location;
     }
 
     _createMode(mode, data=undefined) {
