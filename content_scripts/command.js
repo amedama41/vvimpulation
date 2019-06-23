@@ -144,6 +144,7 @@ const COMMAND_DESCRIPTIONS = {
     mouseoutTo: { description: "Generate a mouse out event from an element to the target" },
     mouseoutFrom: { description: "Generate a mouse out event from the target to an element" },
     mousemove: { description: "Generate a mouse move event on the target for N seconds" },
+    contextmenu: { description: "Generate a contextmenu event for the target" },
 
     /** Commands for select manipulation **/
     selectNextOption: { description: "Select the next option of the select element target" },

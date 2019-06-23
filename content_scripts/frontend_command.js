@@ -700,6 +700,12 @@ class FrontendCommand {
         };
         move();
     }
+    static contextmenu(count, frameInfo) {
+        const elem = frameInfo.getTarget();
+        const coord = getCoord(elem);
+        const [ctrl, shift, alt, meta] = Utils.countToModifiers(count);
+        emulateMouseEvent(elem, "contextmenu", coord, ctrl, alt, shift, meta);
+    }
 
     /**
      * Commands for select element manipulation
