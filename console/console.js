@@ -349,6 +349,9 @@ class ConsoleMode {
     }
     getCandidate() {
         this.onComplete(this._input).then((result) => {
+            if (!this._isOpened) {
+                return;
+            }
             if (result && !this._completer.isFixed) {
                 this._completer.setCandidates(result);
                 this._completer.selectNext(this._input);
@@ -385,6 +388,9 @@ class ExMode extends ConsoleMode {
             !completer.isFixed && !completer.isSelected(value) &&
             value !== prevValue) {
             this.onComplete(input).then((result) => {
+                if (!super.isOpened) {
+                    return;
+                }
                 if (result) {
                     completer.setCandidates(result);
                 }
