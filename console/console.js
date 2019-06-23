@@ -525,6 +525,14 @@ window.addEventListener("DOMContentLoaded", (e) => {
         if (mode.isOpened) {
             return;
         }
+
+        // Suppress browser popup to show
+        const a = document.createElement('A');
+        a.href = '#';
+        document.body.appendChild(a);
+        a.focus();
+        document.body.removeChild(a);
+
         mode.startConsole();
     });
     input.addEventListener("blur", (e) => {
