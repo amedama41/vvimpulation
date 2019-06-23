@@ -20,6 +20,24 @@ VVimpulation also use all host permissions in order to get search suggestions in
 
 ## Release Notes
 
+### 1.5
+
+Command
+- Add contextmenu command.
+- Add bunload console command.
+- Add bdelete console command.
+
+Enhancement
+- Reset command key sequence if hint target is changed.
+- Suppress browser popup to overlap with console.
+- Use original URL with toConsoleModeWithURL in overwritten error page.
+
+Bugfix
+- Fix the issue that console candidate list does not sometimes disappeared.
+- Fix failure to overwrite error page.
+- Fix broken search selection commands.
+- Fix normal mode command count.
+
 ### 1.4
 
 Command
