@@ -893,9 +893,20 @@ function overwriteErrorPage(details) {
     if (details.frameId !== 0) {
         return;
     }
+    openCustomErrorPage(details, true);
+}
+function openCustomErrorPage(details, retry=true) {
     const tabId = details.tabId;
     browser.tabs.get(tabId).then((tab) => {
-        if (tab.status !== "complete" || tab.url !== details.url) {
+        if (tab.status !== "complete") {
+            return;
+        }
+        if (tab.url !== details.url) {
+            // Though status is complete, tab.url maybe have not been
+            // changed yet
+            if (retry) {
+                setTimeout(() => openCustomErrorPage(details, false), 100);
+            }
             return;
         }
         const IGNORED_ERROR_LIST = [
