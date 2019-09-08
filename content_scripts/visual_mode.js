@@ -171,6 +171,11 @@ class VisualModeBase {
                 break;
             }
             default: {
+                const [anchorNode, anchorOffset, focusNode, focusOffset] = [
+                    this.selection.anchorNode, this.selection.anchorOffset,
+                    this.selection.focusNode, this.selection.focusOffset
+                ];
+
                 const alter = this.constructor.getAlter();
                 try {
                     for (let i = 0; i < count; ++i) {
@@ -179,6 +184,16 @@ class VisualModeBase {
                 }
                 catch (e) {
                     console.warn(Utils.errorString(e));
+                }
+
+                // Workaround for selecting Restricted objects
+                try {
+                    this.selection.focusNode.toString();
+                }
+                catch (e) {
+                    console.warn(Utils.errorString(e));
+                    this.selection.setBaseAndExtent(
+                        anchorNode, anchorOffset, focusNode, focusOffset);
                 }
                 break;
             }
