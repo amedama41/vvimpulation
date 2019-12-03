@@ -4,6 +4,7 @@ body {
     width: 100%;
     position: absolute;
     bottom: 0px;
+    background-color: transparent !important;
 }
 
 body * {
